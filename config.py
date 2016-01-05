@@ -1,6 +1,6 @@
 import pyaudio
 
-FORMAT = pyaudio.paInt32
+FORMAT = pyaudio.paFloat32
 CHANNELS = 1
 RATE = 192000
 CHUNK = 1024
