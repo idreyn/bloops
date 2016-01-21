@@ -14,7 +14,7 @@ def hann_window(size):
 	c0, c1, c2 = 0.5, -0.5, 0
 	res = np.empty(size)
 	for i in xrange(size):
-		res[i] = c1 * cos(2.0 * np.pi * i / size) + c2 * cos(4.0 * np.pi * i / size)
+		res[i] = c0 + c1 * cos(2.0 * np.pi * i / size) + c2 * cos(4.0 * np.pi * i / size)
 	return res
 
 def windowed(sample,window_size,overlap,hanning=True):
