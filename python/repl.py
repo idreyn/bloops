@@ -9,6 +9,4 @@ from scipy.signal import *
 import matplotlib.pyplot as plt
 from scikits.audiolab import wavread, play
 
-from process import *
-
 # REPL away!

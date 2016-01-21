@@ -10,23 +10,11 @@ from record import Recorder
 from config import *
 from process import *
 
-class Pulse(object):
-	def __init__(self,start,end,duration):
-		self.start = start
-		self.end = end
-		self.duration = duration
-
-	def low(self):
-		return min(self.start,self.end)
-
-	def high(self):
-		return max(self.start,self.end)
-
 def play_pulse(pulse,record_time=None):
 	if not record_time:
 		record_time = 200
 	frames = []
-	serial.write([pulse.start,pulse.end,pulse.duration])
+	serial.write([pulse.start,pulse.end,pulse.ms_duration])
 	for i, frame in enumerate(rec.record(float(record_time) / 1000)):
 		frames.append(frame)
 	data = frames_to_array(frames)
