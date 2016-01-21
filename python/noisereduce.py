@@ -1,11 +1,6 @@
-import time
-import wave
-
 import numpy as np
 from numpy.fft import *
 from scipy.signal import *
-
-import matplotlib.pyplot as plt
 
 from config import *
 from process import *
@@ -56,7 +51,6 @@ class NoiseReduceSettings(object):
 
 
 def noise_reduce(sample,noise,settings):
-	t0 = time.time()
 	# Check minimum noise length
 	assert len(noise) > settings.window_size
 	# Input constants
@@ -150,10 +144,6 @@ def noise_reduce(sample,noise,settings):
 	for i, offset in enumerate(xrange(0,len(sample),WINDOW_STEP)):
 		result[offset:offset+WINDOW_SIZE] = result[offset:offset+WINDOW_SIZE] + window * np.real(ifft(spectra[i]))
 	# Good lord this took forever
-	print time.time() - t0
-	plt.plot(sample)
-	plt.plot(result)
-	plt.show()
 	return result
 
 def classify_gains(gains,sample_db,noise_db,sensitivity,gain_factor):
