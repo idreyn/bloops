@@ -17,11 +17,11 @@ def open_wave(file):
 		yield data
 		data = wf.readframes(CHUNK)
 
-def play_frames(audio,frames):
+def play_frames(audio,frames,rate_mutliplier=1):
 	stream = audio.open(
 		format=FORMAT,
 		channels=CHANNELS,
-		rate=RATE/50,
+		rate=int(RATE * rate_mutliplier),
 		frames_per_buffer=CHUNK,
 		output=True
 	)
