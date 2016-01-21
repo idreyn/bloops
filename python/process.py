@@ -1,7 +1,10 @@
 import struct
 import time
 import numpy as np
+
+from scipy.special import expit
 from scipy.signal import *
+
 import matplotlib.pyplot as plt
 import peakutils
 
@@ -26,32 +29,54 @@ class Pulse(object):
 	def high(self):
 		return max(self.start,self.end)
 
+class ChannelSample(object):
+	def __init__(
+		self,
+		sample,
+		us_recording_start
+	):
+		self.sample = sample
+		self.us_recording_start = us_recording_start
+
 class EnvironmentSample(object):
 	def __init__(
 		self,
-		left_sample,
-		right_sample,
+		channels,
 		us_pulse_start,
 		us_pulse_duration,
 		us_expected_distance=np.inf):
-		self.len = len(left_sample)
-		self.left_sample = left_sample
-		self.right_sample = right_sample
-		self.us_pulse_start = us_pulse_start
+		self.len = len(channels[0].sample)
+		self.domain = np.arange(self.len)
+		self.channels = channels
 		self.us_pulse_duration = us_pulse_duration
+		self.us_pulse_start = us_pulse_start
 		self.us_expected_distance = us_expected_distance
-		self.us_duration = 1e6 * len(left_sample) / RATE
 
 	def index_to_us(self,ind):
 		return 1e6 * ind * 1.0 / RATE
 
-	def us_to_index(self,time):
-		return int(RATE * time * 1.0 / 1e6)
+	def us_to_index(self,us_time):
+		return int(RATE * us_time * 1.0 / 1e6)
+		# ind = 192k * time[s] = RATE
 
 	def process(self):
-		pre_silence_boundary = us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
-		self.left_silence = self.left_sample[0:pre_silence_boundary]
-		self.right_silence = self.right_sample[0:pre_silence_boundary]
+		assert len(self.channels) == 2
+		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
+		print pre_silence_boundary
+		esi = np.inf
+		for c in self.channels:
+			c.silence = c.sample[0:pre_silence_boundary]
+			c.signal = detrend(c.sample[pre_silence_boundary:],type='constant')
+			esi = min(esi,echo_start_index(c.signal))
+		assert esi < np.inf
+		envelope = sigmoid_pulse_envelope(
+			self.domain[pre_silence_boundary:] - pre_silence_boundary,
+			esi,
+			0.5
+		)
+		plt.plot(self.channels[0].signal * envelope)
+		plt.show()
+		return self.channels[0].signal * envelope
 
 
 def to_db(val):
@@ -81,7 +106,6 @@ def bandpass(data,low,high):
 	return lfilter(bpf[0],bpf[1],data)
 
 def moving_average(sample,size):
-	t0 = time.time()
 	assert size % 2 == 1
 	hw = size / 2
 	l = len(sample)
@@ -98,38 +122,29 @@ def moving_average(sample,size):
 		if on < l:
 			total = total + sample[on]
 		res[center] = total * c
-	print 'moving average:', time.time() - t0
 	return res
 
-def find_after_emit(sample):
-	t0 = time.time()
-	sample = medfilt(np.abs(hilbert(sample)),11)
-	print time.time() - t0
-	plt.plot(sample)
-	plt.show()
-	return
-	top = np.max(sample)
-	print top
-	x = np.array(range(len(sample)))
-	ind = peakutils.indexes(sample,thres=0.2,min_dist=500)
-	plt.plot(top - sample)
-	plt.show()
-	plt.plot(sample)
-	plt.plot(x[ind],sample[ind],'ro')
-	plt.show()
-
-def prep_for_playback(sample):
-	time = np.array(xrange(len(sample)))
+def echo_start_index(sample):
 	MIN_DIST = 500
 	THRESHOLD = 0.2
-	indices = peakutils.indexes(sample,min_dist=MIN_DIST,thres=THRESHOLD)
+	indices = peakutils.indexes(
+		sample,
+		min_dist=MIN_DIST,
+		thres=THRESHOLD
+	)
 	[p0,p1] = indices[0:2]
-	plt.plot(time,sample)
-	plt.plot(time[[p0,p1]],sample[[p0,p1]],'ro')
-	plt.show()
 	constrained = moving_average(np.abs(sample[p0:p1]),101)
-	time_constrained = np.array(xrange(len(constrained)))
-	top_ind = np.where(constrained == min(constrained))
-	plt.plot(time_constrained,constrained)
-	plt.plot(time_constrained[top_ind],constrained[top_ind],'ro')
-	plt.show()
+	return np.where(constrained == min(constrained))[0][0]
+
+def sigmoid(x,k=5):
+	print x
+	if -k < x < k:
+		return expit(x)
+	elif x < 0:
+		return 0
+	else:
+		return 1.0
+sigmoid = np.frompyfunc(sigmoid,1,1)
+
+def sigmoid_pulse_envelope(domain,start_index,k=0.2):
+	return k + (1 - k) * sigmoid(domain - start_index)
