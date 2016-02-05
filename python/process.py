@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import peakutils
 
 from config import *
-from noisereduce import *
 from util import *
 
 class Device:
@@ -74,10 +73,12 @@ class EnvironmentSample(object):
 			esi,
 			0.5
 		)
-		plt.plot(self.channels[0].signal * envelope)
-		plt.show()
-		return self.channels[0].signal * envelope
-
+		print (envelope * self.channels[0].signal).dtype
+		return noise_reduce(
+			self.channels[0].signal * envelope,
+			self.channels[0].silence,
+			NoiseReduceSettings()
+		)
 
 def to_db(val):
 	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
@@ -137,14 +138,15 @@ def echo_start_index(sample):
 	return np.where(constrained == min(constrained))[0][0]
 
 def sigmoid(x,k=5):
-	print x
 	if -k < x < k:
 		return expit(x)
 	elif x < 0:
-		return 0
+		return 0.0
 	else:
 		return 1.0
 sigmoid = np.frompyfunc(sigmoid,1,1)
 
 def sigmoid_pulse_envelope(domain,start_index,k=0.2):
-	return k + (1 - k) * sigmoid(domain - start_index)
+	return np.array(k + (1 - k) * sigmoid(domain - start_index))
+
+from noisereduce import *

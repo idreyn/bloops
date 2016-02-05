@@ -16,4 +16,4 @@ es = EnvironmentSample(
 	5 * 1000
 )
 res = es.process()
-play_array(audio,10 * res,0.02)
+play_array(audio,res,0.1)
