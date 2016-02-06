@@ -1,0 +1,6 @@
+*.pyc
+<<<<<<< HEAD
+venv/
+=======
+build
+>>>>>>> cython
