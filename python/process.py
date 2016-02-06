@@ -11,7 +11,6 @@ import peakutils
 from config import *
 from util import *
 
-<<<<<<< HEAD
 def open_wave(file):
 	wf = wave.open(file,'rb')
 	data = wf.readframes(CHUNK)
@@ -53,7 +52,7 @@ def array_to_frames(arr):
 		format = "%df" % CHUNK
 		frames.append(struct.pack(format,*chunk))
 	return frames
-=======
+
 class Device:
 	SPEED_OF_SOUND = 0.343 / 1000 # meters per us
 	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
@@ -137,7 +136,6 @@ def trim(arr,start,end=1):
 def pad_to_size(sample,length):
 	zeroes = np.repeat(0,length - len(sample))
 	return np.concatenate((sample,zeroes))
->>>>>>> c38f64cff0adf2fa8530db1e49b2301ab37d9591
 
 def bandpass_coefficients(lowcut, highcut, fs, order=3):
 	nyq = 0.5 * fs
