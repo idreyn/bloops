@@ -12,48 +12,6 @@ from config import *
 from util import *
 
 <<<<<<< HEAD
-def open_wave(file):
-	wf = wave.open(file,'rb')
-	data = wf.readframes(CHUNK)
-	while data != '':
-		yield data
-		data = wf.readframes(CHUNK)
-
-def play_frames(audio,frames,rate_mutliplier=1):
-	stream = audio.open(
-		format=FORMAT,
-		channels=CHANNELS,
-		rate=int(RATE * rate_mutliplier),
-		frames_per_buffer=CHUNK,
-		output=True
-	)
-	for f in frames:
-		stream.write(f)
-	stream.close()
-
-def chunks(l, n):
-	for i in xrange(0, len(l), n):
-		yield l[i:i+n]
-
-def frames_to_array(frames):
-	NORMALIZE = 1.0
-	res = []
-	for frame in frames:
-		format = "%df" % CHUNK
-		res = res + list(struct.unpack(format,frame))
-	arr = np.array(res) 
-	return arr * NORMALIZE
-
-def array_to_frames(arr):
-	NORMALIZE = 1.0
-	frames = []
-	arr = (arr * NORMALIZE)
-	res = np.ndarray.tolist(arr)
-	for chunk in chunks(res,CHUNK):
-		format = "%df" % CHUNK
-		frames.append(struct.pack(format,*chunk))
-	return frames
-=======
 class Device:
 	SPEED_OF_SOUND = 0.343 / 1000 # meters per us
 	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
@@ -137,7 +95,49 @@ def trim(arr,start,end=1):
 def pad_to_size(sample,length):
 	zeroes = np.repeat(0,length - len(sample))
 	return np.concatenate((sample,zeroes))
->>>>>>> c38f64cff0adf2fa8530db1e49b2301ab37d9591
+=======
+def open_wave(file):
+	wf = wave.open(file,'rb')
+	data = wf.readframes(CHUNK)
+	while data != '':
+		yield data
+		data = wf.readframes(CHUNK)
+
+def play_frames(audio,frames,rate_mutliplier=1):
+	stream = audio.open(
+		format=FORMAT,
+		channels=CHANNELS,
+		rate=int(RATE * rate_mutliplier),
+		frames_per_buffer=CHUNK,
+		output=True
+	)
+	for f in frames:
+		stream.write(f)
+	stream.close()
+
+def chunks(l, n):
+	for i in xrange(0, len(l), n):
+		yield l[i:i+n]
+
+def frames_to_array(frames):
+	NORMALIZE = 1.0
+	res = []
+	for frame in frames:
+		format = "%df" % CHUNK
+		res = res + list(struct.unpack(format,frame))
+	arr = np.array(res) 
+	return arr * NORMALIZE
+
+def array_to_frames(arr):
+	NORMALIZE = 1.0
+	frames = []
+	arr = (arr * NORMALIZE)
+	res = np.ndarray.tolist(arr)
+	for chunk in chunks(res,CHUNK):
+		format = "%df" % CHUNK
+		frames.append(struct.pack(format,*chunk))
+	return frames
+>>>>>>> cython
 
 def bandpass_coefficients(lowcut, highcut, fs, order=3):
 	nyq = 0.5 * fs
