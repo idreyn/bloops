@@ -11,6 +11,12 @@ import peakutils
 from config import *
 from util import *
 
+SPEED_OF_SOUND = 0.343 / 1000 # meters per us
+
+class Device:
+	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
+	PICKUP_DELAY = SPEAKER_MIC_DISTANCE / SPEED_OF_SOUND # us
+
 def open_wave(file):
 	wf = wave.open(file,'rb')
 	data = wf.readframes(CHUNK)
@@ -52,23 +58,6 @@ def array_to_frames(arr):
 		format = "%df" % CHUNK
 		frames.append(struct.pack(format,*chunk))
 	return frames
-
-class Device:
-	SPEED_OF_SOUND = 0.343 / 1000 # meters per us
-	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
-	PICKUP_DELAY = SPEAKER_MIC_DISTANCE / SPEED_OF_SOUND # us
-
-class Pulse(object):
-	def __init__(self,start,end,duration):
-		self.start = start
-		self.end = end
-		self.ms_duration = duration
-
-	def low(self):
-		return min(self.start,self.end)
-
-	def high(self):
-		return max(self.start,self.end)
 
 class ChannelSample(object):
 	def __init__(
@@ -121,6 +110,10 @@ class EnvironmentSample(object):
 			self.channels[0].silence,
 			NoiseReduceSettings()
 		)
+
+	def align_samples(self):
+		# Correct for microphone clock phase
+		pass
 
 def to_db(val):
 	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)

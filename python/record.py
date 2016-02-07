@@ -17,17 +17,25 @@ class Recorder(object):
 			frames_per_buffer=CHUNK,
 			stream_callback=stream_cb
 		)
-		self.stream.start_stream()
+		self.start()
 
-	def record(self,seconds):
+	def record(self,microseconds):
 		self.clear_queue()
-		for i in xrange(0, int(RATE / CHUNK * seconds)):
+		for i in xrange(0, int(RATE / CHUNK * microseconds * 1e6)):
 			yield self.queue.get(True)
 
 	def clear_queue(self):
 		self.queue = Queue()
 
 	def do_stream(self,data,fc,time,flags):
-		self.queue.put(data)
+		self.queue.put((data,fc,time,flags))
 		return (None,pyaudio.paContinue)
+
+	def start(self):
+		self.stream.start_stream()
+		self.listening = True
+
+	def stop(self):
+		self.stream.stop_stream()
+		self.listening = False
 
