@@ -36,15 +36,15 @@ class Chirp(Pulse):
 		)
 
 class Emitter(object):
-	def __init__(self,audio):
-		self.audio = self.audio
+	def __init__(self,audio,output_device_index=None):
+		self.audio = audio
 		self.stream = audio.open(
+			output_device_index=output_device_index,
 			format=FORMAT,
 			channels=CHANNELS,
 			rate=RATE,
 			output=True,
 			frames_per_buffer=CHUNK,
-			stream_callback=stream_cb
 		)
 		self.start()
 
@@ -55,7 +55,3 @@ class Emitter(object):
 	def stop(self):
 		self.playing = False
 		self.stream.stop_stream()
-
-	@memoize
-	def null_chunk(self):
-		return np.zeros(CHUNK_SIZE)

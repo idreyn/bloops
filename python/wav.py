@@ -11,15 +11,15 @@ def open_wave(file):
 		yield data
 		data = wf.readframes(CHUNK)
 
-def play_array(audio,data,rate_mutliplier=1):
+def play_array(audio,data,rate_mutliplier=1,channels=None):
 	data = pad_to_size(data,CHUNK * (1 + len(data) / CHUNK))
 	frames = array_to_frames(data)
-	play_frames(audio,frames,rate_mutliplier)
+	play_frames(audio,frames,rate_mutliplier,channels=channels)
 
-def play_frames(audio,frames,rate_mutliplier=1):
+def play_frames(audio,frames,rate_mutliplier=1,channels=None,):
 	stream = audio.open(
 		format=FORMAT,
-		channels=CHANNELS,
+		channels=channels or CHANNELS,
 		rate=int(RATE * rate_mutliplier),
 		frames_per_buffer=CHUNK,
 		output=True

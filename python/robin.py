@@ -1,6 +1,5 @@
 import pyaudio
 import time
-from queue import Queue
 
 import numpy as np
 
