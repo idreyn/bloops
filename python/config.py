@@ -3,9 +3,9 @@ import numpy as np
 
 FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
-CHANNELS = 2
+CHANNELS = 1
 RATE = 192000
-CHUNK = 512
+CHUNK = 8192
 
 def enumerate_devices(audio):
 	info = audio.get_host_api_info_by_index(0)
