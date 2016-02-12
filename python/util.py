@@ -1,3 +1,5 @@
+import sys
+
 def round_to_nearest(x,clip):
 	return x * round(float(x) / clip)
 
@@ -13,3 +15,7 @@ def de_interleave(arr):
 
 def log(str,level=0):
 	print str
+
+def log_fail(str,level=0):
+	log(str,level)
+	sys.exit(0)

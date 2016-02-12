@@ -1,5 +1,6 @@
+import pyaudio
+from queue import Queue
 import numpy as np
-
 from config import *
 
 class Pulse(object):
@@ -38,6 +39,8 @@ class Chirp(Pulse):
 class Emitter(object):
 	def __init__(self,audio,output_device_index=None):
 		self.audio = audio
+		def do_stream(a,b,c,d):
+			self.do_stream(a,b,c,d)
 		self.stream = audio.open(
 			output_device_index=output_device_index,
 			format=FORMAT,
@@ -46,7 +49,19 @@ class Emitter(object):
 			output=True,
 			frames_per_buffer=CHUNK,
 		)
-		self.start()
+		self.clear_queue()
+
+	def clear_queue(self):
+		self.queue = Queue()
+
+	def play(self,frames):
+		self.clear_queue()
+		for f in frames:
+			self.queue.put(f)
+
+	def do_stream(self,id,fc,ta,s):
+		if not self.queue.empty():
+			return (self.queue.get(True),pyaudio.paContinue)
 
 	def start(self):
 		self.playing = True
