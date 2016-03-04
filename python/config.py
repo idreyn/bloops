@@ -4,7 +4,7 @@ import numpy as np
 FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
 CHANNELS = 2
-RATE = 44100
+RATE = 192000
 CHUNK = 1024
 
 def enumerate_devices(audio,debug=False):

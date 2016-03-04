@@ -73,7 +73,7 @@ class EnvironmentSample(object):
 		self,
 		channels,
 		us_pulse_start,
-		us_pulse_duration,
+		us_pulse_duration=None,
 		us_expected_distance=np.inf):
 		self.len = len(channels[0].sample)
 		self.domain = np.arange(self.len)
@@ -104,12 +104,12 @@ class EnvironmentSample(object):
 			esi,
 			0.5
 		)
-		print (envelope * self.channels[0].signal).dtype
-		return noise_reduce(
-			self.channels[0].signal * envelope,
-			self.channels[0].silence,
-			NoiseReduceSettings()
-		)
+		for c in self.channels:
+			c.signal = noise_reduce(
+				c.signal * envelope,
+				c.silence,
+				NoiseReduceSettings()
+			)
 
 	def align_samples(self):
 		# Correct for microphone clock phase

@@ -39,17 +39,25 @@ def chunks(l, n):
 		yield l[i:i+n]
 
 def frames_to_array(frames):
-	return np.reshape(
+	return np.transpose(np.reshape(
 		np.fromstring(''.join(frames),dtype=NP_FORMAT),
 		(CHUNK * len(frames),CHANNELS)
-	)
+	))
 
 def array_to_frames(arr):
-	NORMALIZE = 1.0
 	frames = []
-	arr = (arr * NORMALIZE)
-	res = np.ndarray.tolist(arr)
-	for chunk in chunks(res,CHUNK):
-		format = "%df" % CHUNK
+	print arr
+	n_frames = int(round(float(arr.shape[1]) / CHUNK))
+	pad_length = (n_frames * CHUNK) - arr.shape[1]
+	pad_arr = np.zeros((2,pad_length))
+	arr = np.append(arr,pad_arr,axis=1)
+	arr = np.reshape(arr,(1,arr.shape[0] * arr.shape[1]),order='F')[0]
+	res = list(arr)
+	for chunk in chunks(res,CHUNK * CHANNELS):
+		format = "%df" % (CHUNK * CHANNELS)
 		frames.append(struct.pack(format,*chunk))
 	return frames
+
+	
+
+	

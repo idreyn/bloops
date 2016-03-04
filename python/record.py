@@ -27,10 +27,8 @@ class Recorder(object):
 
 	def record(self,seconds):
 		self.clear_queue()
-		frames = []
 		for i in xrange(0, int(RATE / CHUNK * seconds)):
-			frames.append(self.queue.get(True))
-		return frames
+			yield i, self.queue.get(True)
 
 	def clear_queue(self):
 		self.queue = Queue()
