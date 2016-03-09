@@ -31,16 +31,17 @@ serial = serial.Serial(port=SERIAL_PORT,baudrate=SERIAL_BAUD,write_timeout=0.0)
 while True:
 	frames = []
 	t0 = time.time()
-	for i, frame in rec.record(0.15):
-		if i == 0:
-			serial.write([20,50,3])
+	for i, frame in rec.record(0.1):
+		if i == 1:
+			serial.write([50,30,1])
 			t1 = time.time()
 		frames.append(frame)
 	us_pulse_start = round(1e6 * (t1 - t0))
 	data = frames_to_array(frames)
-	data = bandpass(data,20000,80000)
-	plt.plot(data[0])
-	plt.show()
+	left, right = ChannelSample(data[0]), ChannelSample(data[1])
+	es = EnvironmentSample([left,right],us_pulse_start)
+	if es.process():
+		data = es.merge()
+		print data
 	new_frames = array_to_frames(data)
-	play_frames(audio,new_frames,0.04)
-	time.sleep(0.1)
+	play_frames(audio,new_frames,0.1)

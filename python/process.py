@@ -11,6 +11,8 @@ import peakutils
 from config import *
 from util import *
 
+from noisereduce import *
+
 SPEED_OF_SOUND = 0.343 / 1000 # meters per us
 
 class Device:
@@ -63,7 +65,7 @@ class ChannelSample(object):
 	def __init__(
 		self,
 		sample,
-		us_recording_start
+		us_recording_start=0
 	):
 		self.sample = sample
 		self.us_recording_start = us_recording_start
@@ -92,24 +94,36 @@ class EnvironmentSample(object):
 	def process(self):
 		assert len(self.channels) == 2
 		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
-		print pre_silence_boundary
+	 	if pre_silence_boundary > len(self.channels[0].sample):
+	 		return False
 		esi = np.inf
 		for c in self.channels:
 			c.silence = c.sample[0:pre_silence_boundary]
 			c.signal = detrend(c.sample[pre_silence_boundary:],type='constant')
-			esi = min(esi,echo_start_index(c.signal))
+		'''
 		assert esi < np.inf
 		envelope = sigmoid_pulse_envelope(
 			self.domain[pre_silence_boundary:] - pre_silence_boundary,
 			esi,
 			0.5
 		)
+		'''
 		for c in self.channels:
+			c.signal = bandpass(c.signal,20000,80000)
 			c.signal = noise_reduce(
-				c.signal * envelope,
-				c.silence,
+				c.signal.astype(np.float64),
+				c.silence.astype(np.float64),
 				NoiseReduceSettings()
 			)
+			# plt.plot(c.signal)
+		# plt.show()
+		return self.channels[0].signal, self.channels[1].signal
+
+	def merge(self):
+		res = np.empty((len(self.channels),len(self.channels[0].signal)))
+		for i, c in enumerate(self.channels):
+			res[i] = c.signal
+		return res
 
 	def align_samples(self):
 		# Correct for microphone clock phase

@@ -1,6 +1,8 @@
 import struct
 import numpy as np
 
+import math
+
 from process import *
 from config import *
 
@@ -47,7 +49,7 @@ def frames_to_array(frames):
 def array_to_frames(arr):
 	frames = []
 	print arr
-	n_frames = int(round(float(arr.shape[1]) / CHUNK))
+	n_frames = int(math.ceil(float(arr.shape[1]) / CHUNK))
 	pad_length = (n_frames * CHUNK) - arr.shape[1]
 	pad_arr = np.zeros((2,pad_length))
 	arr = np.append(arr,pad_arr,axis=1)
