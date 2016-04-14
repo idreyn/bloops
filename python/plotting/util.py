@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from config import *
+
 def plot_spectrum(spectrum):
 	time_step = 1.0 / RATE
 	ps = np.abs(spectrum) ** 2
@@ -15,3 +17,7 @@ def plot_stereo(time,left,right):
 	axes[1].plot(time,right)
 	axes[1].set_title('Right')
 	return axes
+
+def plot_here(x,y):
+	plt.plot(x,y)
+	plt.show()

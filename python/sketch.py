@@ -14,12 +14,12 @@ from process import *
 from util import *
 from frames import *
 
-SERIAL_PORT = '/dev/cu.usbmodem1421'
+SERIAL_PORT = '/dev/cu.usbmodem14141'
 SERIAL_BAUD = 9600
 
 audio = pyaudio.PyAudio()
 
-microphones = choose_microphone(audio)
+microphones = choose_input(audio)
 print microphones
 
 if microphones is None:
@@ -31,9 +31,9 @@ serial = serial.Serial(port=SERIAL_PORT,baudrate=SERIAL_BAUD,write_timeout=0.0)
 while True:
 	frames = []
 	t0 = time.time()
-	for i, frame in rec.record(0.1):
+	for i, frame in rec.record(0.15):
 		if i == 1:
-			serial.write([50,30,1])
+			serial.write([20,50,5])
 			t1 = time.time()
 		frames.append(frame)
 	us_pulse_start = round(1e6 * (t1 - t0))
@@ -44,4 +44,4 @@ while True:
 		data = es.merge()
 		print data
 	new_frames = array_to_frames(data)
-	play_frames(audio,new_frames,0.1)
+	play_frames(audio,new_frames,0.05)

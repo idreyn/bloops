@@ -4,7 +4,7 @@ import numpy as np
 FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
 CHANNELS = 2
-RATE = 192000
+RATE = 44100
 CHUNK = 1024
 
 def enumerate_devices(audio,debug=False):
@@ -15,7 +15,7 @@ def enumerate_devices(audio,debug=False):
 			print info
 		yield i, info
 
-def choose_microphone(audio):
+def choose_input(audio):
 	max_dsr = 0
 	best = None
 	for i, info in enumerate_devices(audio):

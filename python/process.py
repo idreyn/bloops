@@ -110,11 +110,13 @@ class EnvironmentSample(object):
 		'''
 		for c in self.channels:
 			c.signal = bandpass(c.signal,20000,80000)
+			'''
 			c.signal = noise_reduce(
 				c.signal.astype(np.float64),
 				c.silence.astype(np.float64),
 				NoiseReduceSettings()
 			)
+			'''
 			# plt.plot(c.signal)
 		# plt.show()
 		return self.channels[0].signal, self.channels[1].signal
