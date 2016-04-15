@@ -1,7 +1,5 @@
 import pyaudio
 
-from plotting.util import *
-
 from scikits.audiolab import play
 from scipy.fftpack import fft
 
