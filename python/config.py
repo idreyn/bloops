@@ -6,6 +6,7 @@ NP_FORMAT = np.float32
 CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
+OUTPUT_DEVICE_INDEX = 0
 
 def enumerate_devices(audio,debug=False):
 	info = audio.get_host_api_info_by_index(0)

@@ -27,6 +27,7 @@ def play_frames(audio,frames,rate_mutliplier=1,channels=None):
 		channels=channels or CHANNELS,
 		rate=int(RATE * rate_mutliplier),
 		frames_per_buffer=CHUNK,
+		output_device_index=OUTPUT_DEVICE_INDEX,
 		output=True
 	)
 	for f in frames:
