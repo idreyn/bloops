@@ -6,8 +6,8 @@ import numpy as np
 from scipy.signal import chirp
 from scipy.fftpack import *
 
+from frames import *
 from config import *
-from process import array_to_frames
 
 class Pulse(object):
 	def __init__(self,us_duration,square=False):
@@ -71,7 +71,7 @@ class Click(Pulse):
 
 	def _render(self):
 		res = np.empty(len(self.t_axis()))
-		for f in xrange(self.f_low,self.f_high,10):
+		for f in xrange(self.f_low,self.f_high,100):
 			res = res + np.cos(2 * np.pi * f * self.t_axis())
 		return res
 		
@@ -101,8 +101,8 @@ class Emitter(object):
 	def clear_queue(self):
 		self.queue = Queue()
 
-	def play(self,pulse):
-		frames = array_to_frames(pulse.render())
+	def play(self,data):
+		frames = array_to_frames(data)
 		self.clear_queue()
 		for f in frames:
 			self.queue.put(f)

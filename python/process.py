@@ -51,16 +51,6 @@ def frames_to_array(frames):
 	arr = np.array(res) 
 	return arr * NORMALIZE
 
-def array_to_frames(arr):
-	NORMALIZE = 1.0
-	frames = []
-	arr = (arr * NORMALIZE)
-	res = np.ndarray.tolist(arr)
-	for chunk in chunks(res,CHUNK):
-		format = "%df" % CHUNK
-		frames.append(struct.pack(format,*chunk))
-	return frames
-
 class ChannelSample(object):
 	def __init__(
 		self,
@@ -141,10 +131,6 @@ def trim(arr,start,end=1):
 	start_ind = int(round(start * len(arr)))
 	end_ind = int(round(end * len(arr)))
 	return arr[start_ind:end_ind]
-
-def pad_to_size(sample,length):
-	zeroes = np.repeat(0,length - len(sample))
-	return np.concatenate((sample,zeroes))
 
 def bandpass_coefficients(lowcut, highcut, fs, order=3):
 	nyq = 0.5 * fs

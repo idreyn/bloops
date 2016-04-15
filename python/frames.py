@@ -3,8 +3,11 @@ import numpy as np
 
 import math
 
-from process import *
 from config import *
+
+def pad_to_size(sample,length):
+	zeroes = np.repeat(0,length - len(sample))
+	return np.concatenate((sample,zeroes))
 
 def open_wave(file):
 	wf = wave.open(file,'rb')
@@ -46,12 +49,19 @@ def frames_to_array(frames):
 		(CHUNK * len(frames),CHANNELS)
 	))
 
+def normalize(arr):
+	if len(arr.shape) == 1:
+		nx = np.empty((1,len(arr)))
+		nx[0] = arr
+		return nx
+	return arr
+
 def array_to_frames(arr):
 	frames = []
-	print arr
+	arr = normalize(arr)
 	n_frames = int(math.ceil(float(arr.shape[1]) / CHUNK))
 	pad_length = (n_frames * CHUNK) - arr.shape[1]
-	pad_arr = np.zeros((2,pad_length))
+	pad_arr = np.zeros((arr.shape[0],pad_length))
 	arr = np.append(arr,pad_arr,axis=1)
 	arr = np.reshape(arr,(1,arr.shape[0] * arr.shape[1]),order='F')[0]
 	res = list(arr)

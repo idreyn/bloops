@@ -3,7 +3,7 @@ import numpy as np
 
 FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
-CHANNELS = 2
+CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
 
