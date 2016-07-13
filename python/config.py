@@ -1,14 +1,31 @@
 import pyaudio
 import numpy as np
 
-FORMAT = pyaudio.paFloat32
+PA_FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
-CHANNELS = 1
-RATE = 44100
+CHANNELS = 2
+RATE = 192000
 CHUNK = 1024
 OUTPUT_DEVICE_INDEX = 0
 
-def enumerate_devices(audio,debug=False):
+class Settings(object):
+	def __init__(
+		self,
+		pa_format=PA_FORMAT,
+		np_format=NP_FORMAT,
+		channels=CHANNELS,
+		rate=RATE,
+		chunk=CHUNK,
+		output_device_index=OUTPUT_DEVICE_INDEX
+	):
+		self.pa_format = pa_format
+		self.np_format = np_format
+		self.channels = channels
+		self.rate = rate
+		self.chunk = chunk
+		self.output_device_index = output_device_index
+
+def enumerate_devices(audio, debug=False):
 	info = audio.get_host_api_info_by_index(0)
 	for i in xrange(info.get('deviceCount')):
 		info = audio.get_device_info_by_host_api_device_index(0,i)

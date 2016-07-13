@@ -6,7 +6,7 @@ import numpy as np
 from scipy.signal import chirp
 from scipy.fftpack import *
 
-from frames import *
+from frames import Frames
 from config import *
 
 class Pulse(object):
@@ -75,26 +75,18 @@ class Click(Pulse):
 			res = res + np.cos(2 * np.pi * f * self.t_axis())
 		return res
 		
-
 class Emitter(object):
-	def __init__(
-		self,
-		audio,
-		output_device_index=None,
-		format=None,
-		channels=None,
-		rate=None,
-	):
+	def __init__(self, settings):
 		self.audio = audio
 		def do_stream(a,b,c,d):
 			self.do_stream(a,b,c,d)
 		self.stream = audio.open(
-			output_device_index=output_device_index,
-			format=format or FORMAT,
-			channels=channels or CHANNELS,
-			rate=rate or RATE,
+			output_device_index=settings.output_device_index,
+			format=settings.format,
+			channels=settings.channels,
+			rate=settings.rate,
+			frames_per_buffer=settings.chunk,
 			output=True,
-			frames_per_buffer=CHUNK
 		)
 		self.clear_queue()
 
@@ -102,14 +94,17 @@ class Emitter(object):
 		self.queue = Queue()
 
 	def play(self,data):
-		frames = array_to_frames(data)
+		frames = Frames.from_array(data)
 		self.clear_queue()
 		for f in frames:
 			self.queue.put(f)
 
 	def do_stream(self,id,fc,ta,s):
 		if not self.queue.empty():
-			return (self.queue.get(True),pyaudio.paContinue)
+			return (
+				self.queue.get(True),
+				pyaudio.paContinue
+			)
 
 	def start(self):
 		self.playing = True

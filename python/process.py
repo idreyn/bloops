@@ -19,38 +19,6 @@ class Device:
 	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
 	PICKUP_DELAY = SPEAKER_MIC_DISTANCE / SPEED_OF_SOUND # us
 
-def open_wave(file):
-	wf = wave.open(file,'rb')
-	data = wf.readframes(CHUNK)
-	while data != '':
-		yield data
-		data = wf.readframes(CHUNK)
-
-def play_frames(audio,frames,rate_mutliplier=1):
-	stream = audio.open(
-		format=FORMAT,
-		channels=CHANNELS,
-		rate=int(RATE * rate_mutliplier),
-		frames_per_buffer=CHUNK,
-		output=True
-	)
-	for f in frames:
-		stream.write(f)
-	stream.close()
-
-def chunks(l, n):
-	for i in xrange(0, len(l), n):
-		yield l[i:i+n]
-
-def frames_to_array(frames):
-	NORMALIZE = 1.0
-	res = []
-	for frame in frames:
-		format = "%df" % CHUNK
-		res = res + list(struct.unpack(format,frame))
-	arr = np.array(res) 
-	return arr * NORMALIZE
-
 class ChannelSample(object):
 	def __init__(
 		self,

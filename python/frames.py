@@ -1,20 +1,25 @@
+from __future__ import division
+
 import struct
 import numpy as np
 
 import math
+import wave
 
-from config import *
+from config import Settings
+from util import log, ceil_to_nearest
+
+def require_frames(fn):
+	def do_let(self, *args):
+		if not self.frames:
+			raise Exception("Need frames")
+		else:
+			return fn(self, *args)
+	return do_let
 
 def pad_to_size(sample,length):
 	zeroes = np.repeat(0,length - len(sample))
 	return np.concatenate((sample,zeroes))
-
-def open_wave(file):
-	wf = wave.open(file,'rb')
-	data = wf.readframes(CHUNK)
-	while data != '':
-		yield data
-		data = wf.readframes(CHUNK)
 
 def play_array(audio,data,rate_mutliplier=1,channels=None):
 	data = pad_to_size(data,CHUNK * (1 + len(data) / CHUNK))
@@ -27,29 +32,17 @@ def play_frames(audio,frames,rate_mutliplier=1,channels=None):
 		channels=channels or CHANNELS,
 		rate=int(RATE * rate_mutliplier),
 		frames_per_buffer=CHUNK,
-		output_device_index=OUTPUT_DEVICE_INDEX,
+		# output_device_index=OUTPUT_DEVICE_INDEX,
 		output=True
 	)
 	for f in frames:
 		stream.write(f)
 	stream.close()
 
-def frames_to_file(frames,filename):
-	file = open(filename,'w')
-	for f in frames:
-		file.write(f)
-	file.close()
-
 def chunks(l, n):
 	for i in xrange(0, len(l), n):
 		yield l[i:i+n]
-
-def frames_to_array(frames):
-	return np.transpose(np.reshape(
-		np.fromstring(''.join(frames),dtype=NP_FORMAT),
-		(CHUNK * len(frames),CHANNELS)
-	))
-
+	
 def normalize(arr):
 	if len(arr.shape) == 1:
 		nx = np.empty((1,len(arr)))
@@ -57,20 +50,47 @@ def normalize(arr):
 		return nx
 	return arr
 
-def array_to_frames(arr):
-	frames = []
-	arr = normalize(arr)
-	n_frames = int(math.ceil(float(arr.shape[1]) / CHUNK))
-	pad_length = (n_frames * CHUNK) - arr.shape[1]
-	pad_arr = np.zeros((arr.shape[0],pad_length))
-	arr = np.append(arr,pad_arr,axis=1)
-	arr = np.reshape(arr,(1,arr.shape[0] * arr.shape[1]),order='F')[0]
-	res = list(arr)
-	for chunk in chunks(res,CHUNK * CHANNELS):
-		format = "%df" % (CHUNK * CHANNELS)
-		frames.append(struct.pack(format,*chunk))
-	return frames
+class Frames(object):
+	def __init__(self,settings,frames):
+		self.settings = settings
+		self.frames = frames
 
-	
+	@staticmethod
+	def read_wave(settings, file):
+		res = []
+		wf = wave.open(file,'rb')
+		data = wf.readframes(settings.chunk)
+		while data != '':
+			res.append(data)
+			data = wf.readframes(settings.chunk)
+		res.append(data)
+		return Frames(settings, ''.join(res))
 
-	
+	@staticmethod
+	def from_array(settings, arr):
+		return Frames(
+			settings,
+			np.transpose(arr)
+				.flatten()
+				.astype(settings.np_format)
+				.tostring()
+		)
+
+	@require_frames
+	def write_wave(self, filename):
+		file = open(filename,'w')
+		for f in self.frames:
+			file.write(f)
+		file.close()
+
+	@require_frames
+	def to_array(self):
+		width = self.settings.chunk * self.settings.channels
+		channels = self.settings.channels
+		array = np.fromstring(self.frames, dtype=self.settings.np_format)
+		return np.transpose(
+			np.reshape(
+				array,
+				(len(array) / channels, channels)
+			)
+		)

@@ -1,6 +1,4 @@
 *.pyc
-<<<<<<< HEAD
 build
-=======
 venv/
->>>>>>> c38f64cff0adf2fa8530db1e49b2301ab37d9591
+resources/
