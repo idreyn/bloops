@@ -6,7 +6,7 @@ import numpy as np
 from scipy.signal import chirp
 from scipy.fftpack import *
 
-from frames import Frames
+from data import AudioData
 from config import *
 
 class Pulse(object):
@@ -87,19 +87,19 @@ class Emitter(object):
 			rate=settings.rate,
 			frames_per_buffer=settings.chunk,
 			output=True,
+			stream_callback=do_stream
 		)
 		self.clear_queue()
 
 	def clear_queue(self):
 		self.queue = Queue()
 
-	def play(self,data):
-		frames = Frames.from_array(data)
+	def play_array(self, arr):
 		self.clear_queue()
-		for f in frames:
+		for f in AudioData.from_array(arr).frames:
 			self.queue.put(f)
 
-	def do_stream(self,id,fc,ta,s):
+	def do_stream(self, *rest):
 		if not self.queue.empty():
 			return (
 				self.queue.get(True),

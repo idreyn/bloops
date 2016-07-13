@@ -7,7 +7,6 @@ import math
 import wave
 
 from config import Settings
-from util import log, ceil_to_nearest
 
 def require_frames(fn):
 	def do_let(self, *args):
@@ -17,22 +16,12 @@ def require_frames(fn):
 			return fn(self, *args)
 	return do_let
 
-def pad_to_size(sample,length):
-	zeroes = np.repeat(0,length - len(sample))
-	return np.concatenate((sample,zeroes))
-
-def play_array(audio,data,rate_mutliplier=1,channels=None):
-	data = pad_to_size(data,CHUNK * (1 + len(data) / CHUNK))
-	frames = array_to_frames(data)
-	play_frames(audio,frames,rate_mutliplier,channels=channels)
-
-def play_frames(audio,frames,rate_mutliplier=1,channels=None):
+def play_frames(audio, frames, rate_mutliplier=1):
 	stream = audio.open(
-		format=FORMAT,
-		channels=channels or CHANNELS,
-		rate=int(RATE * rate_mutliplier),
-		frames_per_buffer=CHUNK,
-		# output_device_index=OUTPUT_DEVICE_INDEX,
+		format=frames.settings.pa_format,
+		channels=frames.settings.channels,
+		rate=int(frames.settings.rate * rate_mutliplier),
+		frames_per_buffer=frames.settings.chunk,
 		output=True
 	)
 	for f in frames:
@@ -40,18 +29,13 @@ def play_frames(audio,frames,rate_mutliplier=1,channels=None):
 	stream.close()
 
 def chunks(l, n):
+	res = []
 	for i in xrange(0, len(l), n):
-		yield l[i:i+n]
-	
-def normalize(arr):
-	if len(arr.shape) == 1:
-		nx = np.empty((1,len(arr)))
-		nx[0] = arr
-		return nx
-	return arr
+		res.append(l[i:i+n])
+	return res
 
-class Frames(object):
-	def __init__(self,settings,frames):
+class AudioData(object):
+	def __init__(self, settings, frames):
 		self.settings = settings
 		self.frames = frames
 
@@ -59,21 +43,30 @@ class Frames(object):
 	def read_wave(settings, file):
 		res = []
 		wf = wave.open(file,'rb')
+		params = wf.getparams()
+		if not params[0:3] == (
+			settings.channels,
+			settings.width,
+			settings.rate
+		):
+			raise Exception("Opening file using incompatible Settings")
 		data = wf.readframes(settings.chunk)
-		while data != '':
+		while len(data):
 			res.append(data)
 			data = wf.readframes(settings.chunk)
-		res.append(data)
-		return Frames(settings, ''.join(res))
+		return AudioData(settings, res)
 
 	@staticmethod
 	def from_array(settings, arr):
-		return Frames(
+		return AudioData(
 			settings,
-			np.transpose(arr)
-				.flatten()
-				.astype(settings.np_format)
-				.tostring()
+			chunks(
+				np.transpose(arr)
+					.flatten()
+					.astype(settings.np_format)
+					.tostring(),
+				settings.chunk * settings.channels * settings.width
+			)
 		)
 
 	@require_frames
@@ -87,7 +80,10 @@ class Frames(object):
 	def to_array(self):
 		width = self.settings.chunk * self.settings.channels
 		channels = self.settings.channels
-		array = np.fromstring(self.frames, dtype=self.settings.np_format)
+		array = np.fromstring(
+			''.join(self.frames),
+			dtype=self.settings.np_format
+		)
 		return np.transpose(
 			np.reshape(
 				array,
