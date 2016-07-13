@@ -16,15 +16,15 @@ def require_frames(fn):
 			return fn(self, *args)
 	return do_let
 
-def play_frames(audio, frames, rate_mutliplier=1):
+def play(audio, data, rate_mutliplier=1):
 	stream = audio.open(
-		format=frames.settings.pa_format,
-		channels=frames.settings.channels,
-		rate=int(frames.settings.rate * rate_mutliplier),
-		frames_per_buffer=frames.settings.chunk,
+		format=data.settings.pa_format,
+		channels=data.settings.channels,
+		rate=(data.settings.rate * rate_mutliplier),
+		frames_per_buffer=data.settings.chunk,
 		output=True
 	)
-	for f in frames:
+	for f in data.frames:
 		stream.write(f)
 	stream.close()
 
@@ -44,11 +44,11 @@ class AudioData(object):
 		res = []
 		wf = wave.open(file,'rb')
 		params = wf.getparams()
-		if not params[0:3] == (
+		if not params[0:2] == (
 			settings.channels,
 			settings.width,
-			settings.rate
 		):
+			print params[0:2], settings.channels, settings.width
 			raise Exception("Opening file using incompatible Settings")
 		data = wf.readframes(settings.chunk)
 		while len(data):

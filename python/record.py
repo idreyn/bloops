@@ -10,12 +10,12 @@ from util import *
 from frames import *
 
 class Recorder(object):
-	def __init__(self, audio, settings):
+	def __init__(self, audio, settings, device_index=None):
 		def stream_cb(*args):
 			return self.do_stream(*args)
 		self.clear_queue()
 		self.stream = audio.open(
-			input_device_index=settings.input_device_index,
+			input_device_index=device_index,
 			format=settings.pa_format,
 			channels=settings.channels,
 			rate=settings.rate,
