@@ -42,6 +42,7 @@ class Settings(object):
 		self.pa_format = fmts[0][0]
 		self.np_format = fmts[0][1]
 		self.width = fmts[0][2]
+		self.frame_size = self.channels * self.width * self.chunk
 		
 def enumerate_devices(audio, debug=False):
 	info = audio.get_host_api_info_by_index(0)
