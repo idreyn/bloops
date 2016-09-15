@@ -11,8 +11,6 @@ import peakutils
 from config import *
 from util import *
 
-from noisereduce import *
-
 SPEED_OF_SOUND = 0.343 / 1000 # meters per us
 
 class Device:
@@ -153,5 +151,3 @@ sigmoid = np.frompyfunc(sigmoid,1,1)
 
 def sigmoid_pulse_envelope(domain,start_index,k=0.2):
 	return np.array(k + (1 - k) * sigmoid(domain - start_index))
-
-from noisereduce import *

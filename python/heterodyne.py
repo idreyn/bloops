@@ -4,8 +4,6 @@ from scipy.fftpack import *
 import matplotlib.pyplot as plt
 
 from process import *
-from noisereduce import *
-
 
 def plot_spectrum(spectrum):
 	time_step = 1.0 / RATE
