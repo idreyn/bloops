@@ -37,17 +37,21 @@ def hann_window(int size):
 	cdef np.ndarray[double, ndim=1] res = np.empty(size)
 	cdef int i
 	for i in xrange(size):
-		res[i] = c0 + c1 * cos(2.0 * np.pi * i / size) + c2 * cos(4.0 * np.pi * i / size)
+		res[i] = c0 + c1 * cos(2.0 * np.pi * i / size) + 
+			c2 * cos(4.0 * np.pi * i / size)
 	return res
 
-def windowed(np.ndarray[double, ndim=1] sample,int window_size,double overlap,bool hanning=True):
+def windowed(np.ndarray[double, ndim=1] sample, int window_size,
+		double overlap, bool hanning=True):
 	assert 0 <= overlap < 1
 	cdef int num_windows = count_windows(len(sample),window_size,overlap)
 	cdef np.ndarray[double, ndim=2] res = np.empty((num_windows,window_size))
 	cdef np.ndarray[double, ndim=1] win = np.hanning(window_size)
 	cdef int i, start
 	cdef np.ndarray[double, ndim=1] sub
-	for i, start in enumerate(xrange(0,len(sample),int(window_size * (1 - overlap)))):
+	for i, start in enumerate(
+		xrange(0,len(sample),int(window_size * (1 - overlap))))
+	:
 		sub = sample[start : start + window_size]
 		if len(sub) < window_size: 
 			sub = pad_to_size(sub,window_size)

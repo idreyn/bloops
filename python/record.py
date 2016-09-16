@@ -1,8 +1,8 @@
-import pyaudio
 import time
 import math
 from queue import Queue
 
+import pyaudio
 import numpy as np
 
 from config import *

@@ -20,7 +20,6 @@ settings = Settings(device=output_device, np_format=np.float32)
 emit = Emitter(audio, settings)
 tone = Chirp(settings, 10000, 1000, 1e4)
 tone2 = Chirp(settings, 1000, 10000, 1e4)
-silence = Silence(settings, 2.5e5)
 
 while True:
 	emit.enqueue(tone.render())
