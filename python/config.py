@@ -7,7 +7,7 @@ PA_FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
 CHANNELS = 2
 RATE = 192000
-CHUNK = 1024
+CHUNK = 8192
 
 FORMATS = [
 	(pyaudio.paInt16, np.int16, 2),
@@ -58,6 +58,7 @@ def choose_device(audio, input):
 	best = None
 	channelString = 'maxInputChannels' if input else 'maxOutputChannels'
 	for i, info in enumerate_devices(audio):
+		print info
 		if info.get(channelString) == 2:
 			if info.get('defaultSampleRate') > max_dsr:
 				max_dsr = info.get('defaultSampleRate')

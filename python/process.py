@@ -5,7 +5,6 @@ import numpy as np
 from scipy.special import expit
 from scipy.signal import *
 
-import matplotlib.pyplot as plt
 import peakutils
 
 from config import *
