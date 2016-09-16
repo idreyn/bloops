@@ -25,9 +25,7 @@ class Settings(object):
 		self.channels = channels or dev_channels or CHANNELS
 		self.rate = rate or dev_rate or RATE
 		self.chunk = chunk or CHUNK
-		one_format = (pa_format and not np_format) \
-			or (np_format and not pa_format)
-		if not one_format:
+		if not pa_format ^ np_format:
 			raise Exception(
 				"Please provide Settings with either pa_format or np_format, "
 				"but not both!"
