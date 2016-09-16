@@ -1,4 +1,6 @@
 from multiprocessing import Queue
+from threading import Thread
+
 import pyaudio
 import numpy as np
 
@@ -14,15 +16,14 @@ class Emitter(object):
 		self.audio = audio
 		self.settings = settings
 		self.queue = Queue()
-		def do_stream(*args):
-			return self.do_stream(*args)
 		self.stream = audio.open(
 			format=settings.pa_format,
 			channels=settings.channels,
 			rate=settings.rate,
 			output=True,
-			stream_callback=do_stream
 		)
+		self.thread = Thread(target=playback, args=(self.stream, self.queue))
+		self.thread.start()
 
 	def enqueue(self, arr):
 		frame_size = self.settings.frame_size
@@ -30,6 +31,3 @@ class Emitter(object):
 		for f in frames:
 			f = f + "\x00" * (frame_size - len(f))
 			self.queue.put(f)
-
-	def do_stream(self, *args):
-		return (self.queue.get(), pyaudio.paContinue)

@@ -25,7 +25,7 @@ class Settings(object):
 		self.channels = channels or dev_channels or CHANNELS
 		self.rate = rate or dev_rate or RATE
 		self.chunk = chunk or CHUNK
-		if not pa_format ^ np_format:
+		if not bool(pa_format) ^ bool(np_format):
 			raise Exception(
 				"Please provide Settings with either pa_format or np_format, "
 				"but not both!"
@@ -56,7 +56,6 @@ def choose_device(audio, input):
 	best = None
 	channelString = 'maxInputChannels' if input else 'maxOutputChannels'
 	for i, info in enumerate_devices(audio):
-		print info
 		if info.get(channelString) == 2:
 			if info.get('defaultSampleRate') > max_dsr:
 				max_dsr = info.get('defaultSampleRate')
