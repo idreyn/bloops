@@ -1,33 +1,33 @@
-from multiprocessing import Queue
-from threading import Thread
-
-import pyaudio
-import numpy as np
-
-from pulse import Silence
-from data import AudioData
+from stream import create_stream, SampleBuffer
 
 def playback(stream, queue):
 	while True:
 		stream.write(queue.get())
 
 class Emitter(object):
-	def __init__(self, audio, settings, device_index=None):
-		self.audio = audio
-		self.settings = settings
-		self.queue = Queue()
-		self.stream = audio.open(
-			format=settings.pa_format,
-			channels=settings.channels,
-			rate=settings.rate,
+	def __init__(self, settings, device):
+		self.buffer = SampleBuffer()
+		self.stream = create_stream(
+			settings=settings,
+			device=device,
 			output=True,
+			callback=lambda *args: self.playback(*args)
 		)
-		self.thread = Thread(target=playback, args=(self.stream, self.queue))
-		self.thread.start()
 
-	def enqueue(self, arr):
-		frame_size = self.settings.frame_size
-		frames = AudioData.from_array(self.settings, arr).frames
-		for f in frames:
-			f = f + "\x00" * (frame_size - len(f))
-			self.queue.put(f)
+	def playback(self, output, *rest):
+		# Get transposed version because sounddevice expects transposed shape
+		# relative to what the rest of the system uses, e.g. (len, channels)
+		# instead of (channels, len).
+		output[:] = self.buffer.get_transposed(
+			length=output.shape[0],
+			channels=output.shape[1]
+		)
+
+	def emit(self, arr):
+		self.buffer.put(arr)
+
+	def start(self):
+		self.stream.start()
+
+	def stop(self):
+		self.stream.stop()

@@ -1,70 +1,46 @@
-import pyaudio
+import sounddevice as sd
 import numpy as np
 
-PA = pyaudio.PyAudio
-
-PA_FORMAT = pyaudio.paFloat32
 NP_FORMAT = np.float32
 CHANNELS = 2
 RATE = 192000
-CHUNK = 8192
+CHUNK = 0
 
-FORMATS = [
-	(pyaudio.paInt16, np.int16, 2),
-	(pyaudio.paInt32, np.int32, 4),
-	(pyaudio.paFloat32, np.float32, 4),
-]
+DEFAULT_SAMPLE_RATE = 'default_samplerate'
+MAX_INPUT_CHANNELS = 'max_input_channels'
+MAX_OUTPUT_CHANNELS = 'max_output_channels'
 
 class Settings(object):
-	def __init__(self, pa_format=None, np_format=None, device=None,
+	def __init__(self, np_format=None, device=None,
 			channels=None, rate=None, chunk=None):
-		if type(device) is tuple:
-			device = device[1]
-		dev_rate = int(device['defaultSampleRate']) if device else None
-		dev_channels = int(device['maxInputChannels']) if device else None
+		assert not device or type(device) is Device
+		dev_rate = int(device.info[DEFAULT_SAMPLE_RATE]) if device else None
+		dev_channels = int(device.info[MAX_INPUT_CHANNELS]) if device else None
 		self.channels = channels or dev_channels or CHANNELS
 		self.rate = rate or dev_rate or RATE
 		self.chunk = chunk or CHUNK
-		if not bool(pa_format) ^ bool(np_format):
-			raise Exception(
-				"Please provide Settings with either pa_format or np_format, "
-				"but not both!"
-			)
-		search_index = 0 if pa_format else 1
-		fmts = [
-			f for f in FORMATS
-			if f[search_index] is (pa_format or np_format)
-		]
-		if not len(fmts):
-			raise Exception("Invalid format supplied")
-		self.pa_format = fmts[0][0]
-		self.np_format = fmts[0][1]
-		self.width = fmts[0][2]
-		self.frame_size = self.channels * self.width * self.chunk
-		
-def enumerate_devices(audio, debug=False):
-	info = audio.get_host_api_info_by_index(0)
-	for i in xrange(info.get('deviceCount')):
-		info = audio.get_device_info_by_host_api_device_index(0, i)
-		if debug:
-			print info
-		yield i, info
+		self.np_format = np_format
 
-def choose_device(audio, input):
+class Device(object):
+	def __init__(self, index, info):
+		self.index = index
+		self.info = info
+
+def choose_device(input):
 	max_dsr = 0
 	best_index= -1
 	best = None
-	channelString = 'maxInputChannels' if input else 'maxOutputChannels'
-	for i, info in enumerate_devices(audio):
+	channelString = MAX_INPUT_CHANNELS if input else MAX_OUTPUT_CHANNELS
+	for i, info in enumerate(sd.query_devices()):
 		if info.get(channelString) == 2:
-			if info.get('defaultSampleRate') > max_dsr:
-				max_dsr = info.get('defaultSampleRate')
+			if info.get(DEFAULT_SAMPLE_RATE) > max_dsr:
+				max_dsr = info.get(DEFAULT_SAMPLE_RATE)
 				best_index = i
 				best = info
-	return best_index, best
+	return Device(best_index, best)
 
-def choose_input(audio):
-	return choose_device(audio, True)
+def choose_input():
+	return choose_device(True)
 
-def choose_output(audio):
-	return choose_device(audio, False)
+def choose_output():
+	return choose_device(False)

@@ -1,49 +1,25 @@
-import time
-import math
-from queue import Queue
-
-import pyaudio
-import numpy as np
-
-from config import *
-from util import *
-from frames import *
+from stream import create_stream, SampleBuffer
 
 class Recorder(object):
-	def __init__(self, audio, settings, device_index=None):
-		def stream_cb(*args):
-			return self.do_stream(*args)
-		self.clear_queue()
-		self.stream = audio.open(
-			input_device_index=device_index,
-			format=settings.pa_format,
-			channels=settings.channels,
-			rate=settings.rate,
-			input=True,
-			frames_per_buffer=settings.chunk,
-			stream_callback=stream_cb
+	def __init__(self, settings, device):
+		self.buffer = SampleBuffer()
+		self.stream = create_stream(
+			settings=settings,
+			device=device,
+			output=False,
+			callback=lambda *args: self.record(*args)
 		)
-		self.settings = settings
-		self.start()
 
-	def record(self,seconds):
-		self.clear_queue()
-		for i in xrange(0, int(settings.rate / settings.chunk * seconds)):
-			yield i, self.queue.get(True)
-
-	def clear_queue(self):
-		self.queue = Queue()
-
-	def do_stream(self, data, *rest):
-		self.queue.put(data)
-		return (None, pyaudio.paContinue)
+	def record(self, input, *rest):
+		# Put transposed version because sounddevice expects transposed shape
+		# relative to what the rest of the system uses, e.g. (len, channels)
+		# instead of (channels, len).
+		self.buffer.put_transposed(input)
 
 	def start(self):
-		self.stream.start_stream()
-		self.listening = True
+		self.stream.start()
 
 	def stop(self):
-		self.stream.stop_stream()
-		self.listening = False
+		self.stream.stop()
 
 
