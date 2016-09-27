@@ -4,6 +4,8 @@ import numpy as np
 import signal
 import sys
 
+sys.path.append('..')
+
 from config import *
 from data import *
 from emit import *
@@ -22,9 +24,6 @@ settings = Settings(device=output_device, np_format=np.float32)
 
 e = Emitter(settings, output_device)
 r = Recorder(settings, input_device)
-
-tone = Chirp(settings, 10000, 1000, 2e5)
-tone2 = Chirp(settings, 1000, 10000, 1e4)
 
 while True:
 	r.start()
