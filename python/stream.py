@@ -13,6 +13,9 @@ def create_stream(settings, device, output, callback, **kwargs):
 		**kwargs
 	)
 
+def transposed(sample):
+	return np.transpose(sample)
+
 class SampleBuffer(object):
 	def __init__(self):
 		self.queue = []
@@ -20,10 +23,13 @@ class SampleBuffer(object):
 	def put(self, sample):
 		self.queue.append(np.copy(sample))
 
-	def put_transposed(self, sample):
-		self.put(np.transpose(sample))
+	def has(self):
+		return len(self.queue) > 0
 
-	def get(self, length, channels):
+	def get_chunk(self):
+		return self.queue.pop(0)
+
+	def get_samples(self, length, channels):
 		pointer = 0
 		buff = np.zeros((channels, length))
 		while pointer < length:
@@ -39,6 +45,3 @@ class SampleBuffer(object):
 				if not self.queue[0].shape[1]:
 					self.queue.pop(0)
 		return buff
-
-	def get_transposed(self, **args):
-		return np.transpose(self.get(**args))

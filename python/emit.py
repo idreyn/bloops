@@ -1,4 +1,4 @@
-from stream import create_stream, SampleBuffer
+from stream import create_stream, transposed, SampleBuffer
 
 def playback(stream, queue):
 	while True:
@@ -18,10 +18,7 @@ class Emitter(object):
 		# Get transposed version because sounddevice expects transposed shape
 		# relative to what the rest of the system uses, e.g. (len, channels)
 		# instead of (channels, len).
-		output[:] = self.buffer.get_transposed(
-			length=output.shape[0],
-			channels=output.shape[1]
-		)
+		output[:] = transposed(self.buffer.get_samples(*output.shape))
 
 	def emit(self, arr):
 		self.buffer.put(arr)

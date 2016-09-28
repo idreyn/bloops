@@ -1,6 +1,6 @@
 *.pyc
 *.so
 *.c
-build
+build/
 venv/
 resources/
