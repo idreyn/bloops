@@ -6,7 +6,6 @@ sys.path.append('..')
 from util import handle_close
 
 from config import *
-from data import *
 from emit import *
 from record import *
 
@@ -14,6 +13,8 @@ handle_close()
 
 output_device = choose_output()
 input_device = choose_input()
+
+print "meep"
 
 settings = Settings(device=output_device)
 

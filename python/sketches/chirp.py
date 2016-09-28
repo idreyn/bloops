@@ -6,7 +6,6 @@ sys.path.append('..')
 from util import handle_close
 
 from config import *
-from data import *
 from emit import *
 from pulse import *
 
