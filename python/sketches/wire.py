@@ -14,9 +14,7 @@ handle_close()
 output_device = choose_output()
 input_device = choose_input()
 
-print "meep"
-
-settings = Settings(device=output_device)
+settings = Settings(device=input_device)
 
 e = Emitter(settings, output_device)
 r = Recorder(settings, input_device)
