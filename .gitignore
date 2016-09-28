@@ -1,6 +1,8 @@
 *.pyc
 *.so
 *.c
+*.html
+
 build/
 venv/
 resources/
