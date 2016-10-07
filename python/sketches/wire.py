@@ -1,11 +1,9 @@
-import os.path, sys
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-
-from util import handle_close
+import sketch
 
 from config import *
 from emit import *
 from record import *
+from util import handle_close
 
 handle_close()
 

@@ -31,17 +31,16 @@ class SampleBuffer(object):
 
 	def get_samples(self, length, channels):
 		pointer = 0
-		buff = np.zeros((channels, length))
+		buff = np.zeros((length, channels))
 		while pointer < length:
 			if not len(self.queue):
 				break
 			else:
 				sample = self.queue[0]
-				sample_length = sample.shape[1]
-				take = min(length - pointer, sample_length)
-				buff[:, pointer : pointer + take] = sample[:, 0:take]
-				self.queue[0] = sample[:, take:]
+				take = min(length - pointer, len(sample))
+				buff[pointer : pointer + take, :] = sample[0:take, :]
+				self.queue[0] = sample[take:, :]
 				pointer = pointer + take
-				if not self.queue[0].shape[1]:
+				if not len(self.queue[0]):
 					self.queue.pop(0)
 		return buff

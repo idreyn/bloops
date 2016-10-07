@@ -11,10 +11,7 @@ class Recorder(object):
 		)
 
 	def record(self, input, *rest):
-		# Put transposed version because sounddevice expects transposed shape
-		# relative to what the rest of the system uses, e.g. (len, channels)
-		# instead of (channels, len).
-		self.buffer.put(transposed(input))
+		self.buffer.put(input)
 
 	def sample(self):
 		while not self.buffer.has():

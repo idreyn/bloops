@@ -15,10 +15,7 @@ class Emitter(object):
 		)
 
 	def playback(self, output, *rest):
-		# Get transposed version because sounddevice expects transposed shape
-		# relative to what the rest of the system uses, e.g. (len, channels)
-		# instead of (channels, len).
-		output[:] = transposed(self.buffer.get_samples(*output.shape))
+		output[:] = self.buffer.get_samples(*output.shape)
 
 	def emit(self, arr):
 		self.buffer.put(arr)

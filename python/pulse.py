@@ -29,9 +29,9 @@ class Pulse(object):
 		if self.settings.channels == 1:
 			self.__rendered = r
 		else: 
-			self.__rendered = np.array(
+			self.__rendered = np.transpose(np.array(
 				[r for _ in xrange(self.settings.channels)]
-			)
+			))
 		return self.__rendered
 
 	def _render(self):
