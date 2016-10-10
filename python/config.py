@@ -1,7 +1,7 @@
 import sounddevice as sd
 import numpy as np
 
-NP_FORMAT = np.float32
+NP_FORMAT = np.int16
 CHANNELS = 2
 RATE = 192000
 CHUNK = 0
