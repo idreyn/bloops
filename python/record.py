@@ -23,4 +23,7 @@ class Recorder(object):
 	def stop(self):
 		self.stream.stop()
 
+	def rate(self):
+		return int(self.stream.samplerate)
+
 

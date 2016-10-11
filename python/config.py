@@ -3,7 +3,6 @@ import numpy as np
 
 NP_FORMAT = np.int16
 CHANNELS = 2
-RATE = 192000
 CHUNK = 0
 
 DEFAULT_SAMPLE_RATE = 'default_samplerate'

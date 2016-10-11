@@ -3,7 +3,7 @@ import sketch
 from config import *
 from emit import *
 from record import *
-from util import handle_close
+from util import handle_close, resample
 
 handle_close()
 
@@ -18,11 +18,8 @@ settings = Settings(
 print settings.input.name, settings.input.rate, settings.input.channels
 print settings.output.name, settings.output.rate, settings.output.channels
 
-if settings.must_resample():
-	raise Exception("Resampling not implemented yet")
-
-e = Emitter(settings, output_device)
-r = Recorder(settings, input_device)
+e = Emitter(settings)
+r = Recorder(settings)
 
 r.start()
 e.start()

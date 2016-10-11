@@ -2,9 +2,9 @@ import numpy as np
 from scipy.signal import chirp
 
 class Pulse(object):
-	def __init__(self, device, us_duration, square=False):
+	def __init__(self, settings, us_duration, square=False):
 		self.us_duration = us_duration
-		self.device = device
+		self.settings = settings
 		self.square = square
 		self.__t_axis = None
 		self.__rendered = None
@@ -15,7 +15,7 @@ class Pulse(object):
 		self.__t_axis = np.linspace(
 			0,
 			1e-6 * self.us_duration,
-			1e-6 * self.us_duration * self.device.rate
+			1e-6 * self.us_duration * self.settings.output.rate
 		)
 		return self.__t_axis
 
@@ -26,11 +26,13 @@ class Pulse(object):
 		if self.square:
 			r[r > 0] = 1
 			r[r < 0] = -1
-		if self.device.channels == 1:
+		if self.settings.output.channels == 1:
 			self.__rendered = r
 		else: 
-			self.__rendered = np.transpose(np.array(
-				[r for _ in xrange(self.device.channels)]
+			self.__rendered = (
+				32767 if self.settings.np_format == np.int16 else 1 
+			) * np.transpose(np.array(
+				[r for _ in xrange(self.settings.output.channels)]
 			))
 		return self.__rendered
 
