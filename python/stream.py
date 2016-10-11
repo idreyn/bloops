@@ -1,20 +1,18 @@
 import sounddevice as sd
 import numpy as np
 
-def create_stream(settings, device, output, callback, **kwargs):
+def create_stream(settings, output, callback, **kwargs):
 	Stream = sd.OutputStream if output else sd.InputStream
+	device = settings.output if output else settings.input
 	return Stream(
-		samplerate=settings.rate,
+		samplerate=device.rate,
 		blocksize=settings.chunk,
 		device=device.index,
-		channels=settings.channels,
+		channels=device.channels,
 		dtype=settings.np_format,
 		callback=callback,
 		**kwargs
 	)
-
-def transposed(sample):
-	return np.transpose(sample)
 
 class SampleBuffer(object):
 	def __init__(self):

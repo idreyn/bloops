@@ -2,9 +2,9 @@ import numpy as np
 from scipy.signal import chirp
 
 class Pulse(object):
-	def __init__(self, settings, us_duration, square=False):
+	def __init__(self, device, us_duration, square=False):
 		self.us_duration = us_duration
-		self.settings = settings
+		self.device = device
 		self.square = square
 		self.__t_axis = None
 		self.__rendered = None
@@ -15,7 +15,7 @@ class Pulse(object):
 		self.__t_axis = np.linspace(
 			0,
 			1e-6 * self.us_duration,
-			1e-6 * self.us_duration * self.settings.rate
+			1e-6 * self.us_duration * self.device.rate
 		)
 		return self.__t_axis
 
@@ -26,11 +26,11 @@ class Pulse(object):
 		if self.square:
 			r[r > 0] = 1
 			r[r < 0] = -1
-		if self.settings.channels == 1:
+		if self.device.channels == 1:
 			self.__rendered = r
 		else: 
 			self.__rendered = np.transpose(np.array(
-				[r for _ in xrange(self.settings.channels)]
+				[r for _ in xrange(self.device.channels)]
 			))
 		return self.__rendered
 
@@ -38,24 +38,24 @@ class Pulse(object):
 		raise Exception("Pulse should not be instantiated directly")
 
 class Silence(Pulse):
-	def __init__(self, settings, us_duration):
-		super(Silence, self).__init__(settings, us_duration)
+	def __init__(self, device, us_duration):
+		super(Silence, self).__init__(device, us_duration)
 
 	def _render(self):
 		return np.zeros(len(self.t_axis()))
 
 class Tone(Pulse):
-	def __init__(self, settings, frequency, us_duration, square=False):
-		super(Tone,self).__init__(settings, us_duration, square)
+	def __init__(self, device, frequency, us_duration, square=False):
+		super(Tone,self).__init__(device, us_duration, square)
 		self.frequency = frequency
 
 	def _render(self):
 		return np.cos(2 * np.pi * self.frequency * self.t_axis())
 
 class Chirp(Pulse):
-	def __init__(self, settings, f0, f1, us_duration,
+	def __init__(self, device, f0, f1, us_duration,
 			method='linear', square=False):
-		super(Chirp,self).__init__(settings, us_duration, square)
+		super(Chirp,self).__init__(device, us_duration, square)
 		self.f0 = f0
 		self.f1 = f1
 		self.method = method
@@ -72,8 +72,8 @@ class Chirp(Pulse):
 		)
 
 class Click(Pulse):
-	def __init__(self, settings, us_duration, f_low, f_high):
-		super(Click,self).__init__(settings, us_duration)
+	def __init__(self, device, us_duration, f_low, f_high):
+		super(Click,self).__init__(device, us_duration)
 		self.f_low = f_low
 		self.f_high = f_high
 

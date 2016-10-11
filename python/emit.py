@@ -1,15 +1,14 @@
-from stream import create_stream, transposed, SampleBuffer
+from stream import create_stream, SampleBuffer
 
 def playback(stream, queue):
 	while True:
 		stream.write(queue.get())
 
 class Emitter(object):
-	def __init__(self, settings, device):
+	def __init__(self, settings):
 		self.buffer = SampleBuffer()
 		self.stream = create_stream(
 			settings=settings,
-			device=device,
 			output=True,
 			callback=lambda *args: self.playback(*args)
 		)

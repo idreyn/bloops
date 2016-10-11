@@ -10,7 +10,16 @@ handle_close()
 output_device = choose_output()
 input_device = choose_input()
 
-settings = Settings(device=input_device)
+settings = Settings(
+	input_device=choose_input(), 
+	output_device=choose_output()
+)
+
+print settings.input.name, settings.input.rate, settings.input.channels
+print settings.output.name, settings.output.rate, settings.output.channels
+
+if settings.must_resample():
+	raise Exception("Resampling not implemented yet")
 
 e = Emitter(settings, output_device)
 r = Recorder(settings, input_device)

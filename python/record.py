@@ -1,11 +1,10 @@
-from stream import create_stream, transposed, SampleBuffer
+from stream import create_stream, SampleBuffer
 
 class Recorder(object):
-	def __init__(self, settings, device):
+	def __init__(self, settings):
 		self.buffer = SampleBuffer()
 		self.stream = create_stream(
 			settings=settings,
-			device=device,
 			output=False,
 			callback=lambda *args: self.record(*args)
 		)

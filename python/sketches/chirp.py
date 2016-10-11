@@ -8,16 +8,16 @@ from util import handle_close
 
 handle_close()
 
-output_device = choose_output()
-settings = Settings(device=output_device)
+output = choose_output()
+print output.name
 
-e = Emitter(settings, output_device)
+settings = Settings(output_device=output)
+e = Emitter(settings)
 
-tone = Chirp(settings, 10000, 1000, 1e4)
-tone2 = Chirp(settings, 1000, 10000, 1e4)
+tone = Chirp(settings.output, 10000, 1000, 1e5)
+tone2 = Chirp(settings.output, 1000, 10000, 1e4)
 
-while True:
-	e.start()
-	e.emit(tone.render())
-	e.emit(tone2.render())
-	time.sleep(1)
+e.start()
+e.emit(tone.render())
+e.emit(tone2.render())
+time.sleep(1)
