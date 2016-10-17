@@ -5,6 +5,9 @@ NP_FORMAT = np.int16
 CHANNELS = 2
 CHUNK = 0
 
+MIN_OUTPUT_RATE = None
+MIN_INPUT_RATE = None
+
 DEFAULT_SAMPLE_RATE = 'default_samplerate'
 MAX_INPUT_CHANNELS = 'max_input_channels'
 MAX_OUTPUT_CHANNELS = 'max_output_channels'
@@ -33,11 +36,12 @@ class Device(object):
 		self.rate = int(info.get(DEFAULT_SAMPLE_RATE))
 
 def choose_device(is_input):
-	max_dsr = 0
+	max_dsr = (MIN_INPUT_RATE or 0) if is_input else (MIN_OUTPUT_RATE or 0)
 	best_index= -1
 	best = None
 	channel_string = get_channel_string(is_input)
-	for i, info in enumerate(sd.query_devices()):
+        for i, info in enumerate(sd.query_devices()):
+                # print info
 		if int(info.get(channel_string)) == CHANNELS:
 			if info.get(DEFAULT_SAMPLE_RATE) > max_dsr:
 				max_dsr = info.get(DEFAULT_SAMPLE_RATE)

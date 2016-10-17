@@ -1,3 +1,5 @@
+import time
+
 import sketch
 
 from config import *
@@ -25,4 +27,6 @@ r.start()
 e.start()
 
 while True:
-	e.emit(r.sample())
+	s = r.sample()
+	print s.shape
+	e.emit(s)

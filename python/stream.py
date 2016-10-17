@@ -15,8 +15,12 @@ def create_stream(settings, output, callback, **kwargs):
 	)
 
 class SampleBuffer(object):
-	def __init__(self):
+	def __init__(self, channels):
 		self.queue = []
+                self.channels = channels
+
+        def size(self):
+            return sum([len(s) for s in self.queue])
 
 	def put(self, sample):
 		self.queue.append(np.copy(sample))
@@ -27,9 +31,11 @@ class SampleBuffer(object):
 	def get_chunk(self):
 		return self.queue.pop(0)
 
-	def get_samples(self, length, channels):
+        def get_samples(self, length=None):
 		pointer = 0
-		buff = np.zeros((length, channels))
+                if length is None:
+                    length = self.size()
+		buff = np.zeros((length, self.channels))
 		while pointer < length:
 			if not len(self.queue):
 				break
@@ -41,4 +47,4 @@ class SampleBuffer(object):
 				pointer = pointer + take
 				if not len(self.queue[0]):
 					self.queue.pop(0)
-		return buff
+                return buff

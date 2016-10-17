@@ -4,20 +4,51 @@ import sketch
 from config import *
 from emit import *
 from pulse import *
-from util import handle_close
+from record import *
+
+from process import bandpass
+from util import handle_close, resample
+
+import numpy as np
 
 handle_close()
 
 output = choose_output()
+input = choose_input()
 
-settings = Settings(output_device=output)
+print output.name
+print input.name
+
+settings = Settings(
+    output_device=output,
+    input_device=input
+)
+
 e = Emitter(settings)
+r = Recorder(settings)
 
-tone = Chirp(settings, 10000, 1000, 1e5)
-tone2 = Chirp(settings, 1000, 10000, 1e5)
+LOW = 10000
+HIGH = 80000
+
+tone = Chirp(settings, HIGH, LOW, 1e4)
+tone2 = Chirp(settings, LOW, HIGH, 1e4)
+
+click1 = Click(settings, 1e3)
+click2 = Tone(settings, LOW, 5e2)
 
 while True:
 	e.start()
-	e.emit(tone.render())
-	e.emit(tone2.render())
-	time.sleep(1)
+        r.start()
+        time.sleep(0.05)
+    	e.emit(tone.render())
+        time.sleep(0.12)
+        r.stop()
+        sample = 10 * bandpass(
+            r.buffer.get_samples(),
+            50000,
+            HIGH,
+            settings.input.rate
+        )
+        sample = np.repeat(sample, 10, axis=0)
+        e.emit(sample)
+        time.sleep(2)

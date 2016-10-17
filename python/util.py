@@ -4,6 +4,8 @@ import signal, sys
 
 from scipy.signal import resample
 
+# Audio processing must-haves
+
 def round_to_nearest(x, base):
 	return base * round(x/ base)
 
@@ -25,6 +27,13 @@ def resample(sample, from_rate, to_rate):
 		len(sample) * (to_rate / from_rate)
 	)
 
+def to_db(val):
+	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
+
+def from_db(val):
+	return np.power(10,(1.0 / 20) * val)
+
+# Python kludges
 
 def handle_close():
 	def signal_handler(signal, frame):

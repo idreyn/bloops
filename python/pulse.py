@@ -74,13 +74,13 @@ class Chirp(Pulse):
 		)
 
 class Click(Pulse):
-	def __init__(self, device, us_duration, f_low, f_high):
+	def __init__(self, device, us_duration, f_low=30000, f_high=60000):
 		super(Click,self).__init__(device, us_duration)
 		self.f_low = f_low
 		self.f_high = f_high
 
 	def _render(self):
 		res = np.empty(len(self.t_axis()))
-		for f in xrange(self.f_low,self.f_high,100):
+		for f in xrange(self.f_low,self.f_high,5000):
 			res = res + np.cos(2 * np.pi * f * self.t_axis())
 		return res

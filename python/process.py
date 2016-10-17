@@ -86,26 +86,20 @@ class EnvironmentSample(object):
 		# Correct for microphone clock phase
 		pass
 
-def to_db(val):
-	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
-
-def from_db(val):
-	return np.power(10,(1.0 / 20) * val)
-
 def trim(arr,start,end=1):
 	start_ind = int(round(start * len(arr)))
 	end_ind = int(round(end * len(arr)))
 	return arr[start_ind:end_ind]
 
-def bandpass_coefficients(lowcut, highcut, fs, order=3):
+def bandpass_coefficients(lowcut, highcut, fs, order=5):
 	nyq = 0.5 * fs
 	low = lowcut / nyq
 	high = highcut / nyq
 	b,a = butter(order, [low,high], btype='band')
 	return b,a
 
-def bandpass(data,low,high):
-	bpf = bandpass_coefficients(low,high,RATE)
+def bandpass(data,low,high,rate):
+	bpf = bandpass_coefficients(low,high,rate)
 	return lfilter(bpf[0],bpf[1],data)
 
 def moving_average(sample,size):
@@ -146,6 +140,7 @@ def sigmoid(x,k=5):
 		return 0.0
 	else:
 		return 1.0
+
 sigmoid = np.frompyfunc(sigmoid,1,1)
 
 def sigmoid_pulse_envelope(domain,start_index,k=0.2):

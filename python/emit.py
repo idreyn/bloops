@@ -6,7 +6,7 @@ def playback(stream, queue):
 
 class Emitter(object):
 	def __init__(self, settings):
-		self.buffer = SampleBuffer()
+		self.buffer = SampleBuffer(channels=settings.output.channels)
 		self.stream = create_stream(
 			settings=settings,
 			output=True,
@@ -15,7 +15,7 @@ class Emitter(object):
 		print self.stream.samplerate
 
 	def playback(self, output, *rest):
-		output[:] = self.buffer.get_samples(*output.shape)
+		output[:] = self.buffer.get_samples(len(output))
 
 	def emit(self, arr):
 		self.buffer.put(arr)
