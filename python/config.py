@@ -40,8 +40,8 @@ def choose_device(is_input):
 	best_index= -1
 	best = None
 	channel_string = get_channel_string(is_input)
-        for i, info in enumerate(sd.query_devices()):
-                # print info
+	for i, info in enumerate(sd.query_devices()):
+		print info
 		if int(info.get(channel_string)) == CHANNELS:
 			if info.get(DEFAULT_SAMPLE_RATE) > max_dsr:
 				max_dsr = info.get(DEFAULT_SAMPLE_RATE)

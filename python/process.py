@@ -91,11 +91,11 @@ def trim(arr,start,end=1):
 	end_ind = int(round(end * len(arr)))
 	return arr[start_ind:end_ind]
 
-def bandpass_coefficients(lowcut, highcut, fs, order=5):
+def bandpass_coefficients(lowcut, highcut, fs, order=1):
 	nyq = 0.5 * fs
 	low = lowcut / nyq
 	high = highcut / nyq
-	b,a = butter(order, [low,high], btype='band')
+	b,a = butter(order, [low,high], btype='bandpass')
 	return b,a
 
 def bandpass(data,low,high,rate):

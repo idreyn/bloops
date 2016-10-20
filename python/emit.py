@@ -12,7 +12,6 @@ class Emitter(object):
 			output=True,
 			callback=lambda *args: self.playback(*args)
 		)
-		print self.stream.samplerate
 
 	def playback(self, output, *rest):
 		output[:] = self.buffer.get_samples(len(output))
