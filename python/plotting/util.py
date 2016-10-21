@@ -16,7 +16,7 @@ def plot_stereo(time,left,right):
 	axes[0].set_title('Left')
 	axes[1].plot(time,right)
 	axes[1].set_title('Right')
-	return axes
+	plt.show()
 
 def plot_here(x,y):
 	plt.plot(x,y)

@@ -24,102 +24,88 @@ class ChannelSample(object):
 	):
 		self.sample = sample
 		self.us_recording_start = us_recording_start
+		self.signal = signal
+		self.peak = None
+		self.silence = None
 
 class EnvironmentSample(object):
 	def __init__(
-		self,
-		channels,
-		us_pulse_start,
-		us_pulse_duration=None,
-		us_expected_distance=np.inf):
-		self.len = len(channels[0].sample)
-		self.domain = np.arange(self.len)
-		self.channels = channels
+			self,
+			sample,
+			rate,
+			us_pulse_start,
+			us_pulse_duration=None,
+			us_expected_distance=np.inf):
+		self.channels = [ChannelSample(sample[:,0]), ChannelSample(sample[:,1])]
+		self.rate = rate
 		self.us_pulse_duration = us_pulse_duration
 		self.us_pulse_start = us_pulse_start
 		self.us_expected_distance = us_expected_distance
 
-	def index_to_us(self,ind):
-		return 1e6 * ind * 1.0 / RATE
-
-	def us_to_index(self,us_time):
-		return int(RATE * us_time * 1.0 / 1e6)
-		# ind = 192k * time[s] = RATE
+	def us_to_index(self, us_time):
+		return int(self.rate * us_time * 1.0 / 1e6)
 
 	def process(self):
+		# Sorry, guy
 		assert len(self.channels) == 2
+	 	self.split_silence()
+	 	self.align_samples()
+	 	self.bandpass()
+	 	return self.merge()
+
+	def split_silence(self):
 		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
 	 	if pre_silence_boundary > len(self.channels[0].sample):
-	 		return False
-		esi = np.inf
+	 		raise Exception()
+	 	# Remove DC component
 		for c in self.channels:
 			c.silence = c.sample[0:pre_silence_boundary]
-			c.signal = detrend(c.sample[pre_silence_boundary:],type='constant')
-		'''
-		assert esi < np.inf
-		envelope = sigmoid_pulse_envelope(
-			self.domain[pre_silence_boundary:] - pre_silence_boundary,
-			esi,
-			0.5
-		)
-		'''
+			c.signal = detrend(c.sample[pre_silence_boundary:], type='constant')
+		return self.channels
+
+	def bandpass(self):
 		for c in self.channels:
-			c.signal = bandpass(c.signal,20000,80000)
-			'''
+			c.signal = bandpass(c.signal, 20000, 80000, self.rate)
+		return self.channels
+
+	def noisereduce(self):
+		for c in self.channels:
 			c.signal = noise_reduce(
 				c.signal.astype(np.float64),
 				c.silence.astype(np.float64),
 				NoiseReduceSettings()
 			)
-			'''
-			# plt.plot(c.signal)
-		# plt.show()
-		return self.channels[0].signal, self.channels[1].signal
-
-	def merge(self):
-		res = np.empty((len(self.channels),len(self.channels[0].signal)))
-		for i, c in enumerate(self.channels):
-			res[i] = c.signal
-		return res
+		return self.channels
 
 	def align_samples(self):
-		# Correct for microphone clock phase
-		pass
+		MIN_DIST = 500
+		THRESHOLD = 0.2
 
-def trim(arr,start,end=1):
-	start_ind = int(round(start * len(arr)))
-	end_ind = int(round(end * len(arr)))
-	return arr[start_ind:end_ind]
+		for c in self.channels:
+			indices = peakutils.indexes(
+				c.signal,
+				min_dist=MIN_DIST,
+				thres=THRESHOLD
+			)
+			c.peak = max(indices)
+		[first, last] = sorted(
+			self.channels,
+			key=lambda c: c.peak
+		)
+		cutoff = last.peak - first.peak
+		first.signal = first.signal[:-cutoff]
+		last.signal = last.signal[cutoff:]
+		return self.channels
 
-def bandpass_coefficients(lowcut, highcut, fs, order=1):
-	nyq = 0.5 * fs
-	low = lowcut / nyq
-	high = highcut / nyq
-	b,a = butter(order, [low,high], btype='bandpass')
-	return b,a
-
-def bandpass(data,low,high,rate):
-	bpf = bandpass_coefficients(low,high,rate)
-	return lfilter(bpf[0],bpf[1],data)
-
-def moving_average(sample,size):
-	assert size % 2 == 1
-	hw = size / 2
-	l = len(sample)
-	res = np.empty(l)
-	total = np.sum(sample[0:hw])
-	for center in xrange(l):
-		off = center - hw - 1
-		on = center + hw + 1
-		i0 = max(center - hw,0)
-		i1 = min(center + hw + 1,l)
-		c = float(size) / (i1 - i0)
-		if off >= 0:
-			total = total - sample[off]
-		if on < l:
-			total = total + sample[on]
-		res[center] = total * c
-	return res
+	def merge(self):
+		res = np.empty((
+			len(self.channels[0].signal),
+			len(self.channels)
+		), dtype=np.int16)
+		print res.dtype
+		for i, c in enumerate(self.channels):
+			res[:,i] = c.signal
+		return res
 
 def echo_start_index(sample):
 	MIN_DIST = 500
@@ -130,18 +116,5 @@ def echo_start_index(sample):
 		thres=THRESHOLD
 	)
 	[p0,p1] = indices[0:2]
-	constrained = moving_average(np.abs(sample[p0:p1]),101)
+	constrained = moving_average(np.abs(sample[p0:p1]), 101)
 	return np.where(constrained == min(constrained))[0][0]
-
-def sigmoid(x,k=5):
-	if -k < x < k:
-		return expit(x)
-	elif x < 0:
-		return 0.0
-	else:
-		return 1.0
-
-sigmoid = np.frompyfunc(sigmoid,1,1)
-
-def sigmoid_pulse_envelope(domain,start_index,k=0.2):
-	return np.array(k + (1 - k) * sigmoid(domain - start_index))
