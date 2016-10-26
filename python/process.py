@@ -50,12 +50,13 @@ class EnvironmentSample(object):
 		assert len(self.channels) == 2
 	 	self.split_silence()
 	 	self.align_samples()
-	 	self.bandpass()
+	        self.bandpass()
 	 	return self.merge()
 
 	def split_silence(self):
 		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
 	 	if pre_silence_boundary > len(self.channels[0].sample):
+	 		print pre_silence_boundary, len(self.channels[0].sample)
 	 		raise Exception()
 	 	# Remove DC component
 		for c in self.channels:
@@ -65,7 +66,7 @@ class EnvironmentSample(object):
 
 	def bandpass(self):
 		for c in self.channels:
-			c.signal = bandpass(c.signal, 20000, 80000, self.rate)
+			c.signal = bandpass(c.signal, 30000, 80000, self.rate)
 		return self.channels
 
 	def noisereduce(self):
@@ -101,8 +102,7 @@ class EnvironmentSample(object):
 		res = np.empty((
 			len(self.channels[0].signal),
 			len(self.channels)
-		), dtype=np.int16)
-		print res.dtype
+		), dtype=np.int16)	
 		for i, c in enumerate(self.channels):
 			res[:,i] = c.signal
 		return res
