@@ -27,8 +27,11 @@ class Stream(object):
             self.pcm.pause(False)
 
     def __exit__(self, *rest):
-        self._paused = True
-        self.pcm.pause(True)
+        try:
+            self.pcm.pause(True)
+            self._paused = True
+        except:
+            pass
 
     def read(self):
         length, data = self.pcm.read()
@@ -38,18 +41,13 @@ class Stream(object):
         self.pcm.write(bytes)
 
     def write_array(self, array):
-        period = self.device.period
         periods = array_to_periods(
-            pad(
-                array,
-                period,
-                0
-            ),
+            array,
             self.device
         )
         with self as stream:
             for p in periods:
-                stream.write(p)
+                self.write(p)
 
     def read_array(self, seconds):
         period_count = (self.device.rate // self.device.period_size) * seconds

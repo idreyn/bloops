@@ -6,11 +6,14 @@ from scikits.audiolab import play
 
 from config import *
 from stream import *
+from data import *
 
 print aa.pcms()
 
-d = Device('ultramics', 192000)
-s = Stream(d, True)
+input = Stream(Device('ultramics', 192000), True)
+output = Stream(Device('dac', 192000), False)
 while True:
-	data = (1 / 32768) * np.transpose(s.read_array(0.1))
-	play(data, 20000)
+	data = input.read_array(2)
+	output.write_array(data)
+	
+

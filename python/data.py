@@ -6,9 +6,15 @@ def chunks(l, n):
 		res.append(l[i:i+n])
 	return res
 
+def pad(array, length, pad):
+	if len(array) == length:
+		return array
+	extra = [pad] * (length - len(array))
+	return array + extra
+
 def array_to_periods(array, device):
     return chunks(
-        np.transpose(arr)
+        array
         .flatten()
         .astype(device.np_format)
         .tostring(),
