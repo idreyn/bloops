@@ -1,11 +1,28 @@
 import numpy as np
+import alsaaudio as aa
+import time
 
 class Stream(object):
-    def __init__(self, settings, is_input):
-        self.settings = settings
+    def __init__(self, device, is_input):
+        self.device = device
         self.is_input = is_input
         self.pcm = aa.PCM(
-            
+            type=aa.PCM_CAPTURE, #if is_input else aa.PCM_PLAYBACK,
+            mode=aa.PCM_NORMAL,
+            device=self.device.name
+        )
+        self.pcm.setrate(200000)
+        self.pcm.setchannels(2)
+        self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
+        self.pcm.setperiodsize(1) 
+        while True:
+          print self.read()
+
+    def read(self):
+      return np.fromstring(
+          self.pcm.read(),
+          dtype=self.settings.format
+      )
 
 class SampleBuffer(object):
 	def __init__(self, channels):
@@ -40,4 +57,4 @@ class SampleBuffer(object):
                     pointer = pointer + take
                     if not len(self.queue[0]):
                             self.queue.pop(0)
-                            return buff;:
+                            return buff

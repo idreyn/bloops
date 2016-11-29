@@ -1,8 +1,9 @@
-import numpy as np
+import alsaaudio as aa
 
-NP_FORMAT = np.int16
 CHANNELS = 2
-CHUNK = 0
+FORMAT = aa.PCM_FORMAT_S16_LE
+PERIOD = 50000
+RATE = 200000
 
 MIN_OUTPUT_RATE = None
 MIN_INPUT_RATE = None
@@ -15,23 +16,20 @@ def get_channel_string(is_input):
 	return MAX_INPUT_CHANNELS if is_input else MAX_OUTPUT_CHANNELS
 
 class Settings(object):
-	def __init__(self, input_device=None, output_device=None, 
-			np_format=NP_FORMAT, chunk=CHUNK):
-		self.input = input_device
-		self.output = output_device
-		self.np_format = np_format
-		self.chunk = chunk
+    def __init__(self, input_device=None, output_device=None):
+        self.input = input_device
+	self.output = output_device
 
-	def must_resample(self):
-		return self.input.rate != self.output.rate
+    def must_resample(self):
+	return self.input.rate != self.output.rate
 
 class Device(object):
-	def __init__(self, name, is_input, channels, rate):
-		self.index = index
-		self.is_input = is_input
-		self.name = name
-		self.channels = channels
-		self.rate = rate
+    def __init__(self, name, rate=RATE, channels=CHANNELS, format=FORMAT, period=PERIOD):
+        self.name = name
+        self.channels = channels
+        self.rate = rate
+        self.format = format
+        self.period = period
 
 """
 def choose_device(is_input):
