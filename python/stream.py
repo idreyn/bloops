@@ -17,7 +17,7 @@ class Stream(object):
         self.pcm.setperiodsize(device.periodsize)
         while True:
             r = self.read()
-            if len(r) < 500:
+            if len(r) < 1000:
                 print len(r)
 
     def read(self):
