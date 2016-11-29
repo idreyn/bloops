@@ -57,5 +57,4 @@ class Stream(object):
         with self as stream:
             while len(samples) < period_count:
                 samples.append(self.read())
-        print len(samples), len(samples[0])
         return periods_to_array(samples, self.device)

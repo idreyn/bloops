@@ -21,9 +21,7 @@ def periods_to_array(frames, device):
 		''.join(frames),
 		dtype=device.np_format
 	)
-	return np.transpose(
-		np.reshape(
-			array,
-			(len(array) / channels, channels)
-		)
+	return np.reshape(
+		array,
+		(len(array) / channels, channels)
 	)
