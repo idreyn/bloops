@@ -20,12 +20,15 @@ class Stream(object):
         self.pcm.setchannels(device.channels)
         self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
         self.pcm.setperiodsize(device.period_size)
+        self._paused = False
 
     def __enter__(self, *rest):
-        pass
+        if self._paused:
+            self.pcm.pause(False)
 
     def __exit__(self, *rest):
-        pass
+        self._paused = True
+        self.pcm.pause(True)
 
     def read(self):
         length, data = self.pcm.read()
