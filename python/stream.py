@@ -9,20 +9,20 @@ class Stream(object):
         self.pcm = aa.PCM(
             type=aa.PCM_CAPTURE, #if is_input else aa.PCM_PLAYBACK,
             mode=aa.PCM_NORMAL,
-            device=self.device.name
+            cardindex=1 #device=self.device.name
         )
-        self.pcm.setrate(200000)
-        self.pcm.setchannels(2)
+        self.pcm.setrate(device.rate)
+        self.pcm.setchannels(device.channels)
         self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
-        self.pcm.setperiodsize(1) 
+        self.pcm.setperiodsize(device.periodsize)
         while True:
-          print self.read()
+            r = self.read()
+            if len(r) < 500:
+                print len(r)
 
     def read(self):
-      return np.fromstring(
-          self.pcm.read(),
-          dtype=self.settings.format
-      )
+      length, data = self.pcm.read()
+      return np.fromstring(data, dtype=np.int16)
 
 class SampleBuffer(object):
 	def __init__(self, channels):

@@ -2,8 +2,8 @@ import alsaaudio as aa
 
 CHANNELS = 2
 FORMAT = aa.PCM_FORMAT_S16_LE
-PERIOD = 50000
-RATE = 200000
+PERIODSIZE = 500
+RATE = 120000
 
 MIN_OUTPUT_RATE = None
 MIN_INPUT_RATE = None
@@ -24,12 +24,12 @@ class Settings(object):
 	return self.input.rate != self.output.rate
 
 class Device(object):
-    def __init__(self, name, rate=RATE, channels=CHANNELS, format=FORMAT, period=PERIOD):
+    def __init__(self, name, rate=RATE, channels=CHANNELS, format=FORMAT, periodsize=PERIODSIZE):
         self.name = name
         self.channels = channels
         self.rate = rate
         self.format = format
-        self.period = period
+        self.periodsize = periodsize
 
 """
 def choose_device(is_input):
