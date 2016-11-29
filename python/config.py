@@ -1,4 +1,3 @@
-import sounddevice as sd
 import numpy as np
 
 NP_FORMAT = np.int16
@@ -27,14 +26,14 @@ class Settings(object):
 		return self.input.rate != self.output.rate
 
 class Device(object):
-	def __init__(self, index, info, is_input=True):
+	def __init__(self, name, is_input, channels, rate):
 		self.index = index
-		self.info = info
 		self.is_input = is_input
-		self.name = info.get("name")
-		self.channels = int(info.get(get_channel_string(is_input)))
-		self.rate = int(info.get(DEFAULT_SAMPLE_RATE))
+		self.name = name
+		self.channels = channels
+		self.rate = rate
 
+"""
 def choose_device(is_input):
 	max_dsr = (MIN_INPUT_RATE or 0) if is_input else (MIN_OUTPUT_RATE or 0)
 	best_index= -1
@@ -56,3 +55,4 @@ def choose_input():
 
 def choose_output():
 	return choose_device(False)
+"""

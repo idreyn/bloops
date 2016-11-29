@@ -1,18 +1,11 @@
-import sounddevice as sd
 import numpy as np
 
-def create_stream(settings, output, callback, **kwargs):
-	Stream = sd.OutputStream if output else sd.InputStream
-	device = settings.output if output else settings.input
-	return Stream(
-		samplerate=device.rate,
-		blocksize=settings.chunk,
-		device=device.index,
-		channels=device.channels,
-		dtype=settings.np_format,
-		callback=callback,
-		**kwargs
-	)
+class Stream(object):
+    def __init__(self, settings, is_input):
+        self.settings = settings
+        self.is_input = is_input
+        self.pcm = aa.PCM(
+            
 
 class SampleBuffer(object):
 	def __init__(self, channels):
@@ -32,19 +25,19 @@ class SampleBuffer(object):
 		return self.queue.pop(0)
 
         def get_samples(self, length=None):
-		pointer = 0
-                if length is None:
-                    length = self.size()
-		buff = np.zeros((length, self.channels))
-		while pointer < length:
-			if not len(self.queue):
-				break
-			else:
-				sample = self.queue[0]
-				take = min(length - pointer, len(sample))
-				buff[pointer : pointer + take, :] = sample[0:take, :]
-				self.queue[0] = sample[take:, :]
-				pointer = pointer + take
-				if not len(self.queue[0]):
-					self.queue.pop(0)
-                return buff
+            pointer = 0
+            if length is None:
+                length = self.size()
+            buff = np.zeros((length, self.channels))
+            while pointer < length:
+                if not len(self.queue):
+                        break
+                else:
+                    sample = self.queue[0]
+                    take = min(length - pointer, len(sample))
+                    buff[pointer : pointer + take, :] = sample[0:take, :]
+                    self.queue[0] = sample[take:, :]
+                    pointer = pointer + take
+                    if not len(self.queue[0]):
+                            self.queue.pop(0)
+                            return buff;:
