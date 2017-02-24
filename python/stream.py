@@ -14,7 +14,7 @@ class Stream(object):
         self.pcm = aa.PCM(
             type=aa.PCM_CAPTURE if is_input else aa.PCM_PLAYBACK,
             mode=aa.PCM_NORMAL,
-            device=self.device.name
+            device=self.device.name,
         )
         self.pcm.setrate(device.rate)
         self.pcm.setchannels(device.channels)
