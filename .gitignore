@@ -1,4 +1,7 @@
 *.pyc
+*.swm
+*.swn
+*.swo
 *.so
 *.c
 *.html

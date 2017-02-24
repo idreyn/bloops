@@ -10,9 +10,6 @@ from cpython cimport bool
 from numpy.fft import *
 from scipy.signal import *
 
-from config import *
-from process import *
-
 from math import cos
 
 cdef inline int int_max(int a, int b): return a if a >= b else b
@@ -37,8 +34,7 @@ def hann_window(int size):
 	cdef np.ndarray[double, ndim=1] res = np.empty(size)
 	cdef int i
 	for i in xrange(size):
-		res[i] = c0 + c1 * cos(2.0 * np.pi * i / size) + 
-			c2 * cos(4.0 * np.pi * i / size)
+		res[i] = c0 + c1 * cos(2.0 * np.pi * i / size) + c2 * cos(4.0 * np.pi * i / size)
 	return res
 
 def windowed(np.ndarray[double, ndim=1] sample, int window_size,
@@ -50,8 +46,7 @@ def windowed(np.ndarray[double, ndim=1] sample, int window_size,
 	cdef int i, start
 	cdef np.ndarray[double, ndim=1] sub
 	for i, start in enumerate(
-		xrange(0,len(sample),int(window_size * (1 - overlap))))
-	:
+		xrange(0,len(sample),int(window_size * (1 - overlap)))):
 		sub = sample[start : start + window_size]
 		if len(sub) < window_size: 
 			sub = pad_to_size(sub,window_size)
@@ -61,36 +56,11 @@ def windowed(np.ndarray[double, ndim=1] sample, int window_size,
 def count_windows(int sample_length,int window_size,double overlap):
 	return len(xrange(0,sample_length,int(window_size * (1 - overlap))))
 
-class NoiseReduceSettings(object):
-	def __init__(
-		self,
-		noise_gain=-30.0,
-		sensitivity=10.0,
-		window_size=512,
-		window_step=64,
-		spectrum_median_window=1,
-		freq_smoothing_bins=0,
-		attack_time=0.02,
-		attack_lookback_steps=5,
-		release_time=0.1,
-		double_window=False
-	):
-		self.noise_gain = noise_gain
-		self.sensitivity = sensitivity
-		self.window_size = window_size
-		self.window_step = window_step
-		self.spectrum_median_window = spectrum_median_window
-		self.freq_smoothing_bins = freq_smoothing_bins
-		self.attack_time = attack_time
-		self.attack_lookback_steps = attack_lookback_steps
-		self.release_time = release_time
-		self.double_window = double_window
-
-
 def noise_reduce(sample,noise,settings):
 	# Check minimum noise length
 	assert len(noise) > settings.window_size
 	# Input constants
+	cdef int RATE = settings.rate # Sample rate
 	cdef double NOISE_GAIN = settings.noise_gain # Gain (negative) for noise
 	cdef double SENSITIVITY = settings.sensitivity # How much louder must a band be than avg. noise to pass?
 	cdef int WINDOW_SIZE = settings.window_size # Window size (2 ** n)
@@ -104,8 +74,8 @@ def noise_reduce(sample,noise,settings):
 	# Derived constants
 	cdef double OVERLAP = float(WINDOW_SIZE - WINDOW_STEP) / WINDOW_SIZE # What fraction of window (i) overlaps with window (i+1)?
 	cdef int WINDOW_COUNT = count_windows(len(sample),WINDOW_SIZE,OVERLAP) # How many windows are there in total?
-	cdef int N_ATTACK_BLOCKS = 1 + ATTACK_TIME * RATE / WINDOW_STEP # Attack blocks
-	cdef int N_RELEASE_BLOCKS = 1 + RELEASE_TIME * RATE / WINDOW_STEP # Release blocks
+	cdef int N_ATTACK_BLOCKS = int(1 + ATTACK_TIME * RATE / WINDOW_STEP) # Attack blocks
+	cdef int N_RELEASE_BLOCKS = int(1 + RELEASE_TIME * RATE / WINDOW_STEP) # Release blocks
 	cdef double ATTACK_CONST = from_db(NOISE_GAIN / N_ATTACK_BLOCKS) # Attack decay constant
 	cdef double RELEASE_CONST = from_db(NOISE_GAIN / N_RELEASE_BLOCKS) # Release decay constant
 	cdef double NOISE_ATTEN_FACTOR = from_db(NOISE_GAIN) # Minimum attenuation factor
