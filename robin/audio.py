@@ -5,6 +5,7 @@ import sounddevice as sd
 from stream import *
 from record import *
 from config import *
+from util import *
 
 class AudioDevice(object):
     
