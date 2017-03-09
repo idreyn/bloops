@@ -1,11 +1,9 @@
-import time, sys
-
-sys.path.append('..')
-sys.path.append('../noisereduce/')
-
+import time
 import pstats, cProfile
 
 from scikits.audiolab import wavread
+
+import test
 from process import *
 from noisereduce import noise_reduce, NoiseReduceSettings
 

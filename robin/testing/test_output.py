@@ -6,6 +6,8 @@ import threading
 import alsaaudio as aa
 import numpy as np
 
+import test
+
 from config import *
 from stream import *
 from data import *
@@ -15,9 +17,7 @@ from pulse import *
 from util import handle_close
 
 print aa.pcms()
-
 handle_close()
-
 
 dac = Device('dac', 192000)
 output = Stream(dac, False, False)

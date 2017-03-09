@@ -12,7 +12,7 @@ from util import *
 
 SPEED_OF_SOUND = 0.343 / 1000 # meters per us
 
-class Device:
+class Measurements:
 	SPEAKER_MIC_DISTANCE = 1.0 / 6 # about half a foot
 	PICKUP_DELAY = SPEAKER_MIC_DISTANCE / SPEED_OF_SOUND # us
 
@@ -24,7 +24,7 @@ class ChannelSample(object):
 	):
 		self.sample = sample
 		self.us_recording_start = us_recording_start
-		self.signal = signal
+		self.signal = None
 		self.peak = None
 		self.silence = None
 
@@ -54,7 +54,7 @@ class EnvironmentSample(object):
 	 	return self.merge()
 
 	def split_silence(self):
-		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Device.PICKUP_DELAY)
+		pre_silence_boundary = self.us_to_index(self.us_pulse_start + Measurements.PICKUP_DELAY)
 	 	if pre_silence_boundary > len(self.channels[0].sample):
 	 		raise Exception()
 	 	# Remove DC component
@@ -65,7 +65,7 @@ class EnvironmentSample(object):
 
 	def bandpass(self):
 		for c in self.channels:
-			c.signal = bandpass(c.signal, 20000, 80000, self.rate)
+			c.signal = bandpass(c.signal, 50000, 80000, self.rate)
 		return self.channels
 
 	def noisereduce(self):
@@ -79,8 +79,7 @@ class EnvironmentSample(object):
 
 	def align_samples(self):
 		MIN_DIST = 500
-		THRESHOLD = 0.2
-
+		THRESHOLD = 0.3
 		for c in self.channels:
 			indices = peakutils.indexes(
 				c.signal,
@@ -102,9 +101,8 @@ class EnvironmentSample(object):
 			len(self.channels[0].signal),
 			len(self.channels)
 		), dtype=np.int16)
-		print res.dtype
 		for i, c in enumerate(self.channels):
-			res[:,i] = c.signal
+			res[:,i] = c.signal.astype(np.int16)
 		return res
 
 def echo_start_index(sample):
