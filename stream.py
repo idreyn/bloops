@@ -48,6 +48,9 @@ class Stream(object):
             for p in periods:
                 self.write(p)
 
+    def assert_okay(self):
+        self.pcm.cardname()
+
     def read_array(self, seconds):
         period_count = (self.device.rate // self.device.period_size) * seconds
         samples = []

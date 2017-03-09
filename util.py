@@ -54,3 +54,10 @@ def handle_close():
 	def signal_handler(signal, frame):
 		sys.exit(0)
 	signal.signal(signal.SIGINT, signal_handler)
+
+def get_ip_address():
+	import socket
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.connect(('8.8.8.8',80))
+	return s.getsockname()[0]
+
