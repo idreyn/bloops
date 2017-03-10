@@ -2,6 +2,7 @@ from __future__ import division
 from math import floor, ceil
 import signal, sys
 
+import alsaaudio as aa
 import numpy as np
 from scipy.signal import *
 
@@ -47,21 +48,6 @@ def bandpass(data, low, high, rate):
 
 def t_axis(sample, rate):
 	return np.linspace(0, len(sample) / rate, len(sample))
-
-# Format fun
-
-def format_size(format):
-    return {
-        aa.PCM_FORMAT_S16_LE : 2,
-        aa.PCM_FORMAT_S24_LE: 3,
-        aa.PCM_FORMAT_FLOAT_LE: 4
-    }.get(format)
-
-def format_np(format):
-    return {
-        aa.PCM_FORMAT_S16_LE: np.int16,
-        aa.PCM_FORMAT_FLOAT_LE: np.float32
-    }.get(format)
 
 # Python kludges
 

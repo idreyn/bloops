@@ -7,32 +7,6 @@ from record import *
 from config import *
 from util import *
 
-class AudioDevice(object):
-    
-    def __init__(self, name, rate=RATE, channels=CHANNELS, 
-            format=FORMAT, period_size=PERIOD_SIZE):
-        self.name = name
-        self.channels = channels
-        self.rate = rate
-        self.format = format
-        self.period_size = period_size
-        self.width = format_size(format)
-        self.np_format = format_np(format)
-
-    def frame_bytes(self):
-        return self.width * self.channels
-
-    def period_bytes(self):
-        return self.frame_bytes() * self.period_size
-
-    def check_settings(self, as_input=True):
-        (sd.check_input_settings if as_input else sd.check_output_settings)(
-            device=self.name,
-            channels=self.channels,
-            samplerate=self.rate,
-            dtype=self.np_format
-        )
-
 class Audio(object):
 
     def __init__(self, record_device, emit_device, playback_device=None):
@@ -43,22 +17,53 @@ class Audio(object):
         self.emit_stream = None
         self.playback_stream = None
 
-    def setup_streams(self):
-        if self.recorder and self.recorder.assert_okay():
-            return True  
-        else:
+    # Either returns the objects you need to echolocation
+    # or returns False if they're not available
+    def io(self):
+        if not self.recorder:
             try:
                 self.recorder = Recorder(self.record_device)
-                return True
             except Exception as e:
                 return False
+        else:
+            if not self.recorder.assert_okay():
+                self.recorder.close()
+                self.recorder = None
+                return False
+        if not self.emit_stream:
+            try:
+                self.emit_device.check_settings(False)
+                self.emit_stream = Stream(self.emit_device, False, False)
+            except Exception as e:
+                return False
+        else:
+            if not self.emit_stream.assert_okay():
+                self.emit_stream.close()
+                self.emit_stream = None
+                return False
+        if not self.playback_stream:
+            if self.playback_device != self.emit_device:
+                try:
+                    self.playback_device.check_settings(False)
+                    self.playback_stream = Stream(
+                        self.playback_device, False, False)
+                except:
+                    return False
+            else:
+                self.playback_stream = self.emit_stream
+        else:
+            if not self.playback_stream.assert_okay():
+                self.playback_stream.close()
+                self.playback_stream = None
+                return False
+        return (self.recorder, self.emit_stream, self.playback_stream)
 
     def await_available(self):
-        while not self.setup_streams():
+        while not self.io():
             time.sleep(0.00001)
 
     def await_unavailable(self):
-        while self.setup_streams():
+        while self.io():
             time.sleep(0.00001)
 
 
