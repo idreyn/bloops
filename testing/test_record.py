@@ -31,10 +31,9 @@ def take_sample():
 	with audio as (record, emit, playback):
 		with emitters:
 			emit.write_array(pulse.render())
-			rec = record.read_array(0.1)
+			rec = record.read_array(1)
 	print rec.shape
 	save_file(ultramics, rec)
-	print "DONE"
 
 try:
 	while True:

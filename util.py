@@ -51,10 +51,21 @@ def t_axis(sample, rate):
 
 # Python kludges
 
+RUNNING = True
+
+
 def handle_close():
 	def signal_handler(signal, frame):
+		kill_app()
 		sys.exit(0)
 	signal.signal(signal.SIGINT, signal_handler)
+
+def app_running():
+	return RUNNING
+
+def kill_app():
+	global RUNNING
+	RUNNING = False
 
 def get_ip_address():
 	import socket
