@@ -14,10 +14,13 @@ import alsaaudio as aa
 import sounddevice as sd
 import numpy as np
 
+from util import get_ip_address
+
 BASE_PATH = path.abspath(path.dirname(__file__))
 
 BATCAVE_HOST = ('128.31.37.145', 8000)
 DEVICE_ID = 'robin-prototype'
+IP = get_ip_address()
 
 CHANNELS = 2
 FORMAT = aa.PCM_FORMAT_S16_LE

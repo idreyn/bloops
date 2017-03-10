@@ -1,6 +1,41 @@
 import numpy as np
 from scipy.signal import chirp
 
+def pulse_source_from_dict(d):
+	def get_from_device(device):
+		if d.get("type") == "tone":
+			return Tone(
+				device,
+				1000 * d.get("khzStart"),
+				d.get("usDuration"),
+				d.get("square")
+			)
+		elif d.get("type") == "chirp":
+			return Chirp(
+				device,
+				1000 * d.get("khzStart"),
+				1000 * d.get("khzEnd"),
+				d.get("usDuration"),
+				"logarithmic" if d.get("isLogarithmic") else "linear",
+				d.get("square")
+			)
+		elif d.get("type") == "click":
+			return Click(
+				device,
+				d.get("usDuration")
+			)
+		else:
+			raise Exception("Unable to parse Pulse from dict")
+	return get_from_device
+
+def default_pulse_source():
+	return pulse_source_from_dict({
+		'type': 'chirp',
+		'usDuration': 5e3,
+		'khzStart': 50,
+		'khzEnd': 25
+	})
+
 class Pulse(object):
 	def __init__(self, settings, us_duration, square=False):
 		self.us_duration = us_duration

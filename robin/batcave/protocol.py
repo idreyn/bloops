@@ -14,6 +14,7 @@ class RemoteStatus:
 class Message:
 	CONNECT = "connect"
 	DISCONNECT = "disconnect"
+	RECONNECT = "reconnect"
 	HANDSHAKE_REMOTE = "handshake-remote"
 	HANDSHAKE_DEVICE = "handshake-device"
 	DEVICE_LISTING = "device-listing"
@@ -21,7 +22,8 @@ class Message:
 	DEVICE_CHOICE_INVALID = "device-choice-invalid"
 	DEVICE_CHOICE_SUCCESSFUL = "device-choice-successful"
 	DEVICE_STATUS = "device-status"
-	DEVICE_NEW_REMOTE = "device-new-remote"
+	DEVICE_REMOTE_CONNECT = "device-remote-connect"
+	DEVICE_REMOTE_DISCONNECT = "device-remote-disconnect"
 	UPDATE_PULSE = "update-pulse"
 	UPDATE_OVERRIDES = "update-overrides"
 	RESTART_DEVICE = "restart-device"
