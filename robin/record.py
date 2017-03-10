@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from threading import Thread
 
@@ -10,8 +11,9 @@ from samplebuffer import SampleBuffer
 def do_record(buffer, stream, handle_failure):
     try:
         while True:
-            buffer.put(stream.read_array(0.001))
-    except (ALSAAudioError, ValueError) as e:
+            arr = stream.read_array(0.01)
+            buffer.put(arr)
+    except ALSAAudioError as e:
         handle_failure()
 
 class Recorder(object):
@@ -19,7 +21,7 @@ class Recorder(object):
         self.okay = True
         self.device = device
         self.buffer = SampleBuffer(device.channels)
-        self.stream = Stream(device, True)
+        self.stream = Stream(device, True, True)
         self.record_thread = Thread(
             target=do_record,
             args=(self.buffer, self.stream, self.handle_failure)
@@ -39,3 +41,6 @@ class Recorder(object):
     def handle_failure(self):
         self.stream.pcm.close()
         self.okay = False
+
+    def close(self):
+        self.stream.close()
