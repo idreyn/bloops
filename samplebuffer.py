@@ -5,11 +5,11 @@ import numpy as np
 
 class SampleBuffer(object):
 
-    def __init__(self, channels, capacity=500):
+    def __init__(self, channels, period_capacity=500):
         self.queue = []
         self.times = []
         self.channels = channels
-        self.capacity = capacity
+        self.period_capacity = period_capacity
 
     def time_range(self):
         return (self.times[0], self.times[-1])
@@ -17,7 +17,7 @@ class SampleBuffer(object):
     def put(self, sample):
         self.queue.append(np.copy(sample))
         self.times.append(time.time())
-        if len(self.queue) > self.capacity:
+        if len(self.queue) > self.period_capacity:
             self.shift()
 
     def shift(self, ln=1):
@@ -46,5 +46,5 @@ class SampleBuffer(object):
                 self.queue[0] = sample[take:, :]
                 pointer = pointer + take
                 if not len(self.queue[0]):
-                	self.shift()
+                    self.shift()
         return buff
