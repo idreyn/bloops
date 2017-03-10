@@ -19,6 +19,7 @@ class Stream(object):
         self.pcm.setchannels(device.channels)
         self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
         self.pcm.setperiodsize(device.period_size)
+        self._okay = True
         self._paused = False
 
     def __enter__(self, *rest):
@@ -34,6 +35,9 @@ class Stream(object):
 
     def read(self):
         length, data = self.pcm.read()
+        if length <= 0:
+            self._okay = False
+            raise Exception("Error reading from ALSA stream")
         return data
 
     def write(self, bytes):
@@ -49,7 +53,7 @@ class Stream(object):
                 self.write(p)
 
     def assert_okay(self):
-        return True # For now...
+        return self._okay
 
     def close(self):
         self.pcm.close()
@@ -57,6 +61,7 @@ class Stream(object):
     def read_array(self, seconds):
         period_count = (self.device.rate // self.device.period_size) * seconds
         samples = []
-        while len(samples) < period_count:
-            samples.append(self.read())
+        with self as stream:
+            while len(samples) < period_count:
+                samples.append(self.read())
         return periods_to_array(samples, self.device)

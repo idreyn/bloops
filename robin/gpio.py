@@ -15,11 +15,14 @@ class GPIOHold(object):
 		self.ms_wait = ms_wait
 		gpio.setup(self.pin, gpio.OUT)
 
+	def off(self):
+		gpio.output(self.pin, gpio.LOW)
+
 	def __enter__(self, *rest):
 		gpio.output(self.pin, gpio.HIGH)
 		time.sleep(self.ms_wait / 1000)
 
 	def __exit__(self, *rest):
-		gpio.output(self.pin, gpio.LOW)
+		self.off()
 
 emitters = GPIOHold(17)
