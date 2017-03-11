@@ -19,4 +19,4 @@ def simple_loop(pulse_source):
 			emit.write_array(pulse_source(dac).render())
 			rec = record.read_array(0.1)
 	print rec.shape
-	save_file(ultramics, rec)
+	save_file(ultramics, rec, str(pulse))

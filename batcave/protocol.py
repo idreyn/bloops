@@ -5,11 +5,9 @@ class DeviceStatus:
 	HARDWARE_UNAVAILABLE = "hardware-unavailable"
 	READY = "ready"
 
-
 class RemoteStatus:
 	NO_SOCKET = "no-socket"
 	DISCONNECTED = "disconnected"
-
 
 class Message:
 	CONNECT = "connect"
@@ -24,6 +22,7 @@ class Message:
 	DEVICE_STATUS = "device-status"
 	DEVICE_REMOTE_CONNECT = "device-remote-connect"
 	DEVICE_REMOTE_DISCONNECT = "device-remote-disconnect"
+	TRIGGER_PULSE = "trigger-pulse"
 	UPDATE_PULSE = "update-pulse"
 	UPDATE_OVERRIDES = "update-overrides"
 	RESTART_DEVICE = "restart-device"

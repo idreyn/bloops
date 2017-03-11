@@ -8,7 +8,7 @@ def pulse_source_from_dict(d):
 				device,
 				1000 * d.get("khzStart"),
 				d.get("usDuration"),
-				d.get("square")
+				d.get("isSquare")
 			)
 		elif d.get("type") == "chirp":
 			return Chirp(
@@ -17,7 +17,7 @@ def pulse_source_from_dict(d):
 				1000 * d.get("khzEnd"),
 				d.get("usDuration"),
 				"logarithmic" if d.get("isLogarithmic") else "linear",
-				d.get("square")
+				d.get("isSquare")
 			)
 		elif d.get("type") == "click":
 			return Click(
@@ -27,6 +27,25 @@ def pulse_source_from_dict(d):
 		else:
 			raise Exception("Unable to parse Pulse from dict")
 	return get_from_device
+
+def dict_from_pulse(p):
+	d = {
+		"type": "click" if type(p) is Click else (
+			"chirp" if type(p) is Chirp else (
+				"tone" if type(p) is Tone else "?"
+			)
+		),
+		"usDuration": p.us_duration
+	}
+	if type(p) is Tone:
+		d["khzStart"] = p.frequency / 1000
+		d["isSquare"] = p.square
+	elif type(p) is Chirp:
+		d["khzStart"] = p.f0 / 1000
+		d["khzEnd"] = p.f1 / 1000
+		d["isLogarithmic"] = p.method == "logarithmic"
+		d["isSquare"] = p.square
+	return d
 
 def default_pulse_source():
 	return pulse_source_from_dict({
@@ -86,6 +105,13 @@ class Tone(Pulse):
 		super(Tone,self).__init__(device, us_duration, square)
 		self.frequency = frequency
 
+	def __str__(self):
+		return "tone-%sk-%sms%s" % (
+			str(self.frequency / 1000),
+			str(self.us_duration / 1000),
+			"-square" if self.square else ""
+		)
+
 	def _render(self):
 		return np.cos(2 * np.pi * self.frequency * self.t_axis())
 
@@ -96,6 +122,15 @@ class Chirp(Pulse):
 		self.f0 = f0
 		self.f1 = f1
 		self.method = method
+
+	def __str__(self):
+		return "chirp-%sk-%sk-%sms-%s%s" % (
+			str(self.f0 / 1000),
+			str(self.f1 / 1000),
+			str(self.us_duration / 1000),
+			self.method,
+			"-square" if self.square else ""
+		)
 
 	def _render(self):
 		times = self.t_axis()
@@ -111,6 +146,9 @@ class Chirp(Pulse):
 class Click(Pulse):
 	def __init__(self, device, us_duration):
 		super(Click,self).__init__(device, us_duration)
+
+	def __str__(self):
+		return "click-%sms" % (str(self.us_duration / 1000))
 
 	def _render(self):
 		return np.random.normal(0, 1, size=len(self.t_axis()))
