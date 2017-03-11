@@ -48,7 +48,10 @@ def on_update_pulse(p):
 	if p != last_pulse_dict:
 		last_pulse_dict = p
 		pulse_source = pulse_source_from_dict(p)
-		simple_loop(pulse_source)
+
+def on_trigger_pulse():
+	global pulse_source
+	simple_loop(pulse_source)
 	
 def get_device_status():
 	return DeviceStatus.READY
@@ -60,7 +63,8 @@ def get_device_info():
 		'deviceBatteryLow': False,
 		'emitterBatteryLow': False,
 		'bluetoothConnections': "Unknown",
-		'lastSeen': str(datetime.datetime.now())
+		'lastSeen': str(datetime.datetime.now()),
+		'pulse': last_pulse_dict,
 	}
 
 def main():
@@ -71,6 +75,7 @@ def main():
 			Message.CONNECT: on_connected,
 			Message.RECONNECT: on_connected,
 			Message.DISCONNECT: on_disconnect,
+			Message.TRIGGER_PULSE: on_trigger_pulse,
 			Message.UPDATE_PULSE: on_update_pulse,
 			Message.UPDATE_OVERRIDES: on_update_overrides,
 			Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
