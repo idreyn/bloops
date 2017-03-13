@@ -1,6 +1,60 @@
 import numpy as np
 from scipy.signal import chirp
 
+def pulse_source_from_dict(d):
+	def get_from_device(device):
+		if d.get("type") == "tone":
+			return Tone(
+				device,
+				1000 * d.get("khzStart"),
+				d.get("usDuration"),
+				d.get("isSquare")
+			)
+		elif d.get("type") == "chirp":
+			return Chirp(
+				device,
+				1000 * d.get("khzStart"),
+				1000 * d.get("khzEnd"),
+				d.get("usDuration"),
+				"logarithmic" if d.get("isLogarithmic") else "linear",
+				d.get("isSquare")
+			)
+		elif d.get("type") == "click":
+			return Click(
+				device,
+				d.get("usDuration")
+			)
+		else:
+			raise Exception("Unable to parse Pulse from dict")
+	return get_from_device
+
+def dict_from_pulse(p):
+	d = {
+		"type": "click" if type(p) is Click else (
+			"chirp" if type(p) is Chirp else (
+				"tone" if type(p) is Tone else "?"
+			)
+		),
+		"usDuration": p.us_duration
+	}
+	if type(p) is Tone:
+		d["khzStart"] = p.frequency / 1000
+		d["isSquare"] = p.square
+	elif type(p) is Chirp:
+		d["khzStart"] = p.f0 / 1000
+		d["khzEnd"] = p.f1 / 1000
+		d["isLogarithmic"] = p.method == "logarithmic"
+		d["isSquare"] = p.square
+	return d
+
+def default_pulse_source():
+	return pulse_source_from_dict({
+		'type': 'chirp',
+		'usDuration': 5e3,
+		'khzStart': 50,
+		'khzEnd': 25
+	})
+
 class Pulse(object):
 	def __init__(self, settings, us_duration, square=False):
 		self.us_duration = us_duration
@@ -15,7 +69,7 @@ class Pulse(object):
 		self.__t_axis = np.linspace(
 			0,
 			1e-6 * self.us_duration,
-			1e-6 * self.us_duration * self.settings.output.rate
+			1e-6 * self.us_duration * self.settings.rate
 		)
 		return self.__t_axis
 
@@ -26,13 +80,13 @@ class Pulse(object):
 		if self.square:
 			r[r > 0] = 1
 			r[r < 0] = -1
-		if self.settings.output.channels == 1:
+		if self.settings.channels == 1:
 			self.__rendered = r
 		else: 
 			self.__rendered = (
 				32767 if self.settings.np_format == np.int16 else 1 
 			) * np.transpose(np.array(
-				[r for _ in xrange(self.settings.output.channels)]
+				[r for _ in xrange(self.settings.channels)]
 			))
 		return self.__rendered
 
@@ -51,6 +105,13 @@ class Tone(Pulse):
 		super(Tone,self).__init__(device, us_duration, square)
 		self.frequency = frequency
 
+	def __str__(self):
+		return "tone-%sk-%sms%s" % (
+			str(self.frequency / 1000),
+			str(self.us_duration / 1000),
+			"-square" if self.square else ""
+		)
+
 	def _render(self):
 		return np.cos(2 * np.pi * self.frequency * self.t_axis())
 
@@ -61,6 +122,15 @@ class Chirp(Pulse):
 		self.f0 = f0
 		self.f1 = f1
 		self.method = method
+
+	def __str__(self):
+		return "chirp-%sk-%sk-%sms-%s%s" % (
+			str(self.f0 / 1000),
+			str(self.f1 / 1000),
+			str(self.us_duration / 1000),
+			self.method,
+			"-square" if self.square else ""
+		)
 
 	def _render(self):
 		times = self.t_axis()
@@ -74,13 +144,11 @@ class Chirp(Pulse):
 		)
 
 class Click(Pulse):
-	def __init__(self, device, us_duration, f_low=30000, f_high=60000):
+	def __init__(self, device, us_duration):
 		super(Click,self).__init__(device, us_duration)
-		self.f_low = f_low
-		self.f_high = f_high
+
+	def __str__(self):
+		return "click-%sms" % (str(self.us_duration / 1000))
 
 	def _render(self):
-		res = np.empty(len(self.t_axis()))
-		for f in xrange(self.f_low,self.f_high,5000):
-			res = res + np.cos(2 * np.pi * f * self.t_axis())
-		return res
+		return np.random.normal(0, 1, size=len(self.t_axis()))

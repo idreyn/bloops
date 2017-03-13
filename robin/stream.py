@@ -1,50 +1,67 @@
-import sounddevice as sd
+from __future__ import division
+
 import numpy as np
+import alsaaudio as aa
+import time
 
-def create_stream(settings, output, callback, **kwargs):
-	Stream = sd.OutputStream if output else sd.InputStream
-	device = settings.output if output else settings.input
-	return Stream(
-		samplerate=device.rate,
-		blocksize=settings.chunk,
-		device=device.index,
-		channels=device.channels,
-		dtype=settings.np_format,
-		callback=callback,
-		**kwargs
-	)
+from data import *
 
-class SampleBuffer(object):
-	def __init__(self, channels):
-		self.queue = []
-                self.channels = channels
+class Stream(object):
+    def __init__(self, device, is_input, is_blocking=True):
+        self.device = device
+        self.is_input = is_input
+        self.pcm = aa.PCM(
+            type=aa.PCM_CAPTURE if is_input else aa.PCM_PLAYBACK,
+            mode=aa.PCM_NORMAL if is_blocking else aa.PCM_NONBLOCK,
+            device=self.device.name,
+        )
+        self.pcm.setrate(device.rate)
+        self.pcm.setchannels(device.channels)
+        self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
+        self.pcm.setperiodsize(device.period_size)
+        self._okay = True
+        self._paused = False
 
-        def size(self):
-            return sum([len(s) for s in self.queue])
+    def __enter__(self, *rest):
+        if self._paused:
+            self.pcm.pause(False)
 
-	def put(self, sample):
-		self.queue.append(np.copy(sample))
+    def __exit__(self, *rest):
+        try:
+            self.pcm.pause(True)
+            self._paused = True
+        except:
+            pass
 
-	def has(self):
-		return len(self.queue) > 0
+    def read(self):
+        length, data = self.pcm.read()
+        if length <= 0:
+            self._okay = False
+            raise Exception("Error reading from ALSA stream")
+        return data
 
-	def get_chunk(self):
-		return self.queue.pop(0)
+    def write(self, bytes):
+        self.pcm.write(bytes)
 
-        def get_samples(self, length=None):
-		pointer = 0
-                if length is None:
-                    length = self.size()
-		buff = np.zeros((length, self.channels))
-		while pointer < length:
-			if not len(self.queue):
-				break
-			else:
-				sample = self.queue[0]
-				take = min(length - pointer, len(sample))
-				buff[pointer : pointer + take, :] = sample[0:take, :]
-				self.queue[0] = sample[take:, :]
-				pointer = pointer + take
-				if not len(self.queue[0]):
-					self.queue.pop(0)
-                return buff
+    def write_array(self, array):
+        periods = array_to_periods(
+            array,
+            self.device
+        )
+        with self as stream:
+            for p in periods:
+                self.write(p)
+
+    def assert_okay(self):
+        return self._okay
+
+    def close(self):
+        self.pcm.close()
+
+    def read_array(self, seconds):
+        period_count = (self.device.rate // self.device.period_size) * seconds
+        samples = []
+        with self as stream:
+            while len(samples) < period_count:
+                samples.append(self.read())
+        return periods_to_array(samples, self.device)
