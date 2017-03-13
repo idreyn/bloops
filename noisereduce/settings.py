@@ -3,15 +3,15 @@ class NoiseReduceSettings(object):
 		self,
 		rate=192000,
 		noise_gain=-30.0,
-		sensitivity=6.0,
-		window_size=1024,
-		window_step=256,
+		sensitivity=12.0,
+		window_size=512,
+		window_step=128,
 		spectrum_median_window=1,
 		freq_smoothing_bins=0,
 		attack_time=0.02,
-		attack_lookback_steps=5,
+		attack_lookback_steps=20,
 		release_time=0.02,
-		double_window=True
+		double_window=False
 	):
 		self.rate = rate
 		self.noise_gain = noise_gain

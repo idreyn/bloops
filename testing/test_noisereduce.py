@@ -17,11 +17,15 @@ def save(filename, data, rate):
 sample, rate, _ = wavread('../samples/single-bloop-trimmed.wav')
 noise = wavread('../samples/single-bloop-noise.wav')[0]
 
+"""
 cProfile.runctx(
 	"reduced = noise_reduce(sample, noise, NoiseReduceSettings())",
 	globals(), locals(), "profile.prof")
+"""
+reduced = noise_reduce(sample, noise, NoiseReduceSettings())
 
+
+plt.plot(sample)
+plt.plot(reduced)
+plt.show()
 save('../samples/single-bloop-trimmed-reduced.wav', reduced, rate)
-
-s = pstats.Stats("profile.prof")
-s.strip_dirs().sort_stats("time").print_stats()
