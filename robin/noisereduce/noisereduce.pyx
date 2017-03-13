@@ -18,7 +18,7 @@ cdef inline double double_max(double a, double b): return a if a >= b else b
 cdef inline double double_min(double a, double b): return a if a <= b else b
 
 def to_db(val):
-	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
+	return 10 * np.log10((0.000000001 + np.abs(val)) ** 2)
 
 def from_db(val):
 	return np.power(10,(1.0 / 20) * val)
