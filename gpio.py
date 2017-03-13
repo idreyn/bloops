@@ -8,8 +8,7 @@ from record import *
 
 gpio.setmode(gpio.BCM)
 
-
-class GPIOHold(object):
+class GPIOWrite(object):
 	def __init__(self, pin, ms_wait=200):
 		self.pin = pin
 		self.ms_wait = ms_wait
@@ -25,4 +24,21 @@ class GPIOHold(object):
 	def __exit__(self, *rest):
 		self.set(False)
 
-emitters = GPIOHold(17)
+class GPIORead(object):
+	def __init__(self, pin):
+		self.pin = pin
+		gpio.setup(self.pin, gpio.IN)
+
+	def read(self):
+		return gpio.input(self.pin)
+
+	def on(self, callback, rising=True):
+		def handler():
+			callback(self.read())
+		self._handler = handler
+		gpio.add_event_dectect(self.pin, gpio.RISING)
+		gpio.add_event_dectect(self.pin, gpio.FALLING)
+		gpio.add_event_callback(self.pin, handler)
+
+emitters = GPIOWrite(17)
+power_led = GPIORead(35)
