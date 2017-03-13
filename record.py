@@ -1,32 +1,25 @@
+import time
 import numpy as np
 
-from stream import create_stream, SampleBuffer
+from data import periods_to_array
+from stream import Stream
+from samplebuffer import SampleBuffer
 
 class Recorder(object):
-	def __init__(self, settings):
-		self.buffer = SampleBuffer(channels=settings.input.channels)
-                self.settings = settings
-		self.stream = create_stream(
-			settings=settings,
-			output=False,
-			callback=lambda *args: self._recording(*args)
-		)
+    def __init__(self, stream):
+        self.okay = True
+        self.stream = stream
 
-	def _recording(self, input, *rest):
-		self.buffer.put(input)
-
-	def sample(self):
-		while not self.buffer.has():
-			pass
-		return self.buffer.get_chunk()
-
-	def start(self):
-		self.stream.start()
-
-	def stop(self):
-		self.stream.stop()
-
-	def rate(self):
-		return int(self.stream.samplerate)
-
-
+    def get_recording(self, length_secs):
+        device = self.stream.device
+        start_time = time.time()
+        self.buffer = SampleBuffer(
+            device.channels,
+            length_secs * device.rate / device.period_size
+        )
+        while time.time() - start_time < length_secs:
+            self.buffer.put(self.stream.read_array(0.0001))
+        return self.buffer.get_samples(
+            length_secs * device.rate,
+            start_time
+        )
