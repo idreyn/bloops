@@ -1,30 +1,31 @@
-import time
+import time, sys
 import pstats, cProfile
-
-from scikits.audiolab import wavread
+import sounddevice as sd
+from scikits.audiolab import *
 
 import test
-from process import *
-from noisereduce import noise_reduce, NoiseReduceSettings
 
-audio = pyaudio.PyAudio()
+from robin.plotting import *
+from robin.process import *
+from robin.noisereduce import noise_reduce, NoiseReduceSettings
 
-def noise_reduce_test():
-	sample = wavread('../../sounds/single-bloop-trimmed.wav')[0]
-	noise = wavread('../../sounds/single-bloop-noise.wav')[0]
-	sample = bandpass(sample,30000,50000)
-	t0 = time.time()
-	sample = noise_reduce(sample,noise,NoiseReduceSettings())
-	print 'noise filter in time:', round(time.time() - t0,2)
-	'''
-	sample = from_db(20) * sample
-	if True:
-		data = pad_to_size(sample,CHUNK * (1 + len(sample) / CHUNK))
-		data = array_to_frames(data)
-		play_frames(audio,data,0.04)
-	'''
+def save(filename, data, rate):
+    f = Sndfile(filename, 'w', Format('wav'), 1, rate)
+    f.write_frames(data)
+    f.close()
+
+sample, rate, _ = wavread('../samples/single-bloop-trimmed.wav')
+noise = wavread('../samples/single-bloop-noise.wav')[0]
+
+"""
+cProfile.runctx(
+	"reduced = noise_reduce(sample, noise, NoiseReduceSettings())",
+	globals(), locals(), "profile.prof")
+"""
+reduced = noise_reduce(sample, noise, NoiseReduceSettings())
 
 
-cProfile.runctx("res = noise_reduce_test()",globals(),locals(),"profile.prof")
-s = pstats.Stats("profile.prof")
-s.strip_dirs().sort_stats("time").print_stats()
+plt.plot(sample)
+plt.plot(reduced)
+plt.show()
+save('../samples/single-bloop-trimmed-reduced.wav', reduced, rate)
