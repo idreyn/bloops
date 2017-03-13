@@ -7,7 +7,6 @@ from scipy.signal import *
 
 import peakutils
 
-from config import *
 from util import *
 
 SPEED_OF_SOUND = 0.343 / 1000 # meters per us
