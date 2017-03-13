@@ -1,4 +1,4 @@
-"""
+ROBIN = """
    ___  ____  ___  _____  __
   / _ \/ __ \/ _ )/  _/ |/ /
  / , _/ /_/ / _  |/ //    / 
@@ -6,6 +6,10 @@
 Echolocation for everyone
 
 """
+
+# ron paul dot gif
+print ROBIN
+
 import time
 from shutil import copyfile
 from os import path
@@ -82,8 +86,6 @@ ULTRAMICS = AudioDevice('ultramics', 200000, 2)
 DAC = AudioDevice('snd_rpi_hifiberry_dacplus', 192000, 2)
 REQUIRED_INPUT_DEVICES = [ULTRAMICS]
 REQUIRED_OUTPUT_DEVICES = [DAC]
-
-print "BASE_PATH", BASE_PATH
 
 def has_needed_devices():
     try:

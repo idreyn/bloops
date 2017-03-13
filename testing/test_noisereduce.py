@@ -1,12 +1,12 @@
 import time, sys
 import pstats, cProfile
+
 import sounddevice as sd
-from scikits.audiolab import *
+import matplotlib.pyplot as plt
+from scikits.audiolab import*
 
 import test
 
-from robin.plotting import *
-from robin.process import *
 from robin.noisereduce import noise_reduce, NoiseReduceSettings
 
 def save(filename, data, rate):

@@ -56,9 +56,9 @@ def default_pulse_source():
 	})
 
 class Pulse(object):
-	def __init__(self, settings, us_duration, square=False):
+	def __init__(self, device, us_duration, square=False):
 		self.us_duration = us_duration
-		self.settings = settings
+		self.device = device
 		self.square = square
 		self.__t_axis = None
 		self.__rendered = None
@@ -69,9 +69,12 @@ class Pulse(object):
 		self.__t_axis = np.linspace(
 			0,
 			1e-6 * self.us_duration,
-			1e-6 * self.us_duration * self.settings.rate
+			1e-6 * self.us_duration * self.device.rate
 		)
 		return self.__t_axis
+
+	def band(self):
+		return (0, self.device.rate / 2)
 
 	def render(self):
 		if not self.__rendered is None:
@@ -80,13 +83,13 @@ class Pulse(object):
 		if self.square:
 			r[r > 0] = 1
 			r[r < 0] = -1
-		if self.settings.channels == 1:
+		if self.device.channels == 1:
 			self.__rendered = r
 		else: 
 			self.__rendered = (
-				32767 if self.settings.np_format == np.int16 else 1 
+				32767 if self.device.np_format == np.int16 else 1 
 			) * np.transpose(np.array(
-				[r for _ in xrange(self.settings.channels)]
+				[r for _ in xrange(self.device.channels)]
 			))
 		return self.__rendered
 
@@ -114,6 +117,10 @@ class Tone(Pulse):
 
 	def _render(self):
 		return np.cos(2 * np.pi * self.frequency * self.t_axis())
+
+	def band(self):
+		leakage = 2500 # pretty arbitrary
+		return (self.frequency - leakage, self.frequency + leakeage)
 
 class Chirp(Pulse):
 	def __init__(self, device, f0, f1, us_duration,
@@ -143,6 +150,9 @@ class Chirp(Pulse):
 			method=self.method
 		)
 
+	def band(self):
+		return (self.f0, self.f1)
+
 class Click(Pulse):
 	def __init__(self, device, us_duration):
 		super(Click,self).__init__(device, us_duration)
@@ -152,3 +162,8 @@ class Click(Pulse):
 
 	def _render(self):
 		return np.random.normal(0, 1, size=len(self.t_axis()))
+
+	def band(self):
+		# This bad boy is very broadband but we probably can get rid of audible
+		# sound anyway, since the tweeters are loudest at > 15k.
+		return (1.5e4, self.device.rate / 2)
