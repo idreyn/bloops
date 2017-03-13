@@ -63,13 +63,20 @@ class AudioDevice(object):
     def period_length(self):
         return float(self.period_size) / self.rate
 
-    def check_settings(self, as_input=True):
-        (sd.check_input_settings if as_input else sd.check_output_settings)(
-            device=self.name,
-            channels=self.channels,
-            samplerate=self.rate,
-            dtype=self.np_format
-        )
+    def available(self, as_input=True):
+        try:
+            (sd.check_input_settings
+                if as_input
+                else sd.check_output_settings
+            )(
+                device=self.name,
+                channels=self.channels,
+                samplerate=self.rate,
+                dtype=self.np_format
+            )
+            return True
+        except:
+            return False
 
 ULTRAMICS = AudioDevice('ultramics', 200000, 2)
 DAC = AudioDevice('snd_rpi_hifiberry_dacplus', 192000, 2)
