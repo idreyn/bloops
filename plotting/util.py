@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from config import *
+def plot_samples(*samples):
+    for s in samples:
+        plt.plot(s)
+    plt.show()
 
-def plot_spectrum(spectrum):
-	time_step = 1.0 / RATE
+def plot_spectrum(spectrum, rate):
+	time_step = 1.0 / rate
 	ps = np.abs(spectrum) ** 2
 	freqs = np.fft.fftfreq(spectrum.size, time_step)
 	idx = np.argsort(freqs)
