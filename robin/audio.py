@@ -15,7 +15,7 @@ class Audio(object):
         self.record_stream = None
         self.emit_stream = None
 
-    # Either returns the objects you need to echolocation
+    # Either returns the objects you need to do echolocation
     # or returns False if they're not available
     def io(self):
         if not self.record_stream:

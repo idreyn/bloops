@@ -16,7 +16,7 @@ def simple_loop(pulse_source, slowdown=20):
 	pulse = pulse_source(dac)
 	print "emit!", str(pulse)
 	with audio as (record, emit):
-		with emitters:
+		with emitter_enable:
 			emit.write_array(Silence(dac, 1e4).render())
 			emit.write_array(pulse_source(dac).render())
 			rec = bandpass(record.read_array(0.1), 1e4, 9e4, dac.rate)

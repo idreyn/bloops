@@ -60,8 +60,9 @@ def get_device_info():
 	return {
 		'id': DEVICE_ID,
 		'ip': IP,
-		'deviceBatteryLow': False,
-		'emitterBatteryLow': False,
+		'deviceVoltageLow': power_led.read(),
+		'deviceBatteryLow': device_battery_low.read(),
+		'emitterBatteryLow': emitter_battery_low.read(),
 		'bluetoothConnections': "Unknown",
 		'lastSeen': str(datetime.datetime.now()),
 		'pulse': last_pulse_dict,
