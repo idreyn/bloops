@@ -6,7 +6,7 @@ You'll also need to create a `config_secret.py` file:
 
     $ touch robin/config_secret.py
 
-If you want to be able to control your device remotely with the [https://github.com/idreyn/batcave](Batcave) software, you'll need to feed it the address and port of the server:
+If you want to be able to control your device remotely with the [Batcave](https://github.com/idreyn/batcave) software, you'll need to feed it the address and port of the server:
 
     $ echo "BATCAVE_HOST = ('0.0.0.0', 8000)" > robin/config_secret.py
 
