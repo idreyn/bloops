@@ -21,14 +21,6 @@ def log(x, cb):
 	print(cb(x))
 	return x
 
-def resample(sample, from_rate, to_rate):
-	if from_rate == to_rate:
-		return sample
-	return resample(
-		sample,
-		len(sample) * (to_rate / from_rate)
-	)
-
 def to_db(val):
 	return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
 

@@ -60,6 +60,9 @@ class AudioDevice(object):
     def period_bytes(self):
         return self.frame_bytes() * self.period_size
 
+    def period_length(self):
+        return float(self.period_size) / self.rate
+
     def check_settings(self, as_input=True):
         (sd.check_input_settings if as_input else sd.check_output_settings)(
             device=self.name,

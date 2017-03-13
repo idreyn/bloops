@@ -9,13 +9,11 @@ from util import *
 
 class Audio(object):
 
-    def __init__(self, record_device, emit_device, playback_device=None):
+    def __init__(self, record_device, emit_device):
         self.record_device = record_device
         self.emit_device = emit_device
-        self.playback_device = playback_device or emit_device
         self.record_stream = None
         self.emit_stream = None
-        self.playback_stream = None
 
     # Either returns the objects you need to echolocation
     # or returns False if they're not available
@@ -41,22 +39,7 @@ class Audio(object):
                 self.emit_stream.close()
                 self.emit_stream = None
                 return False
-        if not self.playback_stream:
-            if self.playback_device != self.emit_device:
-                try:
-                    self.playback_device.check_settings(False)
-                    self.playback_stream = Stream(
-                        self.playback_device, False, False)
-                except:
-                    return False
-            else:
-                self.playback_stream = self.emit_stream
-        else:
-            if not self.playback_stream.assert_okay():
-                self.playback_stream.close()
-                self.playback_stream = None
-                return False
-        return (self.record_stream, self.emit_stream, self.playback_stream)
+        return (self.record_stream, self.emit_stream)
 
     def await_available(self):
         while not self.io():
@@ -70,7 +53,6 @@ class Audio(object):
         return set([
             self.record_stream,
             self.emit_stream,
-            self.playback_stream
         ])
 
     def __enter__(self):
@@ -78,7 +60,10 @@ class Audio(object):
 
 
     def __exit__(self, *rest):
-        pass
-
+        # Kludge o'clock
+        self.record_stream.close()
+        self.emit_stream.close()
+        self.record_stream = None
+        self.emit_stream = None
 
 
