@@ -16,28 +16,29 @@ def stage(require=None, forbid=None):
 	elif not hasattr(forbid, "__iter__"):
 		forbid = [forbid]
 	def decorator(stage_func):
+		setattr(stage_func, "__stage__", True)
 		def func_wrapper(es):
 			if not type(es) is EnvironmentSample:
 				raise Exception(
 					"Stage %s was not passed an EnvironmentSample" % (
-						str(stage_func)
+						stage_func.__name__
 					)
 				)
 			if not es.passed_stages(require):
 				raise Exception(
 					"Cannot run pipeline stage %s without first" + \
-					" running its require." % (str(stage_func))
+					" running its require." % (stage_func.__name__)
 				)
 			if es.passed_stages(forbid):
 				raise Exception(
 					"Cannot run pipeline stage %s because a forbidden stage" + \
-					" has already been applied." % (str(stage_func))
+					" has already been applied." % (stage_func.__name__)
 				)
 			es = stage_func(es)
 			if not type(es) is EnvironmentSample:
 				raise Exception(
 					"Stage %s did not return an EnvironmentSample" % (
-						str(stage_func)
+						stage_func.__name__
 					)
 				)
 			es.pass_stage(stage_func)
