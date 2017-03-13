@@ -2,7 +2,6 @@ from __future__ import division
 from math import floor, ceil
 import signal, sys
 
-import alsaaudio as aa
 import numpy as np
 from scipy.signal import *
 
