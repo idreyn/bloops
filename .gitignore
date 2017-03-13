@@ -4,6 +4,8 @@
 *.c
 *.html
 
+config_secret.py
+
 build/
 venv/
 resources/

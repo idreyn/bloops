@@ -7,10 +7,7 @@ from process import *
 from pulse import *
 from save import *
 
-dac = AudioDevice('dac', 192000)
-ultramics = AudioDevice('ultramics', 192000)
-
-audio = Audio(ultramics, dac)
+audio = Audio(ULTRAMICS, DAC)
 
 def simple_loop(pulse_source, slowdown=20):
 	pulse = pulse_source(dac)
