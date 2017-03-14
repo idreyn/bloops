@@ -3,7 +3,7 @@ import pstats, cProfile
 
 import sounddevice as sd
 import matplotlib.pyplot as plt
-from scikits.audiolab import*
+from scikits.audiolab import *
 
 import test
 

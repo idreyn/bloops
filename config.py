@@ -14,7 +14,15 @@ import time
 from shutil import copyfile
 from os import path
 
-import alsaaudio as aa
+try:
+    import alsaaudio as aa
+except:
+    # Shhh, sometimes we're not running on Linux
+    class aa(object):
+        PCM_FORMAT_S16_LE = 0
+        PCM_FORMAT_S24_LE = 1
+        PCM_FORMAT_FLOAT_LE = 2
+
 import sounddevice as sd
 import numpy as np
 
@@ -27,9 +35,9 @@ DEVICE_ID = 'robin-prototype'
 IP = get_ip_address()
 
 CHANNELS = 2
-FORMAT = aa.PCM_FORMAT_S16_LE
 PERIOD_SIZE = 1000
 RATE = 192000
+FORMAT = aa.PCM_FORMAT_S16_LE
 
 # Format fun
 
