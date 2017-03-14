@@ -11,15 +11,16 @@ def moving_average(values, window):
 
 
 
-def align(sample):
+def align(sample, cutoff=0.1):
 	window = 100
 	threshold = 0.001
+	sample = sample[0:len(sample) * cutoff]
 	left = moving_average(sample[:,0] ** 2, window)
 	right = moving_average(sample[:,1] ** 2, window)
 	left -= peakutils.baseline(left, 2)
 	right -= peakutils.baseline(right, 2)
 	max_left, max_right = np.max(left), np.max(right)
 	left *= 1 / max_left
-	right *= 1 /max_right
+	right *= 1 / max_right
 	return np.argmax(left > threshold) - np.argmax(right > threshold)
 
