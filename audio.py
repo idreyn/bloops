@@ -20,8 +20,11 @@ class Audio(object):
     def io(self):
         if not self.record_stream:
             try:
+                self.record_device.available(True)
                 self.record_stream = Stream(self.record_device, True)
             except Exception as e:
+                print "failed to init record_stream"
+                traceback.print_exc()
                 return False
         else:
             if not self.record_stream.assert_okay():
@@ -30,9 +33,11 @@ class Audio(object):
                 return False
         if not self.emit_stream:
             try:
-                self.emit_device.check_settings(False)
+                self.emit_device.available(False)
                 self.emit_stream = Stream(self.emit_device, False, False)
             except Exception as e:
+                print "failed to init emit_stream"
+                traceback.print_exc()
                 return False
         else:
             if not self.emit_stream.assert_okay():

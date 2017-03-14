@@ -7,7 +7,6 @@ import alsaaudio as aa
 import numpy as np
 
 from config import *
-from device import *
 from echolocate import *
 from gpio import *
 from pulse import *
@@ -86,8 +85,9 @@ def main():
 	)
 
 try:
-	main()
+	# main()
 	while True:
-		time.sleep(0.01)
+		time.sleep(1)
+                simple_loop(pulse_source)
 except KeyboardInterrupt:
 	kill_app()

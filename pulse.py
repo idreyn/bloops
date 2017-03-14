@@ -51,8 +51,9 @@ def default_pulse_source():
 	return pulse_source_from_dict({
 		'type': 'chirp',
 		'usDuration': 5e3,
-		'khzStart': 50,
-		'khzEnd': 25
+		'khzStart': 20,
+		'khzEnd': 50,
+                'isLogarithmic': True,
 	})
 
 class Pulse(object):
