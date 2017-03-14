@@ -67,11 +67,11 @@ class AudioDevice(object):
     def period_length(self):
         return float(self.period_size) / self.rate
 
-    def available(self, as_input=True):
+    def available(self, as_input):
         try:
-            (sd.check_input_settings
-                if as_input
-                else sd.check_output_settings
+            (sd.check_input_settings \
+                    if as_input \
+                    else sd.check_output_settings\
             )(
                 device=self.name,
                 channels=self.channels,
@@ -83,16 +83,16 @@ class AudioDevice(object):
             return False
 
 ULTRAMICS = AudioDevice('ultramics', 200000, 2)
-DAC = AudioDevice('snd_rpi_hifiberry_dacplus', 192000, 2)
+DAC = AudioDevice('dac', 192000, 2)
 REQUIRED_INPUT_DEVICES = [ULTRAMICS]
 REQUIRED_OUTPUT_DEVICES = [DAC]
 
 def has_needed_devices():
     try:
-        [d.check_settings() for d in REQUIRED_INPUT_DEVICES]
-        [d.check_settings(False) for d in REQUIRED_OUTPUT_DEVICES]
+        [d.available(True) for d in REQUIRED_INPUT_DEVICES]
+        [d.available(False) for d in REQUIRED_OUTPUT_DEVICES]
         return True
-    except:
+    except Exception as e:
         return False
 
 def setup_asoundrc():
