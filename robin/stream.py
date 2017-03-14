@@ -17,7 +17,7 @@ class Stream(object):
         )
         self.pcm.setrate(device.rate)
         self.pcm.setchannels(device.channels)
-        self.pcm.setformat(aa.PCM_FORMAT_S16_LE)
+        self.pcm.setformat(device.format)
         self.pcm.setperiodsize(device.period_size)
         self._okay = True
         self._paused = False
