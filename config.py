@@ -4,7 +4,6 @@ ROBIN = """
  / , _/ /_/ / _  |/ //    / 
 /_/|_|\____/____/___/_/|_/  
 Echolocation for everyone
-
 """
 
 # ron paul dot gif
