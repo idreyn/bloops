@@ -6,6 +6,7 @@ import datetime
 import alsaaudio as aa
 import numpy as np
 
+from audio import *
 from config import *
 from device import *
 from echolocate import *
@@ -17,9 +18,11 @@ from batcave.client import run_client, emit
 from batcave.protocol import *
 from batcave.debug_override import *
 
-last_pulse_dict = None
+audio = Audio(ULTRAMICS, DAC)
+
 connected_remotes = 0
-pulse_source = default_pulse_source()
+last_pulse_dict = None
+pulse = default_pulse()
 
 def handle_override(o):
 	emitters.set(o.force_enable_emitters)
@@ -44,14 +47,14 @@ def on_update_overrides(o):
 	handle_override(DebugOverride.from_dict(o))
 
 def on_update_pulse(p):
-	global pulse_source, last_pulse_dict
+	global pulse, last_pulse_dict
 	if p != last_pulse_dict:
 		last_pulse_dict = p
-		pulse_source = pulse_source_from_dict(p)
+		pulse = pulse_from_dict(p)
 
 def on_trigger_pulse():
-	global pulse_source
-	simple_loop(pulse_source)
+	global pulse
+	simple_loop(pulse)
 	
 def get_device_status():
 	return DeviceStatus.READY
