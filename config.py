@@ -9,6 +9,9 @@ Echolocation for everyone
 # ron paul dot gif
 print ROBIN
 
+import sounddevice as sd
+import numpy as np
+
 import time
 from shutil import copyfile
 from os import path
@@ -22,14 +25,9 @@ except:
         PCM_FORMAT_S24_LE = 1
         PCM_FORMAT_FLOAT_LE = 2
 
-import sounddevice as sd
-import numpy as np
-
-from config_secret import *
-from util import get_ip_address
+from robin.util import get_ip_address
 
 BASE_PATH = path.abspath(path.dirname(__file__))
-
 DEVICE_ID = 'robin-prototype'
 IP = get_ip_address()
 
@@ -38,20 +36,18 @@ PERIOD_SIZE = 1000
 RATE = 192000
 FORMAT = aa.PCM_FORMAT_S16_LE
 
-# Format fun
-
-def format_size(format):
+def format_size(fmt):
     return {
         aa.PCM_FORMAT_S16_LE : 2,
         aa.PCM_FORMAT_S24_LE: 3,
         aa.PCM_FORMAT_FLOAT_LE: 4
-    }.get(format)
+    }.get(fmt)
 
-def format_np(format):
+def format_np(fmt):
     return {
         aa.PCM_FORMAT_S16_LE: np.int16,
         aa.PCM_FORMAT_FLOAT_LE: np.float32
-    }.get(format)
+    }.get(fmt)
 
 class AudioDevice(object):
     
@@ -76,15 +72,12 @@ class AudioDevice(object):
 
     def available(self, as_input=True):
         try:
-            (sd.check_input_settings
-                if as_input
-                else sd.check_output_settings
-            )(
+            (sd.check_input_settings if as_input
+                else sd.check_output_settings)(
                 device=self.name,
                 channels=self.channels,
                 samplerate=self.rate,
-                dtype=self.np_format
-            )
+                dtype=self.np_format)
             return True
         except:
             return False
@@ -96,8 +89,8 @@ REQUIRED_OUTPUT_DEVICES = [DAC]
 
 def has_needed_devices():
     try:
-        [d.check_settings() for d in REQUIRED_INPUT_DEVICES]
-        [d.check_settings(False) for d in REQUIRED_OUTPUT_DEVICES]
+        [d.available() for d in REQUIRED_INPUT_DEVICES]
+        [d.available(False) for d in REQUIRED_OUTPUT_DEVICES]
         return True
     except:
         return False
