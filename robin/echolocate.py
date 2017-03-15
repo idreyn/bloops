@@ -18,7 +18,7 @@ class Echolocation(object):
 
 
 def simple_loop(ex, audio, pipeline=None):
-    assert isinstance(ex) is Echolocation
+    assert isinstance(ex, Echolocation)
     with audio as (record, emit):
         with emitter_enable:
             if ex.us_silence_before:
