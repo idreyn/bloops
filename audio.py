@@ -7,6 +7,7 @@ from record import *
 from config import *
 from util import *
 
+
 class Audio(object):
 
     def __init__(self, record_device, emit_device):
@@ -58,12 +59,9 @@ class Audio(object):
     def __enter__(self):
         return self.io()
 
-
     def __exit__(self, *rest):
         # Kludge o'clock
         self.record_stream.close()
         self.emit_stream.close()
         self.record_stream = None
         self.emit_stream = None
-
-
