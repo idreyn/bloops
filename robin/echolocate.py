@@ -1,11 +1,10 @@
-from scipy.signal import *
+from scipy.signal import resample
 
-from audio import *
-from config import *
-from gpio import *
-from process import *
-from pulse import *
-from save import *
+from robin.config import DAC, ULTRAMICS
+from robin.gpio import emitter_enable
+from robin.pulse import Silence
+from robin.save import save_file
+from robin.stream import Stream
 
 
 class Echolocation(object):
@@ -19,18 +18,18 @@ class Echolocation(object):
 
 
 def simple_loop(ex, audio, pipeline=None):
-	assert type(ex) is Echolocation
+    assert isinstance(ex) is Echolocation
     with audio as (record, emit):
         with emitter_enable:
-        	if ex.us_silence_before:
-            	emit.write_array(Silence(ex.us_silence_before).render(dac))
-            emit.write_array(ex.pulse.render(dac))
+            if ex.us_silence_before:
+                emit.write_array(Silence(ex.us_silence_before).render(DAC))
+            emit.write_array(ex.pulse.render(DAC))
             sample = record.read_array(1e-6 * ex.us_record_time)
     if pipeline:
-    	sample = pipeline.run(sample)
-    resampled = resample(rec, ex.slowdown * len(sample))
-    playback = Stream(dac, False, True)
+        sample = pipeline.run(sample)
+    resampled = resample(sample, ex.slowdown * len(sample))
+    playback = Stream(DAC, False, True)
     playback.write_array(resampled)
     playback.close()
-    save_file(ultramics, resampled, str(pulse) + "__resampled")
-    save_file(ultramics, rec, str(pulse))
+    save_file(ULTRAMICS, resampled, str(ex.pulse) + "__resampled")
+    save_file(ULTRAMICS, sample, str(ex.pulse))
