@@ -22,7 +22,7 @@ class Pipeline(object):
         es = EnvironmentSample(
             sample=sample,
             rate=pulse.device.rate,
-            us_pulse_udration=pulse.us_duration,
+            us_pulse_duration=pulse.us_duration,
             hz_band=pulse.band(),
             np_format=pulse.device.np_format
         )
