@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import chirp
 
-def pulse_source_from_dict(d):
+def pulse_from_dict(d):
 	if d.get("type") == "tone":
 		return Tone(
 			1000 * d.get("khzStart"),
