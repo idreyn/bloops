@@ -24,5 +24,6 @@ class Message:
 	DEVICE_REMOTE_DISCONNECT = "device-remote-disconnect"
 	TRIGGER_PULSE = "trigger-pulse"
 	UPDATE_PULSE = "update-pulse"
+	SET_RECORD_DURATION = "set-record-duration"
 	UPDATE_OVERRIDES = "update-overrides"
 	RESTART_DEVICE = "restart-device"

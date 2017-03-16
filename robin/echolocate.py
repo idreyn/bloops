@@ -10,7 +10,7 @@ from stream import Stream
 class Echolocation(object):
 
     def __init__(self, pulse, slowdown,
-                 us_silence_before=1e4, us_record_time=1e5):
+                 us_record_time=1e5, us_silence_before=1e4):
         self.pulse = pulse
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
