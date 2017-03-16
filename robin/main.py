@@ -18,6 +18,7 @@ from robin.batcave.debug_override import DebugOverride
 
 AUDIO = Audio(ULTRAMICS, DAC)
 
+ms_record_duration = 100
 connected_remotes = 0
 last_pulse_dict = None
 pulse = default_pulse()
@@ -57,9 +58,12 @@ def on_update_pulse(pulse_dict):
         last_pulse_dict = pulse_dict
         pulse = pulse_from_dict(pulse_dict)
 
+def on_set_record_duration(d):
+	global ms_record_duration
+	ms_record_duration = d
 
 def on_trigger_pulse():
-    simple_loop(pulse, AUDIO)
+    simple_loop(Echolocation(pulse, 20, 1000 * ms_record_duration), AUDIO)
 
 
 def get_device_status():
@@ -89,6 +93,7 @@ def main():
                    Message.DISCONNECT: on_disconnect,
                    Message.TRIGGER_PULSE: on_trigger_pulse,
                    Message.UPDATE_PULSE: on_update_pulse,
+                   Message.SET_RECORD_DURATION: on_set_record_duration,
                    Message.UPDATE_OVERRIDES: on_update_overrides,
                    Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
                    Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
