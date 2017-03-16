@@ -15,13 +15,14 @@ class Pipeline(object):
                 )
         self.steps = steps
 
-    def run(self, pulse, sample):
+    def run(self, echolocation, sample):
         if sample.shape[1] != 2:
             raise Exception("Pipeline only supports 2-channel audio for now.")
+        pulse = echolocation.pulse
         es = EnvironmentSample(
             sample=sample,
             rate=pulse.device.rate,
-            us_pulse_udration=pulse.us_duration,
+            us_pulse_duration=pulse.us_duration,
             hz_band=pulse.band(),
             np_format=pulse.device.np_format
         )
