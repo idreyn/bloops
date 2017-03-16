@@ -4,11 +4,13 @@ ROBIN = """
  / , _/ /_/ / _  |/ //    / 
 /_/|_|\____/____/___/_/|_/  
 Echolocation for everyone
-
 """
 
 # ron paul dot gif
 print ROBIN
+
+import sounddevice as sd
+import numpy as np
 
 import time
 from shutil import copyfile
@@ -23,14 +25,9 @@ except:
         PCM_FORMAT_S24_LE = 1
         PCM_FORMAT_FLOAT_LE = 2
 
-import sounddevice as sd
-import numpy as np
-
-from config_secret import *
-from util import get_ip_address
+from robin.util import get_ip_address
 
 BASE_PATH = path.abspath(path.dirname(__file__))
-
 DEVICE_ID = 'robin-prototype'
 IP = get_ip_address()
 
@@ -39,20 +36,18 @@ PERIOD_SIZE = 1000
 RATE = 192000
 FORMAT = aa.PCM_FORMAT_S16_LE
 
-# Format fun
-
-def format_size(format):
+def format_size(fmt):
     return {
         aa.PCM_FORMAT_S16_LE : 2,
         aa.PCM_FORMAT_S24_LE: 3,
         aa.PCM_FORMAT_FLOAT_LE: 4
-    }.get(format)
+    }.get(fmt)
 
-def format_np(format):
+def format_np(fmt):
     return {
         aa.PCM_FORMAT_S16_LE: np.int16,
         aa.PCM_FORMAT_FLOAT_LE: np.float32
-    }.get(format)
+    }.get(fmt)
 
 class AudioDevice(object):
     
@@ -84,8 +79,7 @@ class AudioDevice(object):
                 device=self.name,
                 channels=self.channels,
                 samplerate=self.rate,
-                dtype=self.np_format
-            )
+                dtype=self.np_format)
             return True
         except:
             return False
