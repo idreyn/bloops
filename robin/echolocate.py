@@ -1,10 +1,10 @@
 from scipy.signal import resample
 
-from robin.config import DAC, ULTRAMICS
-from robin.gpio import emitter_enable
-from robin.pulse import Silence
-from robin.save import save_file
-from robin.stream import Stream
+from config import DAC, ULTRAMICS
+from gpio import emitter_enable
+from pulse import Silence
+from save import save_file
+from stream import Stream
 
 
 class Echolocation(object):

@@ -25,7 +25,7 @@ except:
         PCM_FORMAT_S24_LE = 1
         PCM_FORMAT_FLOAT_LE = 2
 
-from robin.util import get_ip_address
+from util import get_ip_address
 
 BASE_PATH = path.abspath(path.dirname(__file__))
 DEVICE_ID = 'robin-prototype'

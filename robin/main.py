@@ -3,18 +3,18 @@ from __future__ import division
 import time
 import datetime
 
-from robin.audio import Audio
-from robin.config import ULTRAMICS, DAC, IP, DEVICE_ID
-from robin.config_secret import BATCAVE_HOST
-from robin.echolocate import simple_loop
-from robin.gpio import (emitter_enable, emitter_battery_low, device_battery_low,
+from audio import Audio
+from config import ULTRAMICS, DAC, IP, DEVICE_ID
+from config_secret import BATCAVE_HOST
+from echolocate import simple_loop
+from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
                         power_led)
-from robin.pulse import default_pulse, pulse_from_dict
+from pulse import default_pulse, pulse_from_dict
 
-from robin.util import app_running, kill_app
-from robin.batcave.client import run_client
-from robin.batcave.protocol import Message, DeviceStatus
-from robin.batcave.debug_override import DebugOverride
+from util import app_running, kill_app
+from batcave.client import run_client
+from batcave.protocol import Message, DeviceStatus
+from batcave.debug_override import DebugOverride
 
 AUDIO = Audio(ULTRAMICS, DAC)
 
@@ -80,6 +80,7 @@ def get_device_info():
 
 
 def main():
+    print "running client from main..."
     run_client(BATCAVE_HOST,
                get_device_status,
                get_device_info,
