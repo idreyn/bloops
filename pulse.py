@@ -43,7 +43,7 @@ def dict_from_pulse(p):
 	return d
 
 def default_pulse():
-	return pulse_source_from_dict({
+	return pulse_from_dict({
 		'type': 'chirp',
 		'usDuration': 5e3,
 		'khzStart': 20,
@@ -74,7 +74,7 @@ class Pulse(object):
 	def render(self, device):
 		if not self.__rendered is None:
 			return self.__rendered
-		r = self._render()
+		r = self._render(device)
 		if self.square:
 			r[r > 0] = 1
 			r[r < 0] = -1
@@ -118,7 +118,7 @@ class Tone(Pulse):
 		return (self.frequency - leakage, self.frequency + leakeage)
 
 class Chirp(Pulse):
-	def __init__(self, device, f0, f1, us_duration,
+	def __init__(self, f0, f1, us_duration,
 			method='linear', square=False):
 		super(Chirp,self).__init__(us_duration, square)
 		self.f0 = f0
