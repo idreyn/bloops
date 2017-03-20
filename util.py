@@ -44,23 +44,18 @@ def t_axis(sample, rate):
 
 RUNNING = True
 
-
 def handle_close():
 	def signal_handler(signal, frame):
 		kill_app()
 		sys.exit(0)
 	signal.signal(signal.SIGINT, signal_handler)
 
-def app_running():
-	return RUNNING
-
-def kill_app():
-	global RUNNING
-	RUNNING = False
-
 def get_ip_address():
 	import socket
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	s.connect(('8.8.8.8',80))
-	return s.getsockname()[0]
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		s.connect(('8.8.8.8',80))
+		return s.getsockname()[0]
+	except:
+		return "unavailable"
 

@@ -13,8 +13,7 @@ io = None
 def emit(*args):
 	io.emit(*args)
 
-def client(batcave_host, get_device_status, get_device_info, 
-		callbacks, app_running):
+def client(batcave_host, get_device_status, get_device_info, callbacks):
 	global io
 	io = SocketIO(*batcave_host)
 
@@ -26,7 +25,7 @@ def client(batcave_host, get_device_status, get_device_info,
 	io.on(Message.RECONNECT, handshake)
 	handshake()
 
-	while app_running():
+	while True:
 		io.wait(seconds=2)
 		io.emit(Message.DEVICE_STATUS, {
 			'status': get_device_status(),
