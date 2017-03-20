@@ -4,14 +4,14 @@ import time
 import datetime
 
 from audio import Audio
-from config import ULTRAMICS, DAC, IP, DEVICE_ID
+from config import (ULTRAMICS, DAC, IP, DEVICE_ID, has_required_devices,
+                    print_device_availability)
 from config_secret import BATCAVE_HOST
-from echolocate import simple_loop
+from echolocate import simple_loop, Echolocation
 from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
-                        power_led)
+                  power_led)
 from pulse import default_pulse, pulse_from_dict
 
-from util import app_running, kill_app
 from batcave.client import run_client
 from batcave.protocol import Message, DeviceStatus
 from batcave.debug_override import DebugOverride
@@ -58,11 +58,14 @@ def on_update_pulse(pulse_dict):
         last_pulse_dict = pulse_dict
         pulse = pulse_from_dict(pulse_dict)
 
+
 def on_set_record_duration(d):
-	global ms_record_duration
-	ms_record_duration = d
+    global ms_record_duration
+    ms_record_duration = d
+
 
 def on_trigger_pulse():
+    print "pulse triggered!"
     simple_loop(Echolocation(pulse, 20, 1000 * ms_record_duration), AUDIO)
 
 
@@ -84,26 +87,30 @@ def get_device_info():
 
 
 def main():
+    if not has_required_devices():
+        print_device_availability()
+        print "missing audio hardware. exiting."
+        return
     print "running client from main..."
     run_client(BATCAVE_HOST,
-               get_device_status,
-               get_device_info,
-               {
-                   Message.CONNECT: on_connected,
-                   Message.RECONNECT: on_connected,
-                   Message.DISCONNECT: on_disconnect,
-                   Message.TRIGGER_PULSE: on_trigger_pulse,
-                   Message.UPDATE_PULSE: on_update_pulse,
-                   Message.SET_RECORD_DURATION: on_set_record_duration,
-                   Message.UPDATE_OVERRIDES: on_update_overrides,
-                   Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
-                   Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
-               },
-               app_running)
+           get_device_status,
+           get_device_info,
+           {
+               Message.CONNECT: on_connected,
+               Message.RECONNECT: on_connected,
+               Message.DISCONNECT: on_disconnect,
+               Message.TRIGGER_PULSE: on_trigger_pulse,
+               Message.UPDATE_PULSE: on_update_pulse,
+               Message.SET_RECORD_DURATION: on_set_record_duration,
+               Message.UPDATE_OVERRIDES: on_update_overrides,
+               Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
+               Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
+           })
 
 try:
     main()
     while True:
         time.sleep(0.01)
 except KeyboardInterrupt:
-    kill_app()
+    import os
+    os._exit(0)

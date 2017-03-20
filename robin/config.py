@@ -11,6 +11,7 @@ import numpy as np
 
 import time
 import os
+import subprocess
 from shutil import copyfile
 
 from util import get_ip_address
@@ -83,10 +84,10 @@ class AudioDevice(object):
 
     def available(self, as_input):
         try:
-            (sd.check_input_settings \
-                    if as_input \
-                    else sd.check_output_settings\
-            )(
+            (sd.check_input_settings
+             if as_input
+             else sd.check_output_settings
+             )(
                 device=self.name,
                 channels=self.channels,
                 samplerate=self.rate,
@@ -101,29 +102,31 @@ REQUIRED_INPUT_DEVICES = [ULTRAMICS]
 REQUIRED_OUTPUT_DEVICES = [DAC]
 
 
-def has_needed_devices():
-    try:
-        [d.available(True) for d in REQUIRED_INPUT_DEVICES]
-        [d.available(False) for d in REQUIRED_OUTPUT_DEVICES]
-        return True
-    except Exception as e:
-        return False
+def has_required_devices():
+    return len(
+        [True for d in REQUIRED_INPUT_DEVICES if not d.available(True)] +
+        [True for d in REQUIRED_OUTPUT_DEVICES if not d.available(False)]
+    ) == 0
+
+
+def print_device_availability():
+    print "=== hardware availability ==="
+    for d in REQUIRED_OUTPUT_DEVICES:
+        print "%s: %s" % (d.name, d.available(False))
+    for d in REQUIRED_INPUT_DEVICES:
+        print "%s: %s" % (d.name, d.available(True))
 
 
 def setup_asoundrc():
-    global sd
-    config_dir = BASE_PATH + '/../config/'
-    if has_needed_devices():
-        return
-    copyfile(config_dir + 'asound.conf-a', os.path.expanduser('~/.asoundrc'))
-    time.sleep(1)
-    import sounddevice as sd
-    if has_needed_devices():
-        return
-    copyfile(config_dir + 'asound.conf-b', os.path.expanduser('~/.asoundrc'))
-    time.sleep(1)
-    import sounddevice as sd
-    if has_needed_devices():
-        return
-    else:
-        raise Exception("Missing audio hardware")
+    print "setting up .asoundrc"
+    # hack hack hack
+    asound_conf_file = ("asound.conf-dac-0"
+                        if "card 0" in subprocess.check_output(["aplay", "-l"])
+                        else "asound.conf-dac-2"
+                        )
+    copyfile("../config/" + asound_conf_file,
+             os.path.expanduser("~/.asoundrc"))
+
+if __name__ == "__main__":
+    print "running setup..."
+    setup_asoundrc()
