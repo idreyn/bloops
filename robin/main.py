@@ -103,20 +103,22 @@ def main():
         print "missing audio hardware. exiting."
         return
     print "starting batcave client..."
-    batcave.run_client(BATCAVE_HOST,
-           get_device_status,
-           get_device_info,
-           {
-               Message.CONNECT: on_connected,
-               Message.RECONNECT: on_connected,
-               Message.DISCONNECT: on_disconnect,
-               Message.TRIGGER_PULSE: on_trigger_pulse,
-               Message.UPDATE_PULSE: on_update_pulse,
-               Message.SET_RECORD_DURATION: on_set_record_duration,
-               Message.UPDATE_OVERRIDES: on_update_overrides,
-               Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
-               Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
-           })
+    batcave.run_client(
+        BATCAVE_HOST,
+        get_device_status,
+        get_device_info,
+        {
+           Message.CONNECT: on_connected,
+           Message.RECONNECT: on_connected,
+           Message.DISCONNECT: on_disconnect,
+           Message.TRIGGER_PULSE: on_trigger_pulse,
+           Message.UPDATE_PULSE: on_update_pulse,
+           Message.SET_RECORD_DURATION: on_set_record_duration,
+           Message.UPDATE_OVERRIDES: on_update_overrides,
+           Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
+           Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
+        }
+    )
     print "initializing connection to Bluetooth remote..."
     remote.connect_to_remote(
         down={
