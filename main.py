@@ -10,14 +10,17 @@ from config_secret import BATCAVE_HOST
 from echolocate import simple_loop, Echolocation
 from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
                   power_led)
-from pulse import default_pulse, pulse_from_dict
+from pulse import default_pulse, pulse_from_dict, Chirp
 
-from batcave.client import run_client
+import remote
+
+import batcave.client as batcave
 from batcave.protocol import Message, DeviceStatus
 from batcave.debug_override import DebugOverride
 
 AUDIO = Audio(ULTRAMICS, DAC)
 
+busy = False
 ms_record_duration = 100
 connected_remotes = 0
 last_pulse_dict = None
@@ -64,9 +67,17 @@ def on_set_record_duration(d):
     ms_record_duration = d
 
 
-def on_trigger_pulse():
+def on_trigger_pulse(ovr_pulse=None):
+    global busy
+    if busy:
+        return
     print "pulse triggered!"
-    simple_loop(Echolocation(pulse, 20, 1000 * ms_record_duration), AUDIO)
+    busy = True
+    try:
+        simple_loop(Echolocation(
+            ovr_pulse or pulse, 20, 1000 * ms_record_duration), AUDIO)
+    finally:
+        busy = False
 
 
 def get_device_status():
@@ -91,8 +102,8 @@ def main():
         print_device_availability()
         print "missing audio hardware. exiting."
         return
-    print "running client from main..."
-    run_client(BATCAVE_HOST,
+    print "starting batcave client..."
+    batcave.run_client(BATCAVE_HOST,
            get_device_status,
            get_device_info,
            {
@@ -106,6 +117,19 @@ def main():
                Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
                Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
            })
+    print "initializing connection to Bluetooth remote..."
+    remote.connect_to_remote(
+        down={
+            remote.RemoteKeys.UP: lambda:
+                on_trigger_pulse(Chirp(5e4, 1.5e4, 5e3)),
+            remote.RemoteKeys.DOWN: lambda:
+                on_trigger_pulse(Chirp(1.5e4, 5e4, 5e3)),
+            remote.RemoteKeys.LEFT: lambda:
+                on_trigger_pulse(Chirp(5e4, 1.5e4, 1e4)),
+            remote.RemoteKeys.RIGHT: lambda:
+                on_trigger_pulse(Chirp(1.5e4, 5e4, 1e4)),
+        }
+    )
 
 try:
     main()

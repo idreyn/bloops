@@ -37,7 +37,7 @@ class Stream(object):
         length, data = self.pcm.read()
         if length <= 0:
             self._okay = False
-            raise Exception("Error reading from ALSA stream")
+            raise Exception("Error reading from ALSA stream: %s" % length)
         return data
 
     def write(self, bytes):

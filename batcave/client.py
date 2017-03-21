@@ -33,7 +33,7 @@ def client(batcave_host, get_device_status, get_device_info, callbacks):
 		})
 
 def run_client(*args):
-	t = threading.Thread(target=client,args=args)
-	t.daemon = False
+	t = threading.Thread(target=client, args=args)
+	t.daemon = True
 	t.start()
 
