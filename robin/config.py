@@ -24,6 +24,8 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 DEVICE_ID = os.environ.get("ROBIN_DEVICE_ID")
 IP = get_ip_address()
 
+BLUETOOTH_REMOTE_NAME = "MOCUTE-032X_B61-2ECF"
+
 if IS_DEVICE:
     import alsaaudio as aa
 else:
@@ -100,7 +102,6 @@ ULTRAMICS = AudioDevice('ultramics', 200000, 2)
 DAC = AudioDevice('dac', 192000, 2)
 REQUIRED_INPUT_DEVICES = [ULTRAMICS]
 REQUIRED_OUTPUT_DEVICES = [DAC]
-
 
 def has_required_devices():
     return len(
