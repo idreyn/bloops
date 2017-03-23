@@ -1,13 +1,19 @@
 import time
 import traceback
+import threading
 import sounddevice as sd
 
 from stream import *
 from record import *
 from config import *
 from util import *
+from samplebuffer import *
 
-
+def run_audio_thread(record_stream, record_buffer, emit_stream, emit_buffer):
+    while True:
+        a = emit_buffer.get_samples(10000)
+        emit_stream.write_array(a)
+    
 class Audio(object):
 
     def __init__(self, record_device, emit_device):
@@ -15,9 +21,18 @@ class Audio(object):
         self.emit_device = emit_device
         self.record_stream = None
         self.emit_stream = None
+        self.record_buffer = SampleBuffer(record_device.channels)
+        self.emit_buffer = SampleBuffer(emit_device.channels)
 
-    # Either returns the objects you need to do echolocation
-    # or returns False if they're not available
+    def start(self):
+        self.emit_stream = Stream(self.emit_device, False)
+        self.record_stream = Stream(self.record_device, True)
+        self.thread = threading.Thread(target=run_audio_thread,
+            args=(self.record_stream, self.record_buffer, self.emit_stream, self.emit_buffer))
+        self.thread.daemon = True
+        self.thread.start()
+
+    """
     def io(self):
         if not self.record_stream:
             try:
@@ -46,20 +61,7 @@ class Audio(object):
                 self.emit_stream = None
                 return False
         return (self.record_stream, self.emit_stream)
-
-    def await_available(self):
-        while not self.io():
-            time.sleep(0.00001)
-
-    def await_unavailable(self):
-        while self.io():
-            time.sleep(0.00001)
-
-    def all_streams(self):
-        return set([
-            self.record_stream,
-            self.emit_stream,
-        ])
+    """
 
     def __enter__(self):
         return self.io()
