@@ -123,13 +123,21 @@ def main():
     remote.connect_to_remote(
         down={
             remote.RemoteKeys.UP: lambda:
-                on_trigger_pulse(Chirp(5e4, 1.5e4, 5e3)),
+                on_trigger_pulse(Chirp(4e4, 1.5e4, 5e3)),
             remote.RemoteKeys.DOWN: lambda:
                 on_trigger_pulse(Chirp(1.5e4, 5e4, 5e3)),
             remote.RemoteKeys.LEFT: lambda:
-                on_trigger_pulse(Chirp(5e4, 1.5e4, 1e4)),
+                on_trigger_pulse(Chirp(4e4, 1.5e4, 2.5e3)),
             remote.RemoteKeys.RIGHT: lambda:
-                on_trigger_pulse(Chirp(1.5e4, 5e4, 1e4)),
+                on_trigger_pulse(Chirp(1.5e4, 5e4, 2.5e3)),
+        },
+        hold={
+            remote.RemoteKeys.JS_UP: lambda:
+                emitter_enable.set(True)
+        },
+        up={
+            remote.RemoteKeys.JS_UP: lambda:
+                (not busy) and emitter_enable.set(False)
         }
     )
 

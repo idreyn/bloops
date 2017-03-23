@@ -13,6 +13,8 @@ class Audio(object):
     def __init__(self, record_device, emit_device):
         self.record_device = record_device
         self.emit_device = emit_device
+        self.record_stream = None
+        self.emit_stream = None
 
     # Either returns the objects you need to do echolocation
     # or returns False if they're not available
@@ -64,7 +66,10 @@ class Audio(object):
 
     def __exit__(self, *rest):
         # Kludge o'clock
-        self.record_stream.close()
-        self.emit_stream.close()
+        try:
+            self.record_stream.close()
+            self.emit_stream.close()
+        except:
+            pass
         self.record_stream = None
         self.emit_stream = None
