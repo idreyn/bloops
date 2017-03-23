@@ -27,6 +27,7 @@ def client(down=None, hold=None, up=None):
 		try:
 			for event in dev.read_loop():
 				kev = evdev.categorize(event)
+				print kev
 				if isinstance(kev, evdev.KeyEvent):
 					if kev.keystate == kev.key_down:
 						if down and down.get(kev.scancode):
