@@ -100,7 +100,7 @@ class Silence(Pulse):
 
 class Tone(Pulse):
 	def __init__(self, frequency, us_duration, square=False):
-		super(Tone,self).__init__(us_duration, square)
+		super(Tone, self).__init__(us_duration, square)
 		self.frequency = frequency
 
 	def __str__(self):
@@ -115,12 +115,12 @@ class Tone(Pulse):
 
 	def band(self):
 		leakage = 2500 # pretty arbitrary
-		return (self.frequency - leakage, self.frequency + leakeage)
+		return (self.frequency - leakage, self.frequency + leakage)
 
 class Chirp(Pulse):
 	def __init__(self, f0, f1, us_duration,
 			method='linear', square=False):
-		super(Chirp,self).__init__(us_duration, square)
+		super(Chirp, self).__init__(us_duration, square)
 		self.f0 = f0
 		self.f1 = f1
 		self.method = method
@@ -148,12 +148,12 @@ class Chirp(Pulse):
 	def band(self, device=None):
 		return (self.f0, self.f1)
 
-class Click(Pulse):
+class Noise(Pulse):
 	def __init__(self, us_duration):
-		super(Click,self).__init__(us_duration)
+		super(Noise, self).__init__(us_duration)
 
 	def __str__(self):
-		return "click-%sms" % (str(self.us_duration / 1000))
+		return "noise-%sms" % (str(self.us_duration / 1000))
 
 	def _render(self, device):
 		return np.random.normal(0, 1, size=len(self.t_axis(device)))

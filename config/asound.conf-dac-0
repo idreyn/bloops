@@ -1,0 +1,18 @@
+pcm.dac {
+	type hw
+	card 0
+	rate 192000
+	channels 2
+}
+
+pcm.ultramics {
+	type multi
+	slaves.a.pcm "hw:1,0"
+	slaves.a.channels 1
+	slaves.b.pcm "hw:2,0"
+	slaves.b.channels 1
+	bindings.0.slave a
+	bindings.0.channel 0
+	bindings.1.slave b
+	bindings.1.channel 0
+}
