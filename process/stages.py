@@ -1,10 +1,13 @@
 from scipy.special import expit
-from scipy.signal import *
+import scipy.signal
 
 import peakutils
 
 from measurements import *
 from sample import EnvironmentSample
+from analyze import align
+
+import util
 
 def stage(require=None, forbid=None):
 	if require is None:
@@ -26,13 +29,13 @@ def stage(require=None, forbid=None):
 				)
 			if not es.passed_stages(require):
 				raise Exception(
-					"Cannot run pipeline stage %s without first" + \
-					" running its require." % (stage_func.__name__)
+					("Cannot run pipeline stage %s without first" + \
+					" running its required stages.") % (stage_func.__name__)
 				)
-			if es.passed_stages(forbid):
+			if len(forbid) > 0 and es.passed_stages(forbid):
 				raise Exception(
-					"Cannot run pipeline stage %s because a forbidden stage" + \
-					" has already been applied." % (stage_func.__name__)
+					("Cannot run pipeline stage %s because a forbidden stage" + \
+					" has already been applied.") % (stage_func.__name__)
 				)
 			es = stage_func(es)
 			if not type(es) is EnvironmentSample:
@@ -46,28 +49,32 @@ def stage(require=None, forbid=None):
 		return func_wrapper
 	return decorator
 
-@stage
+@stage()
 def split_silence(es):
+	for c in es.channels:
+		c.signal = c.sample
+	return es
+	# TODO
 	def us_to_index(es, us_time):
 		return int(es.rate * us_time * 1.0 / 1e6)
-	pre_silence_boundary = es.us_to_index(
-		es.us_pulse_start + Measurements.PICKUP_DELAY)
+	pre_silence_boundary = us_to_index(
+		es, es.us_pulse_start + PICKUP_DELAY)
  	if pre_silence_boundary > len(es.channels[0].sample):
  		raise Exception()
 	for c in es.channels:
 		c.silence = c.sample[0:pre_silence_boundary]
 	return es
 
-@stage
+@stage()
 def detrend(es):
 	for c in es.channels:
-		c.signal = detrend(c.sample[pre_silence_boundary:], type='constant')
+		c.signal = scipy.signal.detrend(c.signal, type='constant')
 	return es
 
-@stage(require=[split_silence])
+@stage()
 def bandpass(es):
 	for c in es.channels:
-		c.signal = bandpass(c.signal, es.hz_band[0], es.hz_band[1], es.rate)
+		c.signal = util.bandpass(c.signal, es.hz_band[0], es.hz_band[1], es.rate)
 	return es
 
 @stage(require=[split_silence, detrend])
@@ -82,20 +89,18 @@ def noisereduce(es):
 
 @stage(forbid=[bandpass])
 def align_samples(es):
-	MIN_DIST = 500
-	THRESHOLD = 0.3
-	for c in es.channels:
-		indices = peakutils.indexes(
-			c.signal,
-			min_dist=MIN_DIST,
-			thres=THRESHOLD
-		)
-		c.peak = max(indices)
-	[first, last] = sorted(
-		es.channels,
-		key=lambda c: c.peak
-	)
-	cutoff = last.peak - first.peak
-	first.signal = first.signal[:-cutoff]
-	last.signal = last.signal[cutoff:]
+	left = es.channels[0]
+	right = es.channels[1]
+	cutoff = align(left.signal, right.signal)
+	print cutoff
+	if cutoff < 0:
+		cutoff = 0 - cutoff
+		first = left
+		last = right
+	else:
+		first = right
+		last = left
+	if cutoff > 0:
+		first.signal = first.signal[:-cutoff]
+		last.signal = last.signal[cutoff:]
 	return es
