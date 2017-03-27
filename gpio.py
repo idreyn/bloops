@@ -9,7 +9,7 @@ from record import *
 gpio.setmode(gpio.BCM)
 
 class GPIOWrite(object):
-	def __init__(self, pin, ms_wait=50):
+	def __init__(self, pin, ms_wait=100):
 		self.pin = pin
 		self.ms_wait = ms_wait
 		gpio.setup(self.pin, gpio.OUT)
