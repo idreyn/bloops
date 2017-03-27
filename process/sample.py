@@ -29,12 +29,13 @@ class EnvironmentSample(object):
 		self.us_pulse_start = us_pulse_start
 		self.us_expected_distance = us_expected_distance
 		self.hz_band = hz_band or (0, self.rate / 2)
+		self.np_format = np_format
 		self.stages = []
 
-	def passed_stages(stages):
+	def passed_stages(self, stages):
 		return set(self.stages) >= set(stages)
 
-	def pass_stage(stage):
+	def pass_stage(self, stage):
 		self.stages.append(stage)		
 
 	def render(self):
@@ -42,6 +43,8 @@ class EnvironmentSample(object):
 			len(self.channels[0].signal),
 			len(self.channels)
 		), dtype=self.np_format)
+		print self.channels[0]
+		print self.channels[1]
 		for i, c in enumerate(self.channels):
-			res[:,i] = c.signal.astype(self.np_format)
+			res[:,i] = c.signal
 		return res

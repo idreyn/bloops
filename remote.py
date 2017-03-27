@@ -27,7 +27,6 @@ def client(down=None, hold=None, up=None):
 		try:
 			for event in dev.read_loop():
 				kev = evdev.categorize(event)
-				print kev
 				if isinstance(kev, evdev.KeyEvent):
 					if kev.keystate == kev.key_down:
 						if down and down.get(kev.scancode):
@@ -38,7 +37,8 @@ def client(down=None, hold=None, up=None):
 					if kev.keystate == kev.key_up:
 						if up and up.get(kev.scancode):
 							up.get(kev.scancode)()
-		except (IOError, evdev.device.EvdevError):
+		except (IOError, evdev.device.EvdevError) as e:
+			print e
 			print "bluetooth remote appears to be disconnected"
 			
 def connect_to_remote(*args, **kwargs):

@@ -10,13 +10,15 @@ from config_secret import BATCAVE_HOST
 from echolocate import simple_loop, Echolocation
 from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
                   power_led)
-from pulse import default_pulse, pulse_from_dict, Chirp
+from pulse import *
 
 import remote
 
 import batcave.client as batcave
 from batcave.protocol import Message, DeviceStatus
 from batcave.debug_override import DebugOverride
+
+from process.pipeline import STANDARD_PIPELINE
 
 AUDIO = Audio(ULTRAMICS, DAC)
 
@@ -75,7 +77,8 @@ def on_trigger_pulse(ovr_pulse=None):
     busy = True
     try:
         simple_loop(Echolocation(
-            ovr_pulse or pulse, 20, 1000 * ms_record_duration), AUDIO)
+            ovr_pulse or pulse, 20, ULTRAMICS, 1000 * ms_record_duration), 
+            AUDIO, STANDARD_PIPELINE)
     finally:
         busy = False
 
@@ -123,13 +126,16 @@ def main():
     remote.connect_to_remote(
         down={
             remote.RemoteKeys.UP: lambda:
-                on_trigger_pulse(Chirp(4e4, 1.5e4, 5e3)),
+                on_trigger_pulse(CombinedPulse(
+                    Chirp(2e4, 5e4, 5e3),
+                    Chirp(5e4, 2e4, 5e3)
+                )),
             remote.RemoteKeys.DOWN: lambda:
-                on_trigger_pulse(Chirp(1.5e4, 5e4, 5e3)),
+                on_trigger_pulse(Chirp(2e4, 5e4, 1e3)),
             remote.RemoteKeys.LEFT: lambda:
-                on_trigger_pulse(Chirp(4e4, 1.5e4, 2.5e3)),
+                on_trigger_pulse(Chirp(2e4, 5e4, 5e3)),
             remote.RemoteKeys.RIGHT: lambda:
-                on_trigger_pulse(Chirp(1.5e4, 5e4, 2.5e3)),
+                on_trigger_pulse(Tone(2.5e4, 1e6 * 2 / 3e4)),
         },
         hold={
             remote.RemoteKeys.JS_UP: lambda:
