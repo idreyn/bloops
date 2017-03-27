@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.signal import chirp
 
+from util import zero_pad
+
 def pulse_from_dict(d):
 	if d.get("type") == "tone":
 		return Tone(
@@ -100,7 +102,7 @@ class Silence(Pulse):
 
 class Tone(Pulse):
 	def __init__(self, frequency, us_duration, square=False):
-		super(Tone,self).__init__(us_duration, square)
+		super(Tone, self).__init__(us_duration, square)
 		self.frequency = frequency
 
 	def __str__(self):
@@ -115,12 +117,12 @@ class Tone(Pulse):
 
 	def band(self):
 		leakage = 2500 # pretty arbitrary
-		return (self.frequency - leakage, self.frequency + leakeage)
+		return (self.frequency - leakage, self.frequency + leakage)
 
 class Chirp(Pulse):
 	def __init__(self, f0, f1, us_duration,
 			method='linear', square=False):
-		super(Chirp,self).__init__(us_duration, square)
+		super(Chirp, self).__init__(us_duration, square)
 		self.f0 = f0
 		self.f1 = f1
 		self.method = method
@@ -148,12 +150,12 @@ class Chirp(Pulse):
 	def band(self, device=None):
 		return (self.f0, self.f1)
 
-class Click(Pulse):
+class Noise(Pulse):
 	def __init__(self, us_duration):
-		super(Click,self).__init__(us_duration)
+		super(Noise, self).__init__(us_duration)
 
 	def __str__(self):
-		return "click-%sms" % (str(self.us_duration / 1000))
+		return "noise-%sms" % (str(self.us_duration / 1000))
 
 	def _render(self, device):
 		return np.random.normal(0, 1, size=len(self.t_axis(device)))
@@ -162,3 +164,38 @@ class Click(Pulse):
 		# This bad boy is very broadband but we probably can get rid of audible
 		# sound anyway, since the tweeters are loudest at > 15k.
 		return (1.5e4, device.rate / 2)
+
+class CombinedPulse(Pulse):
+	def __init__(self, left, right):
+		super(CombinedPulse, self).__init__(
+			max(left.us_duration, right.us_duration),
+			left.square and right.square
+		)
+		self.__rendered = None
+		self.left_pulse = left
+		self.right_pulse = right
+
+	def render(self, device):
+		assert device.channels == 2
+		if not self.__rendered is None:
+			return self.__rendered
+		lr = self.left_pulse.render(device)
+		rr = self.right_pulse.render(device)
+		if len(lr) < len(rr):
+			lr = zero_pad(lr, right_length=(len(rr) - len(lr)))
+		if len(rr) < len(lr):
+			rr = zero_pad(rr, right_length=(len(lr) - len(rr)))
+		self.__rendered = np.stack((lr[:,0], rr[:,0]), axis=1)
+		print self.__rendered.shape
+		return self.__rendered
+
+	def band(self):
+		(l0, h0) = self.left_pulse.band()
+		(l1, h1) = self.right_pulse.band()
+		return (min(l0, l1), max(h0, h1))
+
+	def __str__(self):
+		return "combined-%s-%s" % (
+			self.left_pulse, self.right_pulse
+		)
+
