@@ -1,6 +1,8 @@
+from __future__ import division
+
+import numpy as np
 from scipy.special import expit
 import scipy.signal
-
 import peakutils
 
 from measurements import *
@@ -50,6 +52,15 @@ def stage(require=None, forbid=None):
 	return decorator
 
 @stage()
+def stats(es):
+	for i, c in enumerate(es.channels):
+		c.max_val = max(c.signal)
+		c.argmax = np.argmax(c.signal)
+		c.avg_power = sum(c.signal ** 2) / len(c.signal)
+		print "channel %s: max %s argmax %s avg_power %s" % (i, c.max_val, c.argmax, c.avg_power)
+	return es
+
+@stage()
 def split_silence(es):
 	for c in es.channels:
 		c.signal = c.sample
@@ -87,11 +98,22 @@ def noisereduce(es):
 		)
 	return es
 
+@stage()
+def normalize_samples(es):
+	max_val = max([max(c.signal) for c in es.channels])
+	for c in es.channels:
+		c.signal *= max_val / max(c.signal)
+	return es
+
+
 @stage(forbid=[bandpass])
 def align_samples(es):
 	left = es.channels[0]
 	right = es.channels[1]
-	cutoff = align(left.signal, right.signal)
+	if False:
+		cutoff = align(left.signal, right.signal)
+	else:
+		cutoff = left.argmax - right.argmax
 	print cutoff
 	if cutoff < 0:
 		cutoff = 0 - cutoff
