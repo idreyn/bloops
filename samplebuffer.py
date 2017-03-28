@@ -3,7 +3,6 @@ import threading
 import bisect
 import numpy as np
 
-from util import zero_pad
 
 class SampleBuffer(object):
 
@@ -13,6 +12,7 @@ class SampleBuffer(object):
         self.channels = channels
         self.lock = threading.Lock()
         self.period_capacity = period_capacity
+        self._empty = None
 
     def _shift(self, ln=1):
         res = self.queue[0:ln]
@@ -29,13 +29,20 @@ class SampleBuffer(object):
         midpoint = (start_limit + end_limit) / 2
 
     def put_samples(self, sample):
+        self.lock.acquire()
         self.queue.append(np.copy(sample))
         self.times.append(time.time())
         if len(self.queue) > self.period_capacity:
             self._shift()
+        self.lock.release()
+
+    def set_empty(self, sample):
+        self._empty = sample
 
     def get_samples(self, length, start_time=None):
         self.lock.acquire()
+        if len(self.queue) == 0 and not self._empty is None:
+            self.queue.append(self._empty)
         offset = 0 if start_time is None \
             else bisect.bisect_left(self.times, start_time)
         self._shift(offset)
