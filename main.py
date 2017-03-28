@@ -105,6 +105,7 @@ def main():
         print_device_availability()
         print "missing audio hardware. exiting."
         return
+    AUDIO.start()
     print "starting batcave client..."
     batcave.run_client(
         BATCAVE_HOST,
@@ -131,7 +132,7 @@ def main():
                     Chirp(5e4, 2e4, 5e3)
                 )),
             remote.RemoteKeys.DOWN: lambda:
-                on_trigger_pulse(Chirp(2e4, 5e4, 1e3)),
+                on_trigger_pulse(Chirp(2e4, 5e4, 5e4)),
             remote.RemoteKeys.LEFT: lambda:
                 on_trigger_pulse(Chirp(2e4, 5e4, 5e3)),
             remote.RemoteKeys.RIGHT: lambda:

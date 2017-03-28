@@ -1,3 +1,5 @@
+from alsaaudio import ALSAAudioError
+
 import time
 import traceback
 import threading
@@ -9,19 +11,19 @@ from config import *
 from util import *
 from samplebuffer import *
 
-def run_emit_thread(emit_stream, buffers):
+def run_emit_thread(emit_stream, buffers, record_stream, record_buffer):
     period_size = emit_stream.device.period_size
     while True:
+        """
         emit_stream.write_array(reduce(
             np.add,
             [b.get_samples(period_size) for b in buffers]
         ))
-
-def run_record_thread(record_stream, record_buffer):
-    period_size = record_stream.device.period_size
-    while True:
-        record_buffer.put_samples(record_stream.read_array(period_size))
-        
+        """
+        res = record_stream.read_array(period_size)
+        record_buffer.put_samples(res)
+        print "oh"
+        time.sleep(0.1)
     
 class Audio(object):
 
@@ -35,16 +37,12 @@ class Audio(object):
         self.background_buffer = SampleBuffer(emit_device.channels)
 
     def start(self):
-        self.emit_stream = Stream(self.emit_device, False)
-        self.record_stream = Stream(self.record_device, True)
+        self.emit_stream = Stream(self.emit_device, False, True)
+        self.record_stream = Stream(self.record_device, True, True)
         self.emit_thread = threading.Thread(target=run_emit_thread,
-            args=(self.emit_stream, [self.emit_buffer, self.background_buffer]))
+            args=(self.emit_stream, [self.emit_buffer, self.background_buffer], self.record_stream, self.record_buffer))
         self.emit_thread.daemon = True
         self.emit_thread.start()
-        self.record_thread = threading.Thread(target=run_record_thread,
-            args=(self.record_stream, self.record_buffer))
-        self.record_thread.daemon = True
-        self.record_thread.start()
 
     """
     def io(self):
