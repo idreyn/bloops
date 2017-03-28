@@ -62,8 +62,8 @@ class Stream(object):
     def close(self):
         self.pcm.close()
 
-    def read_array(self, seconds):
-        period_count = (self.device.rate // self.device.period_size) * seconds
+    def read_array(self, samples):
+        period_count = samples // self.device.period_size
         samples = []
         with self as stream:
             while len(samples) < period_count:
