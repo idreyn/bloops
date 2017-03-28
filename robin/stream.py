@@ -3,6 +3,7 @@ from __future__ import division
 import numpy as np
 import alsaaudio as aa
 import time
+import threading
 
 from data import *
 
@@ -19,14 +20,17 @@ class Stream(object):
         self.pcm.setchannels(device.channels)
         self.pcm.setformat(device.format)
         self.pcm.setperiodsize(device.period_size)
+        self.lock = threading.Lock()
         self._okay = True
         self._paused = False
 
     def __enter__(self, *rest):
+        self.lock.acquire()
         if self._paused:
             self.pcm.pause(False)
 
     def __exit__(self, *rest):
+        self.lock.release()
         try:
             self.pcm.pause(True)
             self._paused = True
@@ -56,8 +60,8 @@ class Stream(object):
     def close(self):
         self.pcm.close()
 
-    def read_array(self, seconds):
-        period_count = (self.device.rate // self.device.period_size) * seconds
+    def read_array(self, samples):
+        period_count = samples // self.device.period_size
         samples = []
         with self as stream:
             while len(samples) < period_count:
