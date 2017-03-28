@@ -102,7 +102,7 @@ def noisereduce(es):
 def normalize_samples(es):
 	max_val = max([max(c.signal) for c in es.channels])
 	for c in es.channels:
-		c.signal *= max_val / max(c.signal)
+		c.signal *= (max_val / max(c.signal)).astype(es.np_format)
 	return es
 
 
