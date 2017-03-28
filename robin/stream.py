@@ -27,19 +27,22 @@ class Stream(object):
     def __enter__(self, *rest):
         self.lock.acquire()
         if self._paused:
-            self.pcm.pause(False)
+            pass
+            # self.pcm.pause(False)
 
     def __exit__(self, *rest):
         self.lock.release()
         try:
             self.pcm.pause(True)
-            self._paused = True
+            # self._paused = True
         except:
             pass
 
     def read(self):
+        print "wup"
         length, data = self.pcm.read()
-        if length <= 0:
+        print length
+        if length < 0:
             self._okay = False
             raise Exception("Error reading from ALSA stream: %s" % length)
         return data

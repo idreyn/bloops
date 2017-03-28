@@ -28,24 +28,22 @@ class Echolocation(object):
 def simple_loop(ex, audio, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = zero_pad(ex.pulse.render(DAC), 50, 50)
-    with audio as (record, emit):
-        with emitter_enable:
-            if ex.us_silence_before:
-                emit.write_array(Silence(ex.us_silence_before).render(DAC))
-            emit.write_array(rendered)
-            sample = record.read_array(1e-6 * ex.us_record_time)
+    with emitter_enable:
+        t0 = time.time()
+        if ex.us_silence_before:
+            audio.emit_buffer.put_samples(Silence(ex.us_silence_before).render(DAC))
+        audio.emit_buffer.put_samples(rendered)
+        record_time = 1e-6 * ex.us_record_time
+        time.sleep(record_time)
+        sample = audio.record_buffer.get_samples(int(record_time * audio.record_stream.device.rate), t0)
     if pipeline:
         sample = pipeline.run(ex, sample)
-    playback = Stream(DAC, False, False)
     chunks = []
     for chunk in np.split(zero_pad_to_multiple(sample, ex.slowdown), ex.slowdown):
         t0 = time.time()
         chunk = resample(chunk, ex.slowdown, 'sinc_fastest')
-        playback.write_array(chunk)
-        print "chunk in", time.time() - t0, len(chunk), len(chunk) / ULTRAMICS.rate
-        time.sleep(0.04)
+        audio.emit_buffer.put_samples(chunk)
         chunks.append(chunk)
-    playback.close()
     resampled = np.concatenate(chunks)
     print resampled.shape
     save_file(ULTRAMICS, resampled, str(ex.pulse) + "__resampled")
