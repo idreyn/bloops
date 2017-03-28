@@ -8,12 +8,14 @@ from audio import *
 a = Audio(ULTRAMICS, DAC)
 a.start()
 
-pulse = Chirp(1e2, 1.2e2, 1e6)
-print pulse
+pulse = Chirp(1e2, 3e2, 1e6)
+
+a.background_buffer.set_empty(0.1 * pulse.render(DAC))
+
+delay = 0.01
 
 try:
 	while True:
-		delay = 0.01
 		t0 = time.time()
 		time.sleep(delay)
 		samples = a.record_buffer.get_samples(int(delay * ULTRAMICS.rate), t0)
