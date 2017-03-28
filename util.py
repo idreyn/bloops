@@ -43,9 +43,12 @@ def t_axis(sample, rate):
 def zero_pad(sample, left_length=0, right_length=0):
 	return np.pad(sample, ((left_length, right_length), (0,0)), mode='constant')
 
+def zero_pad_to_multiple(sample, factor):
+	next_multiple = factor * int(math.ceil(len(sample) / factor))
+	return zero_pad(sample, right_length=(next_multiple - len(sample)))
+
 def zero_pad_power_of_two(sample):
 	next_power = 2 ** math.ceil(math.log(len(sample), 2))
-	print len(sample), next_power
 	return zero_pad(sample, right_length=(next_power - len(sample)))
 
 # Python kludges

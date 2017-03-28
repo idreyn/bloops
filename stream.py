@@ -43,14 +43,12 @@ class Stream(object):
     def write(self, bytes):
         self.pcm.write(bytes)
 
-    def write_array(self, array, fake_block=False):
+    def write_array(self, array):
         device = self.device
         periods = array_to_periods(array, device)
         with self as stream:
             for p in periods:
                 self.write(p)
-                if fake_block:
-                    time.sleep(0.1 * device.period_length())
 
     def assert_okay(self):
         return self._okay
