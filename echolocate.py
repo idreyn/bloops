@@ -1,5 +1,7 @@
 from __future__ import division
 
+from Queue import Queue
+
 import numpy as np
 from scikits.samplerate import resample
 import resampy
@@ -12,7 +14,6 @@ from stream import Stream
 from util import zero_pad, zero_pad_to_multiple, bandpass
 
 import time
-
 
 class Echolocation(object):
 
@@ -27,25 +28,43 @@ class Echolocation(object):
 
 def simple_loop(ex, audio, pipeline=None):
     assert isinstance(ex, Echolocation)
-    rendered = zero_pad(ex.pulse.render(DAC), 50, 50)
+    rendered = ex.pulse.render(DAC)
     with emitter_enable:
+        """
+        audio.emit_buffer.clear()
+        audio.emit_buffer.put(rendered, flag_removed=True)
+        """
+        audio.emit_queue.put(rendered)
         t0 = time.time()
-        if ex.us_silence_before:
-            audio.emit_buffer.put_samples(Silence(ex.us_silence_before).render(DAC))
-        audio.emit_buffer.put_samples(rendered)
+        audio.record_buffer.clear()
         record_time = 1e-6 * ex.us_record_time
         time.sleep(record_time)
-        sample = audio.record_buffer.get_samples(int(record_time * audio.record_stream.device.rate), t0)
-    if pipeline:
+        sample = audio.record_buffer.get(
+            int(record_time * audio.record_stream.device.rate), t0)
+    audio.record_stream.pause()
+    if pipeline and False:
         sample = pipeline.run(ex, sample)
     chunks = []
-    for chunk in np.split(zero_pad_to_multiple(sample, ex.slowdown), ex.slowdown):
-        t0 = time.time()
-        chunk = resample(chunk, ex.slowdown, 'sinc_fastest')
-        audio.emit_buffer.put_samples(chunk)
+    """
+    audio.emit_buffer.clear()
+    """
+    total_chunks = 10
+    buffer_first = 0
+    buffered = Queue()
+    for i, chunk in enumerate(
+        np.split(zero_pad_to_multiple(sample, total_chunks), total_chunks)
+    ):
+        # chunk = resample(chunk, ex.slowdown, 'linear')
+        chunk = np.repeat(chunk, ex.slowdown, axis=0)
         chunks.append(chunk)
+        buffered.put(chunk)
+        if i >= buffer_first:
+            audio.emit_queue.put(buffered.get(), False)
+    while not buffered.empty():
+        audio.emit_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
-    print resampled.shape
+    time.sleep(ex.slowdown * record_time)
     save_file(ULTRAMICS, resampled, str(ex.pulse) + "__resampled")
     save_file(ULTRAMICS, rendered, str(ex.pulse) + "__pulse")
     save_file(ULTRAMICS, sample, str(ex.pulse))
+    audio.record_stream.resume()
