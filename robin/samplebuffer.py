@@ -1,17 +1,22 @@
+from __future__ import division
+
 import time
 import threading
 import bisect
 import numpy as np
 
-
 class SampleBuffer(object):
 
-    def __init__(self, channels, period_capacity=500):
+    def __init__(self, channels, rate, capacity=500):
+        self.channels = channels
+        self.rate = rate
+        self.capacity = capacity
+        self.lock = threading.Lock()
         self.queue = []
         self.times = []
-        self.channels = channels
-        self.lock = threading.Lock()
-        self.period_capacity = period_capacity
+        self.flag_when_removed = None
+        self.flagged_and_removed = None
+        self.flagged_remove_time = None
         self._empty = None
 
     def _shift(self, ln=1):
@@ -19,6 +24,12 @@ class SampleBuffer(object):
         self.queue = self.queue[ln:]
         self.times = self.times[ln:]
         return res
+
+    def clear(self):
+        self.lock.acquire()
+        self.queue = []
+        self.times = []
+        self.lock.release()
 
     def time_range(self):
         return (self.times[0], self.times[-1])
@@ -28,39 +39,77 @@ class SampleBuffer(object):
             end_limit = len(self.times)
         midpoint = (start_limit + end_limit) / 2
 
-    def put_samples(self, sample):
-        self.lock.acquire()
-        self.queue.append(np.copy(sample))
+    def get_flagged_remove_time(self):
+        if not self.flagged_remove_time:
+            if self.flag_when_removed:
+                raise Exception("Flagged sample not yet removed from buffer")
+            else:
+                raise Exception("No sample flagged for removal")
+        res = self.flagged_remove_time
+        self.flagged_remove_time = None
+        self.flagged_and_removed = None
+        return res
+
+    def put(self, sample, critical=True, flag_removed=False):
+        available = self.lock.acquire(critical)
+        if not available:
+            print "discard"
+            # Toss these samples, we're doing something else
+            return
+        if flag_removed:
+            if self.flag_when_removed:
+                print "Warning: overriding buffer's flag_when_removed"
+            self.flag_when_removed = sample
+        self.queue.append(sample)
         self.times.append(time.time())
-        if len(self.queue) > self.period_capacity:
+        while len(self.queue) > self.capacity:
             self._shift()
         self.lock.release()
 
     def set_empty(self, sample):
         self._empty = sample
 
-    def get_samples(self, length, start_time=None):
+    def get_next_sample(self):
+        self.lock.acquire()
+        res = self._shift()
+        self.lock.release()
+        return res
+
+    def get(self, length, start_time=None, verbose=False):
         self.lock.acquire()
         if len(self.queue) == 0 and not self._empty is None:
             self.queue.append(self._empty)
         offset = 0 if start_time is None \
             else bisect.bisect_left(self.times, start_time)
         self._shift(offset)
+        if verbose and start_time:
+            print "requested start time", (start_time,)
+            print "bisect found offset", offset
+            print "actual start time", (self.times[0],)
+        mark_as_removed = None
         pointer = 0
         buff = np.zeros((length, self.channels))
-        i = 0
+        self.lock.release()
         while pointer < length:
-            i = i + 1
             if not len(self.queue):
                 break
             else:
+                self.lock.acquire()
                 sample = self.queue[0]
+                if self.flag_when_removed is sample:
+                    mark_as_removed = (sample, pointer)
                 take = min(length - pointer, len(sample))
-                t0 = time.time()
                 buff[pointer: pointer + take, :] = sample[0:take, :]
                 self.queue[0] = sample[take:, :]
                 pointer = pointer + take
                 if not len(self.queue[0]):
                     self._shift()
-        self.lock.release()
+                self.lock.release()
+        # roughly speaking, expect to be off by a small constant factor
+        remove_time = time.time()
+        if mark_as_removed:
+            (sample, offset) = mark_as_removed
+            self.flag_when_removed = None
+            self.flagged_and_removed = sample
+            self.flagged_remove_time = remove_time + (offset / self.rate)
         return buff

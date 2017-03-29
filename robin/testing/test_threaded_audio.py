@@ -12,14 +12,14 @@ pulse = Chirp(1e2, 3e2, 1e6)
 
 a.background_buffer.set_empty(0.1 * pulse.render(DAC))
 
-delay = 0.01
+delay = 0.1
 
 try:
 	while True:
 		t0 = time.time()
 		time.sleep(delay)
-		samples = a.record_buffer.get_samples(int(delay * ULTRAMICS.rate), t0)
-		a.emit_buffer.put_samples(samples)
+		samples = a.record_buffer.get(int(delay * ULTRAMICS.rate), t0)
+		a.emit_buffer.put(samples)
 except KeyboardInterrupt:
 	pass
 

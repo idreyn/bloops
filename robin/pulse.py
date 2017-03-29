@@ -186,7 +186,6 @@ class CombinedPulse(Pulse):
 		if len(rr) < len(lr):
 			rr = zero_pad(rr, right_length=(len(lr) - len(rr)))
 		self.__rendered = np.stack((lr[:,0], rr[:,0]), axis=1)
-		print self.__rendered.shape
 		return self.__rendered
 
 	def band(self):
