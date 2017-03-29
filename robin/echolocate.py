@@ -30,12 +30,12 @@ def simple_loop(ex, audio, pipeline=None):
     rendered = zero_pad(ex.pulse.render(DAC), 50, 50)
     with emitter_enable:
         t0 = time.time()
-        if ex.us_silence_before:
-            audio.emit_buffer.put_samples(Silence(ex.us_silence_before).render(DAC))
         audio.emit_buffer.put_samples(rendered)
         record_time = 1e-6 * ex.us_record_time
         time.sleep(record_time)
-        sample = audio.record_buffer.get_samples(int(record_time * audio.record_stream.device.rate), t0)
+    t1 = time.time()
+    sample = audio.record_buffer.get_samples(int(record_time * audio.record_stream.device.rate), t0)
+    print "getting samples took", time.time() - t1
     if pipeline:
         sample = pipeline.run(ex, sample)
     chunks = []

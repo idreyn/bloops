@@ -1,51 +1,64 @@
+from __future__ import division
+
 import time
 import threading
+import collections
 import bisect
 import numpy as np
 
-
 class SampleBuffer(object):
 
-    def __init__(self, channels, period_capacity=500):
-        self.queue = []
-        self.times = []
-        self.channels = channels
+    def __init__(self, shape, rate):
+        self.shape = shape
+        self.length = shape[0]
+        self.channels = shape[1]
+        self.rate = rate
+        self.times = collections.deque([]) # List of insert times
+        self.time_indices = {} # Map timestamps to buffer indices
         self.lock = threading.Lock()
-        self.period_capacity = period_capacity
+        self.buffer = np.zeros(shape)
+        self.latest_nonzero_index = -1
         self._empty = None
-
-    def _shift(self, ln=1):
-        res = self.queue[0:ln]
-        self.queue = self.queue[ln:]
-        self.times = self.times[ln:]
-        return res
 
     def time_range(self):
         return (self.times[0], self.times[-1])
 
-    def pointer_for_time(self, time, start_limit=0, end_limit=None):
-        if not end_limit:
-            end_limit = len(self.times)
-        midpoint = (start_limit + end_limit) / 2
-
     def put_samples(self, sample):
+        assert sample.shape[0] <= self.length
+        assert sample.shape[1] == self.channels
+        now = time.time()
         self.lock.acquire()
-        self.queue.append(np.copy(sample))
-        self.times.append(time.time())
-        if len(self.queue) > self.period_capacity:
-            self._shift()
+        if self.latest_nonzero_index + len(sample) > self.length:
+            # Roll as many items through the list as we need to do insert
+            roll = (self.latest_nonzero_index + len(sample)) - self.length + 1
+            t0 = time.time()
+            self.buffer = np.roll(self.buffer, -roll)
+            print "roll operation took", time.time() - t0
+            self.latest_nonzero_index = self.length - roll - 1
+            t0 = time.time()
+            for t in list(self.times):
+                self.time_indices[t] -= roll
+                if self.time_indices[t] < 0:
+                    del self.time_indices[t]
+                    self.times.popleft()
+        insert_index = self.latest_nonzero_index + 1
+        self.time_indices[now] = insert_index
+        self.times.append(now)
+        print insert_index, len(sample)
+        self.buffer[insert_index:insert_index+len(sample)] = sample
+        self.latest_nonzero_index += len(sample)
         self.lock.release()
 
     def set_empty(self, sample):
         self._empty = sample
 
     def get_samples(self, length, start_time=None):
-        self.lock.acquire()
         if len(self.queue) == 0 and not self._empty is None:
             self.queue.append(self._empty)
         offset = 0 if start_time is None \
             else bisect.bisect_left(self.times, start_time)
-        self._shift(offset)
+        if offset > 0:
+            self._shift(offset)
         pointer = 0
         buff = np.zeros((length, self.channels))
         i = 0
@@ -56,11 +69,10 @@ class SampleBuffer(object):
             else:
                 sample = self.queue[0]
                 take = min(length - pointer, len(sample))
-                t0 = time.time()
                 buff[pointer: pointer + take, :] = sample[0:take, :]
                 self.queue[0] = sample[take:, :]
                 pointer = pointer + take
                 if not len(self.queue[0]):
                     self._shift()
-        self.lock.release()
+        print "iterations", i
         return buff
