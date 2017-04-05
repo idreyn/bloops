@@ -26,8 +26,8 @@ class Pipeline(object):
 STANDARD_PIPELINE = Pipeline([
     split_silence,
     stats,
-    normalize_samples,
-    align_samples,
+    # normalize_samples,
+    # align_samples,
     detrend,
     bandpass,
 ])

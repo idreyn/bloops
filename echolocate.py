@@ -42,7 +42,7 @@ def simple_loop(ex, audio, pipeline=None):
         sample = audio.record_buffer.get(
             int(record_time * audio.record_stream.device.rate), t0)
     audio.record_stream.pause()
-    if pipeline and False:
+    if pipeline:
         sample = pipeline.run(ex, sample)
     chunks = []
     """

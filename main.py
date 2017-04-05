@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from __future__ import division
 
 import time
@@ -127,16 +129,17 @@ def main():
     remote.connect_to_remote(
         down={
             remote.RemoteKeys.UP: lambda:
-                on_trigger_pulse(CombinedPulse(
-                    Chirp(2e4, 5e4, 5e3),
-                    Chirp(5e4, 2e4, 5e3)
-                )),
+                on_trigger_pulse(Chirp(2e4, 5e4, 2.5e3)),
             remote.RemoteKeys.DOWN: lambda:
-                on_trigger_pulse(Chirp(2e4, 5e4, 5e4)),
+                on_trigger_pulse(Chirp(2e4, 5e4, 1e4)),
             remote.RemoteKeys.LEFT: lambda:
                 on_trigger_pulse(Chirp(2e4, 5e4, 5e3)),
             remote.RemoteKeys.RIGHT: lambda:
                 on_trigger_pulse(Tone(2.5e4, 1e6 * 2 / 3e4)),
+            remote.RemoteKeys.JS_DOWN: lambda:
+                on_trigger_pulse(Noise(2.5e3)),
+            remote.RemoteKeys.JS_RIGHT: lambda:
+                on_trigger_pulse(Chirp(1e4, 6e4, 0.1e3)),
         },
         hold={
             remote.RemoteKeys.JS_UP: lambda:
@@ -147,6 +150,11 @@ def main():
                 (not busy) and emitter_enable.set(False)
         }
     )
+    for i in xrange(3):
+        emitter_enable.set(True)
+        time.sleep(0.5)
+        emitter_enable.set(False)
+        time.sleep(0.5)
 
 try:
     main()
