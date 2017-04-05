@@ -52,6 +52,14 @@ def stage(require=None, forbid=None):
 	return decorator
 
 @stage()
+def bandpass(es):
+	for c in es.channels:
+		c.signal = util.bandpass(
+			c.signal, es.hz_band[0], es.hz_band[1], es.rate
+		)
+	return es
+
+@stage()
 def detrend(es):
 	for c in es.channels:
 		c.signal = scipy.signal.detrend(c.signal, type='constant')
@@ -66,7 +74,6 @@ def find_pulse_start_index(es):
 			min(1, 2 * (
 				es.us_pulse_duration / es.us_record_duration)
 			) * len(left.signal))
-		)
 	)
 	left.pulse_start_index = lps
 	right.pulse_start_index = rps
@@ -92,14 +99,6 @@ def normalize(es):
 	max_sample = max(max(left.signal), max(right.signal))
 	left.signal = left.signal / max_sample
 	right.signal = right.signal / max_sample
-	return es
-
-@stage()
-def bandpass(es):
-	for c in es.channels:
-		c.signal = util.bandpass(
-			c.signal, es.hz_band[0], es.hz_band[1], es.rate
-		)
 	return es
 
 @stage(require=[detrend], forbid=[normalize])
