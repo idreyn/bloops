@@ -1,7 +1,6 @@
 from sample import EnvironmentSample, ChannelSample
 from stages import *
 
-
 class Pipeline(object):
 
     def __init__(self, steps):
