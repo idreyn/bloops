@@ -6,6 +6,7 @@ import RPi.GPIO as gpio
 from stream import *
 from record import *
 
+gpio.setwarnings(False)
 gpio.setmode(gpio.BCM)
 
 class GPIOWrite(object):

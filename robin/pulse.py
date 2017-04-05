@@ -160,10 +160,10 @@ class Noise(Pulse):
 	def _render(self, device):
 		return np.random.normal(0, 1, size=len(self.t_axis(device)))
 
-	def band(self, device):
+	def band(self, device=None):
 		# This bad boy is very broadband but we probably can get rid of audible
 		# sound anyway, since the tweeters are loudest at > 15k.
-		return (1.5e4, device.rate / 2)
+		return (1.5e4, 9.6e4)
 
 class CombinedPulse(Pulse):
 	def __init__(self, left, right):
