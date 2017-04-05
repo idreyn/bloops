@@ -8,12 +8,18 @@ from audio import *
 a = Audio(ULTRAMICS, DAC)
 a.start()
 
-pulse = Tone(3.4e2, 1e6)
-print pulse
+pulse = Chirp(1e2, 3e2, 1e6)
+
+a.background_buffer.set_empty(0.1 * pulse.render(DAC))
+
+delay = 0.1
 
 try:
 	while True:
-		a.emit_buffer.put(pulse.render(DAC))
-		time.sleep(0)
+		t0 = time.time()
+		time.sleep(delay)
+		samples = a.record_buffer.get(int(delay * ULTRAMICS.rate), t0)
+		a.emit_buffer.put(samples)
 except KeyboardInterrupt:
 	pass
+

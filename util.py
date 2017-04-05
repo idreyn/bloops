@@ -1,6 +1,6 @@
 from __future__ import division
-from math import floor, ceil
 import signal, sys
+import math
 
 import numpy as np
 from scipy.signal import *
@@ -11,10 +11,10 @@ def round_to_nearest(x, base):
 	return base * round(x/ base)
 
 def ceil_to_nearest(x, base):
-	return base * ceil(x / base)
+	return base * math.ceil(x / base)
 
 def floor_to_nearest(x, clip):
-	return base * floor(x / clip)
+	return base * math.floor(x / clip)
 
 def log(x, cb):
 	print(cb(x))
@@ -39,6 +39,17 @@ def bandpass(data, low, high, rate):
 
 def t_axis(sample, rate):
 	return np.linspace(0, len(sample) / rate, len(sample))
+
+def zero_pad(sample, left_length=0, right_length=0):
+	return np.pad(sample, ((left_length, right_length), (0,0)), mode='constant')
+
+def zero_pad_to_multiple(sample, factor):
+	next_multiple = factor * int(math.ceil(len(sample) / factor))
+	return zero_pad(sample, right_length=(next_multiple - len(sample)))
+
+def zero_pad_power_of_two(sample):
+	next_power = 2 ** math.ceil(math.log(len(sample), 2))
+	return zero_pad(sample, right_length=(next_power - len(sample)))
 
 # Python kludges
 

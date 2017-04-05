@@ -20,7 +20,6 @@ class Pipeline(object):
         )
         for step in self.steps:
             es = step(es)
-            print step, [c.signal.shape for c in es.channels]
         return es.render()
 
 STANDARD_PIPELINE = Pipeline([
