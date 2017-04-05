@@ -6,10 +6,11 @@ import RPi.GPIO as gpio
 from stream import *
 from record import *
 
+gpio.setwarnings(False)
 gpio.setmode(gpio.BCM)
 
 class GPIOWrite(object):
-	def __init__(self, pin, ms_wait=50):
+	def __init__(self, pin, ms_wait=200):
 		self.pin = pin
 		self.ms_wait = ms_wait
 		gpio.setup(self.pin, gpio.OUT)
