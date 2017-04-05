@@ -4,20 +4,19 @@ class ChannelSample(object):
 	def __init__(
 		self,
 		sample,
-		us_recording_start=0
+		silence_boundary_index
 	):
 		self.sample = sample
-		self.us_recording_start = us_recording_start
-		self.signal = sample # This will likely be altered by a pipeline stage
-		self.peak = None
-		self.silence = None
+		self.signal = sample[silence_boundary_index:]
+		self.silence = sample[0:silence_boundary_index]
+		self.pulse_start_index = None
 
 class EnvironmentSample(object):
 	def __init__(
 			self,
 			sample,
 			rate,
-			us_pulse_start,
+			silence_boundary_index,
 			hz_band=None,
 			us_pulse_duration=None,
 			us_expected_distance=np.inf,
@@ -28,6 +27,8 @@ class EnvironmentSample(object):
 		self.us_pulse_duration = us_pulse_duration
 		self.us_pulse_start = us_pulse_start
 		self.us_expected_distance = us_expected_distance
+		self.silence_boundary_index = silence_boundary_index
+		self.us_record_duration = 1e6 * len(sample) / self.rate
 		self.hz_band = hz_band or (0, self.rate / 2)
 		self.np_format = np_format
 		self.stages = []

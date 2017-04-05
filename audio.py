@@ -7,7 +7,6 @@ from record import *
 from config import *
 from util import *
 
-
 class Audio(object):
 
     def __init__(self, record_device, emit_device):

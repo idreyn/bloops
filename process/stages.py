@@ -1,3 +1,5 @@
+from __future__ import division
+
 from scipy.special import expit
 import scipy.signal
 
@@ -5,7 +7,7 @@ import peakutils
 
 from measurements import *
 from sample import EnvironmentSample
-from analyze import align
+from analyze import *
 
 import util
 
@@ -50,34 +52,57 @@ def stage(require=None, forbid=None):
 	return decorator
 
 @stage()
-def split_silence(es):
-	for c in es.channels:
-		c.signal = c.sample
-	return es
-	# TODO
-	def us_to_index(es, us_time):
-		return int(es.rate * us_time * 1.0 / 1e6)
-	pre_silence_boundary = us_to_index(
-		es, es.us_pulse_start + PICKUP_DELAY)
- 	if pre_silence_boundary > len(es.channels[0].sample):
- 		raise Exception()
-	for c in es.channels:
-		c.silence = c.sample[0:pre_silence_boundary]
-	return es
-
-@stage()
 def detrend(es):
 	for c in es.channels:
 		c.signal = scipy.signal.detrend(c.signal, type='constant')
 	return es
 
+@stage(require=[bandpass])
+def find_pulse_start_index(es):
+	left, right = es.channels
+	lps, rps = find_signal_start(
+		left.signal, right.signal, left.silence, right.silence,
+		cutoff_index=(
+			min(1, 2 * (
+				es.us_pulse_duration / es.us_record_duration)
+			) * len(left.signal))
+		)
+	)
+	left.pulse_start_index = lps
+	right.pulse_start_index = rps
+	return es
+
+@stage(require=[find_pulse_start_index])
+def align_samples(es):
+	left, right = es.channels
+	left.signal, right.signal = align_samples(
+		left.signal, right.signal,
+		left.pulse_start_index, right.pulse_start_index
+	)
+	return es
+
+@stage(require=[find_pulse_start_index])
+def normalize(es):
+	left, right = es.channels
+	take_samples = 0.2 * (us_pulse_duration / 1e6) * es.rate
+	left_rms = np.std(left.signal[0:take_samples])
+	right_rms = np.std(right.signal[0:take_samples])
+	left.signal *= left_rms / right_rms
+	# Now make the max sample 1
+	max_sample = max(max(left.signal), max(right.signal))
+	left.signal = left.signal / max_sample
+	right.signal = right.signal / max_sample
+	return es
+
 @stage()
 def bandpass(es):
 	for c in es.channels:
-		c.signal = util.bandpass(c.signal, es.hz_band[0], es.hz_band[1], es.rate)
+		c.signal = util.bandpass(
+			c.signal, es.hz_band[0], es.hz_band[1], es.rate
+		)
 	return es
 
-@stage(require=[split_silence, detrend])
+@stage(require=[detrend], forbid=[normalize])
 def noisereduce(es):
 	for c in es.channels:
 		c.signal = noise_reduce(
@@ -85,22 +110,4 @@ def noisereduce(es):
 			c.silence.astype(np.float64),
 			NoiseReduceSettings()
 		)
-	return es
-
-@stage(forbid=[bandpass])
-def align_samples(es):
-	left = es.channels[0]
-	right = es.channels[1]
-	cutoff = align(left.signal, right.signal)
-	print cutoff
-	if cutoff < 0:
-		cutoff = 0 - cutoff
-		first = left
-		last = right
-	else:
-		first = right
-		last = left
-	if cutoff > 0:
-		first.signal = first.signal[:-cutoff]
-		last.signal = last.signal[cutoff:]
 	return es
