@@ -24,8 +24,8 @@ class Pipeline(object):
         return es.render()
 
 STANDARD_PIPELINE = Pipeline([
-    split_silence,
+    bandpass,
+    find_pulse_start_index,
     align_samples,
     detrend,
-    bandpass,
 ])
