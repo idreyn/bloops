@@ -9,7 +9,8 @@ def moving_average(values, window):
     sma = np.convolve(values, weights, 'valid')
     return sma
 
-def find_signal_start(sample, silence, cutoff_index=None, window=100, factor=2):
+def find_signal_start(left, right, left_silence=None, right_silence=None, 
+		silence_boundary_index=None, cutoff_index=None, window=100, factor=10):
 	if cutoff_index:
 		left = left[0:cutoff_index]
 		right = right[0:cutoff_index]
@@ -32,7 +33,7 @@ def find_signal_start(sample, silence, cutoff_index=None, window=100, factor=2):
 	right_start_index = np.argmax(right > (factor * right_silence_pwr))
 	return left_start_index, right_start_index
 
-def align_samples(left, right, lsi, rsi):
+def align(left, right, lsi, rsi):
 	offset = lsi - rsi
 	if offset < 0:
 		offset = 0 - offset
@@ -43,6 +44,7 @@ def align_samples(left, right, lsi, rsi):
 		first_is_left = False
 		first = right
 		last = left
-	first = first[:-offset]
-	last = last[offset:]
+	if offset > 0:
+		first = first[:-offset]
+		last = last[offset:]
 	return first if first_is_left else last, last if first_is_left else first

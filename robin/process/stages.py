@@ -7,8 +7,7 @@ import peakutils
 
 from measurements import *
 from sample import EnvironmentSample
-from analyze import *
-
+import analyze
 import util
 
 def stage(require=None, forbid=None):
@@ -21,7 +20,6 @@ def stage(require=None, forbid=None):
 	elif not hasattr(forbid, "__iter__"):
 		forbid = [forbid]
 	def decorator(stage_func):
-		setattr(stage_func, "__stage__", True)
 		def func_wrapper(es):
 			if not type(es) is EnvironmentSample:
 				raise Exception(
@@ -46,8 +44,9 @@ def stage(require=None, forbid=None):
 						stage_func.__name__
 					)
 				)
-			es.pass_stage(stage_func)
+			es.pass_stage(stage_func.__stage__)
 			return es
+		setattr(stage_func, "__stage__", func_wrapper)
 		return func_wrapper
 	return decorator
 
@@ -78,30 +77,33 @@ def detrend(es):
 @stage(require=[bandpass])
 def find_pulse_start_index(es):
 	left, right = es.channels
-	lps, rps = find_signal_start(
-		left.signal, right.signal, left.silence, right.silence,
-		cutoff_index=(
+	lps, rps = analyze.find_signal_start(
+		left=left.signal,
+		right=right.signal,
+		left_silence=left.silence,
+		right_silence=right.silence,
+		cutoff_index=int(
 			min(1, 2 * (
 				es.us_pulse_duration / es.us_record_duration)
 			) * len(left.signal))
 	)
-	left.pulse_start_index = lps
-	right.pulse_start_index = rps
+	left.pulse_start_offset = lps
+	right.pulse_start_offset = rps
 	return es
 
 @stage(require=[find_pulse_start_index])
-def align_samples(es):
+def align(es):
 	left, right = es.channels
-	left.signal, right.signal = align_samples(
+	left.signal, right.signal = analyze.align(
 		left.signal, right.signal,
-		left.pulse_start_index, right.pulse_start_index
+		left.pulse_start_offset, right.pulse_start_offset
 	)
 	return es
 
 @stage(require=[find_pulse_start_index])
 def normalize(es):
 	left, right = es.channels
-	take_samples = 0.2 * (us_pulse_duration / 1e6) * es.rate
+	take_samples = int(0.2 * (es.us_pulse_duration / 1e6) * es.rate)
 	left_rms = np.std(left.signal[0:take_samples])
 	right_rms = np.std(right.signal[0:take_samples])
 	left.signal *= left_rms / right_rms
@@ -127,24 +129,3 @@ def normalize_samples(es):
 	for c in es.channels:
 		c.signal *= (max_val / max(c.signal)).astype(es.np_format)
 	return es
-
-
-@stage(forbid=[bandpass])
-def align_samples(es):
-	left = es.channels[0]
-	right = es.channels[1]
-	if False:
-		cutoff = align(left.signal, right.signal)
-	else:
-		cutoff = left.argmax - right.argmax
-	print cutoff
-	if cutoff < 0:
-		cutoff = 0 - cutoff
-		first = left
-		last = right
-	else:
-		first = right
-		last = left
-	if cutoff > 0:
-		first.signal = first.signal[:-cutoff]
-		last.signal = last.signal[cutoff:]
