@@ -10,17 +10,17 @@ class Pipeline(object):
         if sample.shape[1] != 2:
             raise Exception("Pipeline only supports 2-channel audio for now.")
         pulse = echolocation.pulse
+        device = echolocation.device
         es = EnvironmentSample(
             sample=sample,
-            rate=echolocation.device.rate,
+            rate=device.rate,
             us_silence_before=echolocation.us_silence_before,
             us_pulse_duration=pulse.us_duration,
             hz_band=pulse.band(),
-            np_format=echolocation.device.np_format
+            np_format=device.np_format
         )
         for step in self.steps:
             es = step(es)
-            print es.channels[0].signal.shape, es.channels[1].signal.shape
         return es.render()
 
 STANDARD_PIPELINE = Pipeline([

@@ -44,7 +44,9 @@ def simple_loop(ex, audio, pipeline=None):
         )
     audio.record_stream.pause()
     if pipeline:
+        t0 = time.time()
         sample = pipeline.run(ex, sample)
+        print "pipeline ran in", round(time.time() - t0, 3)
     chunks = []
     """
     audio.emit_buffer.clear()

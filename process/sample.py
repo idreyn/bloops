@@ -47,7 +47,6 @@ class EnvironmentSample(object):
 			len(self.channels[0].signal),
 			len(self.channels)
 		), dtype=self.np_format)
-		print self.channels[0].signal.shape, self.channels[1].signal.shape
 		for i, c in enumerate(self.channels):
 			res[:,i] = c.signal
 		return res
