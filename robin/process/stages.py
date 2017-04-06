@@ -5,10 +5,11 @@ from scipy.special import expit
 import scipy.signal
 import peakutils
 
-from measurements import *
-from sample import EnvironmentSample
 import analyze
 import util
+from noisereduce import *
+from measurements import *
+from sample import EnvironmentSample
 
 def stage(require=None, forbid=None):
 	if require is None:
