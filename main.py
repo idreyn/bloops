@@ -150,7 +150,7 @@ def main():
                 (not busy) and emitter_enable.set(False)
         }
     )
-    for i in xrange(3):
+    for i in xrange(1):
         emitter_enable.set(True)
         time.sleep(0.5)
         emitter_enable.set(False)

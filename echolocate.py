@@ -36,10 +36,12 @@ def simple_loop(ex, audio, pipeline=None):
         audio.emit_queue.put(rendered)
         t0 = time.time()
         audio.record_buffer.clear()
-        record_time = 1e-6 * ex.us_record_time
+        record_time = 1e-6 * (ex.us_record_time + ex.us_silence_before)
         time.sleep(record_time)
         sample = audio.record_buffer.get(
-            int(record_time * audio.record_stream.device.rate), t0)
+            int(record_time * audio.record_stream.device.rate), 
+            t0 - ex.us_silence_before
+        )
     audio.record_stream.pause()
     if pipeline:
         sample = pipeline.run(ex, sample)
@@ -63,7 +65,7 @@ def simple_loop(ex, audio, pipeline=None):
         audio.emit_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
     time.sleep(ex.slowdown * record_time)
+    save_file(ULTRAMICS, sample, str(ex.pulse))
     save_file(ULTRAMICS, resampled, str(ex.pulse) + "__resampled")
     save_file(ULTRAMICS, rendered, str(ex.pulse) + "__pulse")
-    save_file(ULTRAMICS, sample, str(ex.pulse))
     audio.record_stream.resume()

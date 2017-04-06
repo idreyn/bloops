@@ -13,8 +13,6 @@ from config import *
 from util import *
 from samplebuffer import *
 
-<<<<<<< HEAD
-=======
 """
 def run_playback_thread(playback_stream, buffers):
     period_size = playback_stream.device.period_size
@@ -45,7 +43,6 @@ def run_record_thread(record_stream, record_buffer):
         except Exception as e:
             record_stream.setup()
 
->>>>>>> master
 class Audio(object):
 
     def __init__(self, record_device, emit_device):

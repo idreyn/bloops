@@ -13,18 +13,19 @@ class Pipeline(object):
         es = EnvironmentSample(
             sample=sample,
             rate=echolocation.device.rate,
-            us_pulse_start=0,
+            us_silence_before=echolocation.us_silence_before,
             us_pulse_duration=pulse.us_duration,
             hz_band=pulse.band(),
             np_format=echolocation.device.np_format
         )
         for step in self.steps:
             es = step(es)
+            print es.channels[0].signal.shape, es.channels[1].signal.shape
         return es.render()
 
 STANDARD_PIPELINE = Pipeline([
     bandpass,
     find_pulse_start_index,
-    align_samples,
+    align,
     detrend,
 ])
