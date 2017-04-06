@@ -4,14 +4,25 @@ import threading
 from config import BLUETOOTH_REMOTE_NAME
 
 class RemoteKeys:
-	JS_UP = 208
-	JS_DOWN = 168
-	JS_LEFT = 165
-	JS_RIGHT = 163
-	UP = 115
-	DOWN = 113
-	LEFT = 114
-	RIGHT = 139
+	JS_UP = "JS_UP"
+	JS_DOWN = "JS_DOWN"
+	JS_LEFT = "JS_LEFT"
+	JS_RIGHT = "JS_RIGHT"
+	UP = "UP"
+	DOWN = "DOWN"
+	LEFT = "LEFT"
+	RIGHT = "RIGHT"
+
+KEYCODES = {
+	RemoteKeys.JS_UP: 208,
+	RemoteKeys.JS_DOWN: 168,
+	RemoteKeys.JS_LEFT: 165,
+	RemoteKeys.JS_RIGHT: 163,
+	RemoteKeys.UP: 115,
+	RemoteKeys.DOWN: 113,
+	RemoteKeys.LEFT: 114,
+	RemoteKeys.RIGHT: 139,
+}
 
 def get_remote_device(name):
 	while True:
@@ -21,9 +32,12 @@ def get_remote_device(name):
 				return dev
 
 def client(down=None, hold=None, up=None):
+	down = {KEYCODES[k]: down[k] for k in down}
+	hold = {KEYCODES[k]: hold[k] for k in hold}
+	up = {KEYCODES[k]: up[k] for k in up}
 	while True:
 		dev = get_remote_device(BLUETOOTH_REMOTE_NAME)
-		print "bluetooth remote connected!"
+		print "Bluetooth remote connected"
 		try:
 			for event in dev.read_loop():
 				kev = evdev.categorize(event)
@@ -39,7 +53,7 @@ def client(down=None, hold=None, up=None):
 							up.get(kev.scancode)()
 		except (IOError, evdev.device.EvdevError) as e:
 			print e
-			print "bluetooth remote appears to be disconnected"
+			print "Bluetooth remote disconnected"
 			
 def connect_to_remote(*args, **kwargs):
 	t = threading.Thread(target=client, args=args, kwargs=kwargs)
