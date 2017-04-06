@@ -17,26 +17,22 @@ from util import zero_pad, zero_pad_to_multiple, bandpass
 class Echolocation(object):
 
     def __init__(self, pulse, slowdown, device,
-                 us_record_time=1e5, us_silence_before=1e4):
+                 us_record_duration=1e5, us_silence_before=1e4):
         self.pulse = pulse
         self.slowdown = slowdown
         self.device = device
         self.us_silence_before = us_silence_before
-        self.us_record_time = us_record_time
+        self.us_record_duration = us_record_duration
 
 
-def simple_loop(ex, audio, pipeline=None):
+def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(DAC)
     with emitter_enable:
-        """
-        audio.emit_buffer.clear()
-        audio.emit_buffer.put(rendered, flag_removed=True)
-        """
         audio.emit_queue.put(rendered)
         t0 = time.time()
         audio.record_buffer.clear()
-        record_time = 1e-6 * (ex.us_record_time + ex.us_silence_before)
+        record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
         time.sleep(record_time)
         sample = audio.record_buffer.get(
             int(record_time * audio.record_stream.device.rate), 
@@ -46,11 +42,8 @@ def simple_loop(ex, audio, pipeline=None):
     if pipeline:
         t0 = time.time()
         sample = pipeline.run(ex, sample)
-        print "pipeline ran in", round(time.time() - t0, 3)
+        print "Pipeline ran in", round(time.time() - t0, 3)
     chunks = []
-    """
-    audio.emit_buffer.clear()
-    """
     total_chunks = 10
     buffer_first = 0
     buffered = Queue()
@@ -63,11 +56,21 @@ def simple_loop(ex, audio, pipeline=None):
         buffered.put(chunk)
         if i >= buffer_first:
             audio.emit_queue.put(buffered.get(), False)
-    while not buffered.empty():
-        audio.emit_queue.put(buffered.get(), False)
+    if profile.should_play_recording():
+        while not buffered.empty():
+            audio.emit_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
-    time.sleep(ex.slowdown * record_time)
-    save_file(ULTRAMICS, sample, str(ex.pulse))
-    save_file(ULTRAMICS, resampled, str(ex.pulse) + "__resampled")
-    save_file(ULTRAMICS, rendered, str(ex.pulse) + "__pulse")
+    if profile.should_play_recording():
+        time.sleep(ex.slowdown * record_time)
+    else:
+        print "Playback disabld in profile"
+    prefix = profile.save_prefix() + "_" + str(ex.pulse)
+    print "Saving..."
+    if profile.should_save_recording():
+        save_file(ULTRAMICS, sample, prefix)
+    if profile.should_save_resampled():
+        save_file(ULTRAMICS, resampled, prefix + "__resampled")
+    if profile.should_save_pulse():
+        save_file(ULTRAMICS, rendered, prefix + "__pulse")
     audio.record_stream.resume()
+    print "Done"

@@ -4,6 +4,7 @@ from __future__ import division
 
 import time
 import datetime
+import sys
 
 from audio import Audio
 from config import (ULTRAMICS, DAC, IP, DEVICE_ID, has_required_devices,
@@ -12,9 +13,9 @@ from config_secret import BATCAVE_HOST
 from echolocate import simple_loop, Echolocation
 from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
                   power_led)
+from profile import *
 from pulse import *
-
-import remote
+from remote import *
 
 import batcave.client as batcave
 from batcave.protocol import Message, DeviceStatus
@@ -25,11 +26,10 @@ from process.pipeline import STANDARD_PIPELINE
 AUDIO = Audio(ULTRAMICS, DAC)
 
 busy = False
-ms_record_duration = 100
 connected_remotes = 0
+# Ugh
 last_pulse_dict = None
 pulse = default_pulse()
-
 
 def handle_override(overrides):
     emitter_enable.set(overrides.force_enable_emitters)
@@ -66,21 +66,29 @@ def on_update_pulse(pulse_dict):
         pulse = pulse_from_dict(pulse_dict)
 
 
-def on_set_record_duration(d):
-    global ms_record_duration
-    ms_record_duration = d
+def on_set_ms_record_duration(d):
+    profile.us_record_duration = d * 1000
 
 
 def on_trigger_pulse(ovr_pulse=None):
     global busy
     if busy:
         return
-    print "pulse triggered!"
+    print "Emitting", ovr_pulse or pulse
     busy = True
     try:
-        simple_loop(Echolocation(
-            ovr_pulse or pulse, 20, ULTRAMICS, 1000 * ms_record_duration), 
-            AUDIO, STANDARD_PIPELINE)
+        simple_loop(
+            Echolocation(
+                ovr_pulse or pulse,
+                profile.slowdown,
+                ULTRAMICS,
+                profile.us_record_duration,
+                profile.us_silence_before
+            ),
+            AUDIO,
+            profile,
+            STANDARD_PIPELINE,
+        )
     finally:
         busy = False
 
@@ -101,14 +109,26 @@ def get_device_info():
         'pulse': last_pulse_dict,
     }
 
+def make_pulse_callback(pulse):
+    def inner():
+        on_trigger_pulse(pulse)
+    return inner
 
-def main():
+def main(prof=None):
+    global profile
+    if len(sys.argv) > 1:
+        prof_path = sys.argv[1]
+        print "Using profile from %s" % prof_path
+        profile = Profile.from_file(prof_path)
+    else:
+        profile = Profile()
+        print "Using default profile"
     if not has_required_devices():
         print_device_availability()
-        print "missing audio hardware. exiting."
-        return
+        print "Missing audio hardware. exiting."
+        os._exit(0)
     AUDIO.start()
-    print "starting batcave client..."
+    print "Starting batcave client..."
     batcave.run_client(
         BATCAVE_HOST,
         get_device_status,
@@ -119,34 +139,24 @@ def main():
            Message.DISCONNECT: on_disconnect,
            Message.TRIGGER_PULSE: on_trigger_pulse,
            Message.UPDATE_PULSE: on_update_pulse,
-           Message.SET_RECORD_DURATION: on_set_record_duration,
+           Message.SET_RECORD_DURATION: on_set_ms_record_duration,
            Message.UPDATE_OVERRIDES: on_update_overrides,
            Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
            Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
         }
     )
-    print "initializing connection to Bluetooth remote..."
-    remote.connect_to_remote(
+    print "Initializing connection to Bluetooth remote..."
+    connect_to_remote(
         down={
-            remote.RemoteKeys.UP: lambda:
-                on_trigger_pulse(Chirp(2e4, 5e4, 2.5e3)),
-            remote.RemoteKeys.DOWN: lambda:
-                on_trigger_pulse(Chirp(2e4, 5e4, 1e4)),
-            remote.RemoteKeys.LEFT: lambda:
-                on_trigger_pulse(Chirp(2e4, 5e4, 5e3)),
-            remote.RemoteKeys.RIGHT: lambda:
-                on_trigger_pulse(Tone(2.5e4, 1e6 * 2 / 3e4)),
-            remote.RemoteKeys.JS_DOWN: lambda:
-                on_trigger_pulse(Noise(2.5e3)),
-            remote.RemoteKeys.JS_RIGHT: lambda:
-                on_trigger_pulse(Chirp(1e4, 6e4, 0.1e3)),
+            k: make_pulse_callback(profile.remote_mapping[k])
+            for k in profile.remote_mapping
         },
         hold={
-            remote.RemoteKeys.JS_UP: lambda:
+            RemoteKeys.JS_UP: lambda:
                 emitter_enable.set(True)
         },
         up={
-            remote.RemoteKeys.JS_UP: lambda:
+            RemoteKeys.JS_UP: lambda:
                 (not busy) and emitter_enable.set(False)
         }
     )
