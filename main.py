@@ -21,19 +21,18 @@ import batcave.client as batcave
 from batcave.protocol import Message, DeviceStatus
 from batcave.debug_override import DebugOverride
 
-from process.pipeline import STANDARD_PIPELINE
+import process.pipeline as pipeline
 
-AUDIO = Audio(ULTRAMICS, DAC)
-
+audio = Audio(ULTRAMICS, DAC)
+profile = None
 busy = False
 connected_remotes = 0
-# Ugh
-last_pulse_dict = None
-pulse = default_pulse()
 
 def handle_override(overrides):
     emitter_enable.set(overrides.force_enable_emitters)
-
+    profile.playback = not overrides.disable_playback
+    profile.set_save_all(not overrides.disable_save)
+    profile.set_save_prefix(overrides.save_prefix)
 
 def on_connected():
     print "we're connected!"
@@ -60,34 +59,32 @@ def on_update_overrides(overrides):
 
 
 def on_update_pulse(pulse_dict):
-    global pulse, last_pulse_dict
-    if pulse != last_pulse_dict:
-        last_pulse_dict = pulse_dict
-        pulse = pulse_from_dict(pulse_dict)
+    profile.current_pulse = pulse_from_dict(pulse_dict)
 
 
 def on_set_ms_record_duration(d):
     profile.us_record_duration = d * 1000
 
 
-def on_trigger_pulse(ovr_pulse=None):
+def on_trigger_pulse(pulse=None):
     global busy
     if busy:
         return
-    print "Emitting", ovr_pulse or pulse
+    pulse = pulse or profile.current_pulse
+    print "Emitting", pulse
     busy = True
     try:
         simple_loop(
             Echolocation(
-                ovr_pulse or pulse,
+                pulse,
                 profile.slowdown,
-                ULTRAMICS,
+                audio.record_device,
                 profile.us_record_duration,
                 profile.us_silence_before
             ),
-            AUDIO,
+            audio,
             profile,
-            STANDARD_PIPELINE,
+            pipeline.STANDARD_PIPELINE,
         )
     finally:
         busy = False
@@ -95,7 +92,6 @@ def on_trigger_pulse(ovr_pulse=None):
 
 def get_device_status():
     return DeviceStatus.READY
-
 
 def get_device_info():
     return {
@@ -114,7 +110,7 @@ def make_pulse_callback(pulse):
         on_trigger_pulse(pulse)
     return inner
 
-def main(prof=None):
+def main():
     global profile
     if len(sys.argv) > 1:
         prof_path = sys.argv[1]
@@ -127,7 +123,7 @@ def main(prof=None):
         print_device_availability()
         print "Missing audio hardware. exiting."
         os._exit(0)
-    AUDIO.start()
+    audio.start()
     print "Starting batcave client..."
     batcave.run_client(
         BATCAVE_HOST,
@@ -160,11 +156,11 @@ def main(prof=None):
                 (not busy) and emitter_enable.set(False)
         }
     )
-    for i in xrange(1):
+    for i in xrange(3):
         emitter_enable.set(True)
-        time.sleep(0.5)
+        time.sleep(0.1)
         emitter_enable.set(False)
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 try:
     main()
