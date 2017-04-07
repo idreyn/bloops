@@ -63,7 +63,7 @@ def simple_loop(ex, audio, profile, pipeline=None):
     if profile.should_play_recording():
         time.sleep(ex.slowdown * record_time)
     else:
-        print "Playback disabld in profile"
+        print "Playback disabled in profile"
     prefix = profile.save_prefix() + "_" + str(ex.pulse)
     print "Saving..."
     if profile.should_save_recording():
