@@ -30,7 +30,8 @@ class Profile(object):
             us_record_duration=1e5,
             playback=True,
             remote_mapping=DEFAULT_REMOTE_MAPPING,
-            save_options=DEFAULT_SAVE_OPTIONS
+            save_options=DEFAULT_SAVE_OPTIONS,
+            current_pulse=None
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -38,6 +39,7 @@ class Profile(object):
         self.playback = playback
         self.remote_mapping = remote_mapping
         self.save_options = save_options
+        self.current_pulse = current_pulse
 
     def should_play_recording(self):
     	return self.playback
@@ -54,6 +56,13 @@ class Profile(object):
     def save_prefix(self):
         return self.save_options.get("prefix") or ""
 
+    def set_save_all(self, value):
+    	self.save_options["recording"] = value
+    	self.save_options["resampled"] = value
+    	self.save_options["pulse"] = value
+
+    def set_save_prefix(self, value):
+    	self.save_options["prefix"] = value
 
     @staticmethod
     def from_file(fn):
