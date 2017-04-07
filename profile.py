@@ -28,7 +28,7 @@ class Profile(object):
             slowdown=20,
             us_silence_before=1e4,
             us_record_duration=1e5,
-            playback=False,
+            playback=True,
             remote_mapping=DEFAULT_REMOTE_MAPPING,
             save_options=DEFAULT_SAVE_OPTIONS
     ):

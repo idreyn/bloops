@@ -104,14 +104,10 @@ def align(es):
 @stage(require=[find_pulse_start_index])
 def normalize(es):
 	left, right = es.channels
-	take_samples = int(0.2 * (es.us_pulse_duration / 1e6) * es.rate)
-	left_rms = np.std(left.signal[0:take_samples])
-	right_rms = np.std(right.signal[0:take_samples])
-	left.signal *= left_rms / right_rms
-	# Now make the max sample 1
+	max_value = np.iinfo(left.signal).max
 	max_sample = max(max(left.signal), max(right.signal))
-	left.signal = left.signal / max_sample
-	right.signal = right.signal / max_sample
+	left.signal = left.signal * (max_value / max_sample)
+	right.signal = right.signal * (max_sample / max_sample)
 	return es
 
 @stage(require=[detrend], forbid=[normalize])
