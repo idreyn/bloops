@@ -1,7 +1,5 @@
 import test, time
-
 from scikits.audiolab import *
-import peakutils
 
 from util import bandpass
 from process.analyze import *
