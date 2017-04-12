@@ -39,10 +39,10 @@ class Profile(object):
         self.playback = playback
         self.remote_mapping = remote_mapping
         self.save_options = save_options
-        self.current_pulse = current_pulse
+        self.current_pulse = current_pulse or Chirp(1.5e4, 4e4, 2.5e3)
 
     def should_play_recording(self):
-    	return self.playback
+        return self.playback
 
     def should_save_recording(self):
         return self.save_options.get("recording")
@@ -57,12 +57,12 @@ class Profile(object):
         return self.save_options.get("prefix") or ""
 
     def set_save_all(self, value):
-    	self.save_options["recording"] = value
-    	self.save_options["resampled"] = value
-    	self.save_options["pulse"] = value
+        self.save_options["recording"] = value
+        self.save_options["resampled"] = value
+        self.save_options["pulse"] = value
 
     def set_save_prefix(self, value):
-    	self.save_options["prefix"] = value
+        self.save_options["prefix"] = value
 
     @staticmethod
     def from_file(fn):

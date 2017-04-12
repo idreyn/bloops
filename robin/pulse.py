@@ -18,8 +18,8 @@ def pulse_from_dict(d):
 			"logarithmic" if d.get("isLogarithmic") else "linear",
 			d.get("isSquare")
 		)
-	elif d.get("type") == "click":
-		return Click(
+	elif d.get("type") == "noise":
+		return Noise(
 			d.get("usDuration")
 		)
 	else:
@@ -27,7 +27,7 @@ def pulse_from_dict(d):
 
 def dict_from_pulse(p):
 	d = {
-		"type": "click" if type(p) is Click else (
+		"type": "noise" if type(p) is Noise else (
 			"chirp" if type(p) is Chirp else (
 				"tone" if type(p) is Tone else "?"
 			)

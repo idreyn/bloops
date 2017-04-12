@@ -5,11 +5,13 @@ from __future__ import division
 import time
 import datetime
 import sys
+import base64
 
 from audio import Audio
 from config import (ULTRAMICS, DAC, IP, DEVICE_ID, has_required_devices,
                     print_device_availability)
 from config_secret import BATCAVE_HOST
+from data import array_to_periods
 from echolocate import simple_loop, Echolocation
 from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
                   power_led)
@@ -35,11 +37,11 @@ def handle_override(overrides):
     profile.set_save_prefix(overrides.save_prefix)
 
 def on_connected():
-    print "we're connected!"
+    print "Batcave client connected"
 
 
 def on_disconnect():
-    print "we're disconnected."
+    print "Batcave client disconnected"
 
 
 def on_remote_connect():
@@ -62,9 +64,17 @@ def on_update_pulse(pulse_dict):
     profile.current_pulse = pulse_from_dict(pulse_dict)
 
 
-def on_set_ms_record_duration(d):
-    profile.us_record_duration = d * 1000
+def on_set_record_duration(d):
+    profile.us_record_duration = d
 
+def on_assign_pulse(info):
+    button = info["button"]
+    pulse = pulse_from_dict(info["pulse"])
+    print "Assigning", pulse, "to", button
+    profile.remote_mapping[button] = pulse
+
+def on_update_label(label):
+    profile.set_save_prefix(label)
 
 def on_trigger_pulse(pulse=None):
     global busy
@@ -74,7 +84,7 @@ def on_trigger_pulse(pulse=None):
     print "Emitting", pulse
     busy = True
     try:
-        simple_loop(
+        ex = simple_loop(
             Echolocation(
                 pulse,
                 profile.slowdown,
@@ -86,6 +96,17 @@ def on_trigger_pulse(pulse=None):
             profile,
             pipeline.STANDARD_PIPELINE,
         )
+        """
+        if ex.recording_filename:
+            encoded = base64.b64encode(open(ex.recording_filename, 'r').read())
+            batcave.emit(Message.AUDIO, {
+                'pulse': dict_from_pulse(pulse),
+                'audio': encoded
+            })
+            print "Sent audio to Batcave"
+        else:
+            print "No audio to send"
+        """
     finally:
         busy = False
 
@@ -102,12 +123,12 @@ def get_device_info():
         'emitterBatteryLow': emitter_battery_low.read(),
         'bluetoothConnections': "Unknown",
         'lastSeen': str(datetime.datetime.now()),
-        'pulse': last_pulse_dict,
+        'pulse': dict_from_pulse(profile.current_pulse),
     }
 
-def make_pulse_callback(pulse):
+def make_pulse_callback(button):
     def inner():
-        on_trigger_pulse(pulse)
+        on_trigger_pulse(profile.remote_mapping[button])
     return inner
 
 def main():
@@ -135,16 +156,18 @@ def main():
            Message.DISCONNECT: on_disconnect,
            Message.TRIGGER_PULSE: on_trigger_pulse,
            Message.UPDATE_PULSE: on_update_pulse,
-           Message.SET_RECORD_DURATION: on_set_ms_record_duration,
+           Message.SET_RECORD_DURATION: on_set_record_duration,
            Message.UPDATE_OVERRIDES: on_update_overrides,
            Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
            Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
+           Message.ASSIGN_PULSE: on_assign_pulse,
+           Message.UPDATE_LABEL: on_update_label,
         }
     )
     print "Initializing connection to Bluetooth remote..."
     connect_to_remote(
         down={
-            k: make_pulse_callback(profile.remote_mapping[k])
+            k: make_pulse_callback(k)
             for k in profile.remote_mapping
         },
         hold={
