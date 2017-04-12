@@ -15,8 +15,8 @@ def save_file(device, sound, name_append=None, prefix=(BASE_PATH + "/../recordin
 	path = os.path.abspath(rel_path) + '/'
 	if not os.path.exists(path):
 		os.mkdir(path)
-	file = Sndfile(path + now_stamp() + (
-		"__" + name_append if name_append else ""
-	) + ".wav", 'w', Format('wav', 'pcm16'), device.channels, device.rate)
+	filename = path + now_stamp() + "__" + (name_append if name_append else "") + ".wav"
+	file = Sndfile(filename, 'w', Format('wav', 'pcm16'), device.channels, device.rate)
 	file.write_frames((1.0 / 32678) * sound)
 	file.close()
+	return filename

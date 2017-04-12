@@ -23,7 +23,9 @@ class Echolocation(object):
         self.device = device
         self.us_silence_before = us_silence_before
         self.us_record_duration = us_record_duration
-
+        self.recording = None
+        self.recording_filename = None
+        self.resampled = None
 
 def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
@@ -67,10 +69,13 @@ def simple_loop(ex, audio, profile, pipeline=None):
     prefix = profile.save_prefix() + "_" + str(ex.pulse)
     print "Saving..."
     if profile.should_save_recording():
-        save_file(ULTRAMICS, sample, prefix)
+        ex.recording_filename = save_file(ULTRAMICS, sample, prefix)
     if profile.should_save_resampled():
         save_file(ULTRAMICS, resampled, prefix + "__resampled")
     if profile.should_save_pulse():
         save_file(ULTRAMICS, rendered, prefix + "__pulse")
+    ex.recording = sample
+    ex.resampled = resampled
     audio.record_stream.resume()
     print "Done"
+    return ex

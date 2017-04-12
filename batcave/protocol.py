@@ -27,3 +27,6 @@ class Message:
 	SET_RECORD_DURATION = "set-record-duration"
 	UPDATE_OVERRIDES = "update-overrides"
 	RESTART_DEVICE = "restart-device"
+	AUDIO = "audio"
+	ASSIGN_PULSE = "assign-pulse"
+	UPDATE_LABEL = "update-label"
