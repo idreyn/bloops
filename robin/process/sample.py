@@ -7,7 +7,7 @@ class ChannelSample(object):
 		silence_boundary_index
 	):
 		self.sample = sample
-		self.signal = sample[silence_boundary_index:]
+		self.signal = sample #sample[silence_boundary_index:]
 		self.silence = sample[0:silence_boundary_index]
 		self.pulse_start_index = None
 		self.pulse_start_offset = None

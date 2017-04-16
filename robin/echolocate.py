@@ -1,11 +1,13 @@
 
 from __future__ import division
+
 import time
 from Queue import Queue
 
 import numpy as np
 from scikits.samplerate import resample
 import resampy
+
 
 from config import DAC, ULTRAMICS
 from gpio import emitter_enable
@@ -32,8 +34,8 @@ def simple_loop(ex, audio, profile, pipeline=None):
     rendered = ex.pulse.render(DAC)
     with emitter_enable:
         audio.emit_queue.put(rendered)
-        t0 = time.time()
         audio.record_buffer.clear()
+        t0 = time.time()
         record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
         time.sleep(record_time)
         sample = audio.record_buffer.get(
