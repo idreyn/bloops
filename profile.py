@@ -5,12 +5,12 @@ from pulse import *
 from echolocate import *
 
 DEFAULT_REMOTE_MAPPING = {
-    RemoteKeys.UP: Chirp(2e4, 5e4, 2.5e3),
-    RemoteKeys.DOWN: Chirp(2e4, 5e4, 1e4),
-    RemoteKeys.LEFT: Chirp(2e4, 5e4, 5e3),
-    RemoteKeys.RIGHT: Tone(2.5e4, 1e6 * 2 / 3e4),
-    RemoteKeys.JS_DOWN: Noise(2.5e3),
-    RemoteKeys.JS_RIGHT: Chirp(1e4, 6e4, 0.1e3),
+    RemoteKeys.UP: Chirp(1.5e4, 4e4, 2.5e3),
+    RemoteKeys.DOWN: Chirp(1.5e4, 4e4, 1e4),
+    RemoteKeys.LEFT: Chirp(1.5e4, 4e4, 5e3),
+    RemoteKeys.RIGHT: Tone(2.5e4, 2e3),
+    RemoteKeys.JS_DOWN: Chirp(4e4, 1.5e4, 5e3),
+    RemoteKeys.JS_RIGHT: Tone(4e4, 2e3),
 }
 
 DEFAULT_SAVE_OPTIONS = {
@@ -27,7 +27,7 @@ class Profile(object):
             self,
             slowdown=20,
             us_silence_before=1e4,
-            us_record_duration=1e5,
+            us_record_duration=3e4,
             playback=True,
             remote_mapping=DEFAULT_REMOTE_MAPPING,
             save_options=DEFAULT_SAVE_OPTIONS,

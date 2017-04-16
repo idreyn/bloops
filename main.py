@@ -7,14 +7,18 @@ import datetime
 import sys
 import base64
 
+
 from audio import Audio
 from config import (ULTRAMICS, DAC, IP, DEVICE_ID, has_required_devices,
                     print_device_availability)
+
 from config_secret import BATCAVE_HOST
 from data import array_to_periods
+
 from echolocate import simple_loop, Echolocation
-from gpio import (emitter_enable, emitter_battery_low, device_battery_low,
-                  power_led)
+
+from gpio import emitter_enable
+
 from profile import *
 from pulse import *
 from remote import *
@@ -184,6 +188,7 @@ def main():
         time.sleep(0.1)
         emitter_enable.set(False)
         time.sleep(0.1)
+
 
 try:
     main()
