@@ -138,6 +138,11 @@ def make_pulse_callback(button):
 
 def main():
     global profile
+    reverse = False
+    if len(sys.argv) > 1 and sys.argv[1] == "-r":
+        print "Reversing channels"
+        reverse = True
+        sys.argv.pop(0) # So jank, please fix
     if len(sys.argv) > 1:
         prof_path = sys.argv[1]
         print "Using profile from %s" % prof_path
@@ -145,6 +150,8 @@ def main():
     else:
         profile = Profile()
         print "Using default profile"
+    if reverse:
+        profile.reverse_channels = True
     if not has_required_devices():
         print_device_availability()
         print "Missing audio hardware. exiting."
