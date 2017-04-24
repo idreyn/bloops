@@ -42,6 +42,8 @@ def simple_loop(ex, audio, profile, pipeline=None):
             int(record_time * audio.record_stream.device.rate), 
             t0 - ex.us_silence_before
         )
+        if profile.reverse_channels:
+            sample = np.flip(sample, axis=1)
     audio.record_stream.pause()
     if pipeline:
         t0 = time.time()

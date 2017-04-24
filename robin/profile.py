@@ -31,7 +31,8 @@ class Profile(object):
             playback=True,
             remote_mapping=DEFAULT_REMOTE_MAPPING,
             save_options=DEFAULT_SAVE_OPTIONS,
-            current_pulse=None
+            current_pulse=None,
+            reverse_channels=False
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -40,6 +41,7 @@ class Profile(object):
         self.remote_mapping = remote_mapping
         self.save_options = save_options
         self.current_pulse = current_pulse or Chirp(1.5e4, 4e4, 2.5e3)
+        self.reverse_channels = reverse_channels
 
     def should_play_recording(self):
         return self.playback
