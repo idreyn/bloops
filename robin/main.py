@@ -2,6 +2,7 @@
 
 from __future__ import division
 
+import os
 import time
 import datetime
 import sys
@@ -122,9 +123,9 @@ def get_device_info():
     return {
         'id': DEVICE_ID,
         'ip': IP,
-        'deviceVoltageLow': power_led.read(),
-        'deviceBatteryLow': device_battery_low.read(),
-        'emitterBatteryLow': emitter_battery_low.read(),
+        'deviceVoltageLow': False, # power_led.read(),
+        'deviceBatteryLow': False, # device_battery_low.read(),
+        'emitterBatteryLow': False, # emitter_battery_low.read(),
         'bluetoothConnections': "Unknown",
         'lastSeen': str(datetime.datetime.now()),
         'pulse': dict_from_pulse(profile.current_pulse),
@@ -195,5 +196,4 @@ try:
     while True:
         time.sleep(0.01)
 except KeyboardInterrupt:
-    import os
     os._exit(0)
