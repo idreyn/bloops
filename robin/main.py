@@ -11,8 +11,8 @@ import click
 
 
 from audio import Audio
-from config import (ULTRAMICS, DAC, IP, DEVICE_ID, has_required_devices,
-                    print_device_availability)
+from config import (ULTRAMICS, DAC, IP, DEVICE_ID, BLUETOOTH_REMOTE_NAME,
+        has_required_devices, print_device_availability)
 
 from config_secret import BATCAVE_HOST
 from data import array_to_periods
@@ -139,8 +139,17 @@ def make_pulse_callback(button):
 
 @click.command()
 @click.option('--reverse-channels/--no-reverse-channels', default=False, required=False)
+@click.option('--loopback-test/--no-loopback-test', default=True, required=False)
 @click.argument('profile_path', type=click.Path(exists=True), required=False)
-def main(reverse_channels, profile_path):
+def main_wrapper(*args, **kwargs):
+    try:
+        main(*args, **kwargs)
+        while True:
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        os._exit(0)
+
+def main(reverse_channels, loopback_test, profile_path):
     global profile
     if not has_required_devices():
         print_device_availability()
@@ -179,7 +188,14 @@ def main(reverse_channels, profile_path):
         }
     )
     print "Waiting for Bluetooth remote..."
-    connect_to_remote(
+    remote = Remote(BLUETOOTH_REMOTE_NAME)
+    if loopback_test:
+        remote.clear_key(RemoteKeys.RIGHT)
+        print "Ready earbuds and press RIGHT on the remote"
+        print "Waiting for key..."
+        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
+            audio.loopback()
+    remote.register_handlers(
         down={
             k: make_pulse_callback(k)
             for k in profile.remote_mapping
@@ -195,14 +211,8 @@ def main(reverse_channels, profile_path):
     )
     for i in xrange(3):
         emitter_enable.set(True)
-        time.sleep(0.1)
+        time.sleep(0.05)
         emitter_enable.set(False)
-        time.sleep(0.1)
-    try:
-        while True:
-            time.sleep(0.01)
-    except KeyboardInterrupt:
-        os._exit(0)
+        time.sleep(0.05)
 
-if __name__ == "__main__":
-    main()
+main_wrapper()

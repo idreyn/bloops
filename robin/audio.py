@@ -67,3 +67,6 @@ class Audio(object):
             args=(self.record_stream, self.record_buffer))
         self.record_thread.daemon = True
         self.record_thread.start()
+
+    def loopback(self):
+        self.emit_queue.put(self.record_buffer.get_next())
