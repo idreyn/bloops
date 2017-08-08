@@ -53,7 +53,7 @@ class SampleBuffer(object):
     def put(self, sample, critical=True, flag_removed=False):
         available = self.lock.acquire(critical)
         if not available:
-            print "discard"
+            print "Warning: discarded sample"
             # Toss these samples, we're doing something else
             return
         if flag_removed:
@@ -69,13 +69,12 @@ class SampleBuffer(object):
     def set_empty(self, sample):
         self._empty = sample
 
-    def get_next_sample(self):
-        self.lock.acquire()
-        res = self._shift()
-        self.lock.release()
-        return res
+    def get_next(self):
+        while len(self.queue) == 0:
+            time.sleep(0.001)
+        return self.get(len(self.queue[0]))
 
-    def get(self, length, start_time=None, verbose=False):
+    def get(self, length, start_time=None, verbose=False, block=False):
         self.lock.acquire()
         if len(self.queue) == 0 and not self._empty is None:
             self.queue.append(self._empty)
@@ -92,7 +91,10 @@ class SampleBuffer(object):
         self.lock.release()
         while pointer < length:
             if not len(self.queue):
-                break
+                if block:
+                    continue
+                else:
+                    break
             else:
                 self.lock.acquire()
                 sample = self.queue[0]
