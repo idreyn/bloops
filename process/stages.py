@@ -64,6 +64,7 @@ def stats(es):
 @stage()
 def bandpass(es):
 	for c in es.channels:
+                print es.hz_band
 		c.signal = util.bandpass(
 			c.signal, es.hz_band[0], es.hz_band[1], es.rate
 		)
