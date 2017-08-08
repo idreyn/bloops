@@ -6,7 +6,7 @@ from util import zero_pad
 def pulse_from_dict(d):
 	if d.get("type") == "tone":
 		return Tone(
-			1000 * d.get("khzStart"),
+			1000 * (d.get("khzFreq") or d.get("khzStart")),
 			d.get("usDuration"),
 			d.get("isSquare")
 		)

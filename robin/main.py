@@ -214,5 +214,6 @@ def main(reverse_channels, loopback_test, profile_path):
         time.sleep(0.05)
         emitter_enable.set(False)
         time.sleep(0.05)
+    print "Ready to echolocate!"
 
 main_wrapper()
