@@ -148,7 +148,7 @@ class Chirp(Pulse):
 		)
 
 	def band(self, device=None):
-		return (self.f0, self.f1)
+    	    return (min(self.f0, self.f1), max(self.f1, self.f0))
 
 class Noise(Pulse):
 	def __init__(self, us_duration):
@@ -163,7 +163,7 @@ class Noise(Pulse):
 	def band(self, device=None):
 		# This bad boy is very broadband but we probably can get rid of audible
 		# sound anyway, since the tweeters are loudest at > 15k.
-		return (1.5e4, 9.6e4)
+		return (1.5e4, 7e4)
 
 class CombinedPulse(Pulse):
 	def __init__(self, left, right):

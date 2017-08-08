@@ -22,9 +22,9 @@ print ROBIN
 IS_DEVICE = os.environ.get("ROBIN_IS_DEVICE")
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 DEVICE_ID = os.environ.get("ROBIN_DEVICE_ID")
-IP = 'raspberrypi.local' #get_ip_address()
+IP = "robin.local" #get_ip_address()
 
-BLUETOOTH_REMOTE_NAME = "MOCUTE-032X_B61-2ECF"
+BLUETOOTH_REMOTE_NAME = "MOCUTE-032X_B61-2FB6"
 
 if IS_DEVICE:
     import alsaaudio as aa
