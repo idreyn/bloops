@@ -33,17 +33,18 @@ def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(DAC)
     with emitter_enable:
-        audio.emit_queue.put(rendered)
         audio.record_buffer.clear()
+        audio.emit_queue.put(rendered)
         t0 = time.time()
-        record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
-        time.sleep(record_time)
-        sample = audio.record_buffer.get(
-            int(record_time * audio.record_stream.device.rate), 
-            t0 - ex.us_silence_before
-        )
-        if profile.reverse_channels:
-            sample = np.flip(sample, axis=1)
+        time.sleep(1e-6 * ex.pulse.us_duration)  
+    record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
+    time.sleep(record_time)
+    sample = audio.record_buffer.get(
+        int(record_time * audio.record_stream.device.rate), 
+        t0 - ex.us_silence_before
+    )
+    if profile.reverse_channels:
+        sample = np.flip(sample, axis=1)
     audio.record_stream.pause()
     if pipeline:
         t0 = time.time()

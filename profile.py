@@ -5,17 +5,17 @@ from pulse import *
 from echolocate import *
 
 DEFAULT_REMOTE_MAPPING = {
-    RemoteKeys.UP: Chirp(1.5e4, 4e4, 2.5e3),
+    RemoteKeys.UP: Chirp(1.5e4, 4e4, 1e3),
     RemoteKeys.DOWN: Chirp(1.5e4, 4e4, 1e4),
-    RemoteKeys.LEFT: Chirp(1.5e4, 4e4, 5e3),
+    RemoteKeys.LEFT: Chirp(0.5e4, 4e4, 5e3),
     RemoteKeys.RIGHT: Tone(2.5e4, 2e3),
     RemoteKeys.JS_DOWN: Chirp(4e4, 1.5e4, 5e3),
-    RemoteKeys.JS_RIGHT: Tone(4e4, 2e3),
+    RemoteKeys.JS_RIGHT: Noise(0.5e3),
 }
 
 DEFAULT_SAVE_OPTIONS = {
-    'recording': True,
-    'resampled': True,
+    'recording': False,
+    'resampled': False,
     'pulse': False,
     'prefix': ""
 }
@@ -26,7 +26,7 @@ class Profile(object):
     def __init__(
             self,
             slowdown=20,
-            us_silence_before=1e4,
+            us_silence_before=6e4,
             us_record_duration=1e5,
             playback=True,
             remote_mapping=DEFAULT_REMOTE_MAPPING,
@@ -75,11 +75,16 @@ class Profile(object):
             k: pulse_from_dict(remote_mapping[k])
             for k in remote_mapping
         }
+        assert echolocation['slowdown']
+        assert echolocation['usRecordDuration']
+        assert echolocation['usSilenceBefore']
+        assert echolocation['saveOptions']
+        assert echolocation['playback']
         return Profile(
             slowdown=echolocation.get('slowdown'),
             us_record_duration=echolocation.get('usRecordDuration'),
             us_silence_before=echolocation.get('usSilenceBefore'),
-            save=echolocation.get('saveOptions'),
+            save_options=echolocation.get('saveOptions'),
             playback=echolocation.get('playback'),
             remote_mapping=remote_mapping
         )

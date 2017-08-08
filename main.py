@@ -7,6 +7,7 @@ import time
 import datetime
 import sys
 import base64
+import click
 
 
 from audio import Audio
@@ -136,28 +137,29 @@ def make_pulse_callback(button):
         on_trigger_pulse(profile.remote_mapping[button])
     return inner
 
-def main():
+@click.command()
+@click.option('--reverse-channels/--no-reverse-channels', default=False, required=False)
+@click.argument('profile_path', type=click.Path(exists=True), required=False)
+def main(reverse_channels, profile_path):
     global profile
-    reverse = False
-    if len(sys.argv) > 1 and sys.argv[1] == "-r":
-        print "Reversing channels"
-        reverse = True
-        sys.argv.pop(0) # So jank, please fix
-    if len(sys.argv) > 1:
-        prof_path = sys.argv[1]
-        print "Using profile from %s" % prof_path
-        profile = Profile.from_file(prof_path)
-    else:
-        profile = Profile()
-        print "Using default profile"
-    if reverse:
-        profile.reverse_channels = True
     if not has_required_devices():
         print_device_availability()
         print "Missing audio hardware. exiting."
         os._exit(0)
+    if profile_path:
+        print "Using profile from %s" % profile_path
+        profile = Profile.from_file(profile_path)
+    else:
+        profile = Profile()
+        print "Using default profile"
+    if reverse_channels != None:
+        profile.reverse_channels = reverse_channels
+        print "Override reverse_channels to %s" % reverse_channels
+    if len(profile.remote_mapping) == 0:
+        print "Warning: profile has no remote key mappings"
+    print "Starting audio I/O..."
     audio.start()
-    print "Starting batcave client..."
+    print "Starting Batcave client..."
     batcave.run_client(
         BATCAVE_HOST,
         get_device_status,
@@ -176,7 +178,7 @@ def main():
            Message.UPDATE_LABEL: on_update_label,
         }
     )
-    print "Initializing connection to Bluetooth remote..."
+    print "Waiting for Bluetooth remote..."
     connect_to_remote(
         down={
             k: make_pulse_callback(k)
@@ -196,11 +198,11 @@ def main():
         time.sleep(0.1)
         emitter_enable.set(False)
         time.sleep(0.1)
+    try:
+        while True:
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        os._exit(0)
 
-
-try:
+if __name__ == "__main__":
     main()
-    while True:
-        time.sleep(0.01)
-except KeyboardInterrupt:
-    os._exit(0)
