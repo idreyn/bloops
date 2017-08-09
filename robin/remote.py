@@ -18,7 +18,7 @@ KEYCODES = {
 	RemoteKeys.JS_RIGHT: 163,
 	RemoteKeys.UP: 115,
 	RemoteKeys.DOWN: 28,
-	RemoteKeys.LEFT: 113,
+	RemoteKeys.LEFT: 114,
 	RemoteKeys.RIGHT: 158,
 }
 
