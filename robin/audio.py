@@ -45,16 +45,19 @@ def run_record_thread(record_stream, record_buffer):
 
 class Audio(object):
 
-    def __init__(self, record_device, emit_device):
+    def __init__(self, record_device, emit_device, playback_device=None):
         self.record_device = record_device
         self.emit_device = emit_device
+        self.playback_device = playback_device
         self.record_stream = None
-        self.emit_stream = None
+        self.emit_stream = None 
         self.record_buffer = SampleBuffer(
             record_device.channels,
             record_device.rate
         )
         self.emit_queue = Queue()
+        self.playback_stream = None
+        self.playback_queue = Queue()
 
     def start(self):
         self.emit_stream = Stream(self.emit_device, False)
@@ -63,10 +66,19 @@ class Audio(object):
             args=(self.emit_stream, self.emit_queue))
         self.emit_thread.daemon = True
         self.emit_thread.start()
+        if self.playback_device:
+            self.playback_stream = Stream(self.playback_device, False)
+            self.playback_thread = threading.Thread(target=run_emit_thread,
+                args=(self.playback_stream, self.playback_queue))
+            self.playback_thread.daemon = True
+            self.playback_thread.start()
+        else:
+            self.playback_device = emit_device
+            self.playback_queue = emit_queue
         self.record_thread = threading.Thread(target=run_record_thread,
             args=(self.record_stream, self.record_buffer))
         self.record_thread.daemon = True
         self.record_thread.start()
 
     def loopback(self):
-        self.emit_queue.put(self.record_buffer.get_next())
+        self.playback_queue.put(self.record_buffer.get_next())

@@ -18,7 +18,7 @@ KEYCODES = {
 	RemoteKeys.JS_RIGHT: 163,
 	RemoteKeys.UP: 115,
 	RemoteKeys.DOWN: 28,
-	RemoteKeys.LEFT: 113,
+	RemoteKeys.LEFT: 114,
 	RemoteKeys.RIGHT: 158,
 }
 
@@ -37,7 +37,7 @@ def client(device_name, resolve_await, down=None, hold=None, up=None):
                     for event in dev.read_loop():
                             kev = evdev.categorize(event)
                             if isinstance(kev, evdev.KeyEvent):
-                                    if kev.keystate == kev.key_down:
+                                    if kev.keystate == kev.key_down: 
                                             resolve_await(kev.scancode)
                                             if down and down.get(kev.scancode):
                                                     down.get(kev.scancode)()

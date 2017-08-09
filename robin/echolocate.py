@@ -62,10 +62,10 @@ def simple_loop(ex, audio, profile, pipeline=None):
         chunks.append(chunk)
         buffered.put(chunk)
         if i >= buffer_first:
-            audio.emit_queue.put(buffered.get(), False)
+            audio.playback_queue.put(buffered.get(), False)
     if profile.should_play_recording():
         while not buffered.empty():
-            audio.emit_queue.put(buffered.get(), False)
+            audio.playback_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
     if profile.should_play_recording():
         time.sleep(ex.slowdown * record_time)

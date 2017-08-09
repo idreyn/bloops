@@ -11,8 +11,8 @@ import click
 
 
 from audio import Audio
-from config import (ULTRAMICS, DAC, IP, DEVICE_ID, BLUETOOTH_REMOTE_NAME,
-        has_required_devices, print_device_availability)
+from config import (ULTRAMICS, DAC, EARBUDS, IP, DEVICE_ID, 
+        BLUETOOTH_REMOTE_NAME, has_required_devices, print_device_availability)
 
 from config_secret import BATCAVE_HOST
 from data import array_to_periods
@@ -31,7 +31,7 @@ from batcave.debug_override import DebugOverride
 
 import process.pipeline as pipeline
 
-audio = Audio(ULTRAMICS, DAC)
+audio = Audio(ULTRAMICS, DAC, EARBUDS)
 profile = None
 busy = False
 connected_remotes = 0
@@ -127,7 +127,6 @@ def get_device_info():
         'deviceVoltageLow': False, # power_led.read(),
         'deviceBatteryLow': False, # device_battery_low.read(),
         'emitterBatteryLow': False, # emitter_battery_low.read(),
-        'bluetoothConnections': "Unknown",
         'lastSeen': str(datetime.datetime.now()),
         'pulse': dict_from_pulse(profile.current_pulse),
     }
@@ -191,9 +190,16 @@ def main(reverse_channels, loopback_test, profile_path):
     remote = Remote(BLUETOOTH_REMOTE_NAME)
     if loopback_test:
         remote.clear_key(RemoteKeys.RIGHT)
-        print "Ready earbuds and press RIGHT on the remote"
+        remote.clear_key(RemoteKeys.LEFT)
+        print "Ready earbuds and press RIGHT on the remote, or LEFT to reverse output channels"
         print "Waiting for key..."
-        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
+        while True:
+            if remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
+                break
+            if remote.await_key(RemoteKeys.LEFT, time=0, and_clear=False):
+                profile.reverse_channels = True
+                print "Override reverse_channels to True"
+                break
             audio.loopback()
     remote.register_handlers(
         down={

@@ -100,8 +100,9 @@ class AudioDevice(object):
 
 ULTRAMICS = AudioDevice('ultramics', 200000, 2)
 DAC = AudioDevice('dac', 192000, 2)
+EARBUDS = AudioDevice('bluebuds', 192000, 2)
 REQUIRED_INPUT_DEVICES = [ULTRAMICS]
-REQUIRED_OUTPUT_DEVICES = [DAC]
+REQUIRED_OUTPUT_DEVICES = [DAC, EARBUDS]
 
 def has_required_devices():
     return len(
@@ -111,7 +112,7 @@ def has_required_devices():
 
 
 def print_device_availability():
-    print "=== hardware availability ==="
+    print "=== Hardware availability ==="
     for d in REQUIRED_OUTPUT_DEVICES:
         print "%s: %s" % (d.name, d.available(False))
     for d in REQUIRED_INPUT_DEVICES:
@@ -119,7 +120,7 @@ def print_device_availability():
 
 
 def setup_asoundrc():
-    print "setting up .asoundrc"
+    print "Setting up .asoundrc"
     # hack hack hack
     asound_conf_file = ("asound.conf-dac-0"
                         if "card 0" in subprocess.check_output(["aplay", "-l"])
@@ -129,5 +130,5 @@ def setup_asoundrc():
              os.path.expanduser("~/.asoundrc"))
 
 if __name__ == "__main__":
-    print "running setup..."
+    print "Running setup..."
     setup_asoundrc()

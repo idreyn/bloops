@@ -69,7 +69,6 @@ class Profile(object):
     @staticmethod
     def from_file(fn):
         data = json.loads(open(fn, 'r').read())
-        print data
         echolocation = data.get('echolocation') or {}
         remote_mapping = data.get('remoteMapping') or {}
         remote_mapping = {
