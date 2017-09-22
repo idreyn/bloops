@@ -75,11 +75,11 @@ class Profile(object):
             k: pulse_from_dict(remote_mapping[k])
             for k in remote_mapping
         }
-        assert echolocation['slowdown']
-        assert echolocation['usRecordDuration']
-        assert echolocation['usSilenceBefore']
-        assert echolocation['saveOptions']
-        assert echolocation['playback']
+        assert echolocation.get('slowdown')
+        assert echolocation.get('usRecordDuration') 
+        assert echolocation.get('usSilenceBefore')
+        assert echolocation.get('saveOptions')
+        assert echolocation.get('playback') != None
         return Profile(
             slowdown=echolocation.get('slowdown'),
             us_record_duration=echolocation.get('usRecordDuration'),

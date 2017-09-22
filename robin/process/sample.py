@@ -9,7 +9,9 @@ class ChannelSample(object):
 		self.sample = sample
 		self.signal = sample #sample[silence_boundary_index:]
 		self.silence = sample[0:silence_boundary_index]
+                self.power = None
 		self.pulse_start_index = None
+                self.pulse_end_index = None
 		self.pulse_start_offset = None
 
 class EnvironmentSample(object):

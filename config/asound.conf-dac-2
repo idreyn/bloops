@@ -16,3 +16,7 @@ pcm.ultramics {
 	bindings.1.slave b
 	bindings.1.channel 0
 }
+
+pcm.bluebuds {
+    type pulse
+}

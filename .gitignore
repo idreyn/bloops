@@ -1,8 +1,5 @@
 *.pyc
-*.swm
-*.swn
-*.swo
-*.swp
+*.
 *.so
 *.c
 *.html
@@ -12,3 +9,5 @@ config_secret.py
 build/
 venv/
 resources/
+
+! .gitignore

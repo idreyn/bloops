@@ -102,7 +102,7 @@ ULTRAMICS = AudioDevice('ultramics', 200000, 2)
 DAC = AudioDevice('dac', 192000, 2)
 EARBUDS = AudioDevice('bluebuds', 192000, 2)
 REQUIRED_INPUT_DEVICES = [ULTRAMICS]
-REQUIRED_OUTPUT_DEVICES = [DAC, EARBUDS]
+REQUIRED_OUTPUT_DEVICES = [DAC]
 
 def has_required_devices():
     return len(

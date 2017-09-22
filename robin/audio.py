@@ -73,8 +73,8 @@ class Audio(object):
             self.playback_thread.daemon = True
             self.playback_thread.start()
         else:
-            self.playback_device = emit_device
-            self.playback_queue = emit_queue
+            self.playback_device = self.emit_device
+            self.playback_queue = self.emit_queue
         self.record_thread = threading.Thread(target=run_record_thread,
             args=(self.record_stream, self.record_buffer))
         self.record_thread.daemon = True
