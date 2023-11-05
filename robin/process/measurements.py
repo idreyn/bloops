@@ -1,0 +1,3 @@
+SPEED_OF_SOUND = 0.343 / 1000  # meters per us
+SPEAKER_MIC_DISTANCE = 1.0 / 6  # about half a foot
+PICKUP_DELAY = SPEAKER_MIC_DISTANCE / SPEED_OF_SOUND  # us

@@ -1,8 +1,8 @@
 import json
 
-from remote import RemoteKeys
-from pulse import *
-from echolocate import *
+from .remote import RemoteKeys
+from .pulse import *
+from .echolocate import *
 
 DEFAULT_REMOTE_MAPPING = {
     RemoteKeys.UP: Chirp(1.5e4, 4e4, 1e3),
@@ -14,25 +14,24 @@ DEFAULT_REMOTE_MAPPING = {
 }
 
 DEFAULT_SAVE_OPTIONS = {
-    'recording': False,
-    'resampled': False,
-    'pulse': False,
-    'prefix': ""
+    "recording": False,
+    "resampled": False,
+    "pulse": False,
+    "prefix": "",
 }
 
 
 class Profile(object):
-
     def __init__(
-            self,
-            slowdown=20,
-            us_silence_before=6e4,
-            us_record_duration=1e5,
-            playback=True,
-            remote_mapping=DEFAULT_REMOTE_MAPPING,
-            save_options=DEFAULT_SAVE_OPTIONS,
-            current_pulse=None,
-            reverse_channels=False
+        self,
+        slowdown=20,
+        us_silence_before=6e4,
+        us_record_duration=1e5,
+        playback=True,
+        remote_mapping=DEFAULT_REMOTE_MAPPING,
+        save_options=DEFAULT_SAVE_OPTIONS,
+        current_pulse=None,
+        reverse_channels=False,
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -68,24 +67,21 @@ class Profile(object):
 
     @staticmethod
     def from_file(fn):
-        data = json.loads(open(fn, 'r').read())
-        print data
-        echolocation = data.get('echolocation') or {}
-        remote_mapping = data.get('remoteMapping') or {}
-        remote_mapping = {
-            k: pulse_from_dict(remote_mapping[k])
-            for k in remote_mapping
-        }
-        assert echolocation['slowdown']
-        assert echolocation['usRecordDuration']
-        assert echolocation['usSilenceBefore']
-        assert echolocation['saveOptions']
-        assert echolocation['playback']
+        data = json.loads(open(fn, "r").read())
+        print(data)
+        echolocation = data.get("echolocation") or {}
+        remote_mapping = data.get("remoteMapping") or {}
+        remote_mapping = {k: pulse_from_dict(remote_mapping[k]) for k in remote_mapping}
+        assert echolocation["slowdown"]
+        assert echolocation["usRecordDuration"]
+        assert echolocation["usSilenceBefore"]
+        assert echolocation["saveOptions"]
+        assert echolocation["playback"]
         return Profile(
-            slowdown=echolocation.get('slowdown'),
-            us_record_duration=echolocation.get('usRecordDuration'),
-            us_silence_before=echolocation.get('usSilenceBefore'),
-            save_options=echolocation.get('saveOptions'),
-            playback=echolocation.get('playback'),
-            remote_mapping=remote_mapping
+            slowdown=echolocation.get("slowdown"),
+            us_record_duration=echolocation.get("usRecordDuration"),
+            us_silence_before=echolocation.get("usSilenceBefore"),
+            save_options=echolocation.get("saveOptions"),
+            playback=echolocation.get("playback"),
+            remote_mapping=remote_mapping,
         )

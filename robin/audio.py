@@ -1,17 +1,12 @@
-from __future__ import division
-
-from Queue import Queue
+from queue import Queue
 
 import time
-import traceback
 import threading
-import sounddevice as sd
 
-from stream import *
-from record import *
-from config import *
-from util import *
-from samplebuffer import *
+from .stream import *
+from .config import *
+from .util import *
+from .samplebuffer import *
 
 """
 def run_playback_thread(playback_stream, buffers):
@@ -23,9 +18,11 @@ def run_playback_thread(playback_stream, buffers):
         ))
 """
 
-def run_emit_thread(emit_stream, emit_queue):
+
+def run_emit_or_playback_thread(emit_stream, emit_queue):
     while True:
         emit_stream.write_array(emit_queue.get())
+
 
 def run_record_thread(record_stream, record_buffer):
     period_size = record_stream.device.period_size
@@ -41,32 +38,41 @@ def run_record_thread(record_stream, record_buffer):
             record_buffer.put(samples, False)
             put_duration = time.time() - t0
         except Exception as e:
+            print(e)
             record_stream.setup()
 
-class Audio(object):
 
-    def __init__(self, record_device, emit_device):
+class Audio(object):
+    def __init__(self, record_device, emit_device, playback_device):
         self.record_device = record_device
         self.emit_device = emit_device
+        self.playback_device = playback_device
         self.record_stream = None
         self.emit_stream = None
-        self.record_buffer = SampleBuffer(
-            record_device.channels,
-            record_device.rate
-        )
+        self.record_buffer = SampleBuffer(record_device.channels, record_device.rate)
         self.emit_queue = Queue()
+        self.playback_queue = Queue()
 
     def start(self):
         self.emit_stream = Stream(self.emit_device, False)
         self.record_stream = Stream(self.record_device, True)
-        self.emit_thread = threading.Thread(target=run_emit_thread,
-            args=(self.emit_stream, self.emit_queue))
+        self.playback_stream = Stream(self.playback_device, False)
+        self.emit_thread = threading.Thread(
+            target=run_emit_or_playback_thread, args=(self.emit_stream, self.emit_queue)
+        )
         self.emit_thread.daemon = True
         self.emit_thread.start()
-        self.record_thread = threading.Thread(target=run_record_thread,
-            args=(self.record_stream, self.record_buffer))
+        self.record_thread = threading.Thread(
+            target=run_record_thread, args=(self.record_stream, self.record_buffer)
+        )
         self.record_thread.daemon = True
         self.record_thread.start()
+        self.playback_thread = threading.Thread(
+            target=run_emit_or_playback_thread, args=(self.playback_stream, self.playback_queue)
+        )
+        self.playback_thread.daemon = True
+        self.playback_thread.start()
 
     def loopback(self):
-        self.emit_queue.put(self.record_buffer.get_next())
+        nxt = self.record_buffer.get_next()
+        self.playback_queue.put(nxt)

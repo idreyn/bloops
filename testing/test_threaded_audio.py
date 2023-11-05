@@ -15,11 +15,10 @@ a.background_buffer.set_empty(0.1 * pulse.render(DAC))
 delay = 0.1
 
 try:
-	while True:
-		t0 = time.time()
-		time.sleep(delay)
-		samples = a.record_buffer.get(int(delay * ULTRAMICS.rate), t0)
-		a.emit_buffer.put(samples)
+    while True:
+        t0 = time.time()
+        time.sleep(delay)
+        samples = a.record_buffer.get(int(delay * ULTRAMICS.rate), t0)
+        a.emit_buffer.put(samples)
 except KeyboardInterrupt:
-	pass
-
+    pass

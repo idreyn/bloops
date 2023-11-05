@@ -93,8 +93,8 @@ def noise_reduce(sample,noise,settings):
 	# Calculate the gains for each sample based on noise reference
 	for center in xrange(WINDOW_COUNT):
 		if SPECTRUM_MEDIAN_WINDOW > 1:
-			i0 = int_max(center - (SPECTRUM_MEDIAN_WINDOW / 2),0)
-			i1 = int_max(center + (SPECTRUM_MEDIAN_WINDOW / 2) + 1,WINDOW_COUNT - 1)
+			i0 = int_max(center - (SPECTRUM_MEDIAN_WINDOW // 2),0)
+			i1 = int_max(center + (SPECTRUM_MEDIAN_WINDOW // 2) + 1,WINDOW_COUNT - 1)
 			spectrum_med_db = to_db(np.median(spectra[i0:i1],0))
 		else:
 			spectrum_med_db = to_db(spectra[center])
@@ -206,7 +206,7 @@ def smooth(np.ndarray[double, ndim=1] sample,int width=3,bool geom=True):
 	if geom:
 		ref = to_db(ref)
 	for i in xrange(len(sample)):
-		i0 = int_max(0,i - width / 2)
-		i1 = int_min(len(sample) - 1,1 + i + width / 2)
+		i0 = int_max(0,i - width // 2)
+		i1 = int_min(len(sample) - 1,1 + i + width //2)
 		avg = sum(ref[i0:i1]) / (i1 - i0)
 		sample[i] = from_db(avg) if geom else avg

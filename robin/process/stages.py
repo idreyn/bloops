@@ -1,15 +1,13 @@
-from __future__ import division
-
 import numpy as np
 from scipy.special import expit
 import scipy.signal
 import peakutils
 
-import analyze
-import util
-from noisereduce import *
-from measurements import *
-from sample import EnvironmentSample
+from .. import util
+from ..noisereduce import *
+from .measurements import *
+from .sample import EnvironmentSample
+from . import analyze
 
 def stage(require=None, forbid=None):
 	if require is None:
@@ -58,13 +56,13 @@ def stats(es):
 		c.max_val = max(c.signal)
 		c.argmax = np.argmax(c.signal)
 		c.avg_power = sum(c.signal ** 2) / len(c.signal)
-		print "channel %s: max %s argmax %s avg_power %s" % (i, c.max_val, c.argmax, c.avg_power)
+		print("channel %s: max %s argmax %s avg_power %s" % (i, c.max_val, c.argmax, c.avg_power))
 	return es
 
 @stage()
 def bandpass(es):
 	for c in es.channels:
-                print es.hz_band
+		print(es.hz_band)
 		c.signal = util.bandpass(
 			c.signal, es.hz_band[0], es.hz_band[1], es.rate
 		)

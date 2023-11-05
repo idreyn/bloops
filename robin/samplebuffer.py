@@ -1,12 +1,10 @@
-from __future__ import division
-
 import time
 import threading
 import bisect
 import numpy as np
 
-class SampleBuffer(object):
 
+class SampleBuffer(object):
     def __init__(self, channels, rate, capacity=500):
         self.channels = channels
         self.rate = rate
@@ -53,12 +51,12 @@ class SampleBuffer(object):
     def put(self, sample, critical=True, flag_removed=False):
         available = self.lock.acquire(critical)
         if not available:
-            print "Warning: discarded sample"
+            print("Warning: discarded sample")
             # Toss these samples, we're doing something else
             return
         if flag_removed:
             if self.flag_when_removed:
-                print "Warning: overriding buffer's flag_when_removed"
+                print("Warning: overriding buffer's flag_when_removed")
             self.flag_when_removed = sample
         self.queue.append(sample)
         self.times.append(time.time())
@@ -78,13 +76,12 @@ class SampleBuffer(object):
         self.lock.acquire()
         if len(self.queue) == 0 and not self._empty is None:
             self.queue.append(self._empty)
-        offset = 0 if start_time is None \
-            else bisect.bisect_left(self.times, start_time)
+        offset = 0 if start_time is None else bisect.bisect_left(self.times, start_time)
         self._shift(offset)
         if verbose and start_time:
-            print "requested start time", (start_time,)
-            print "bisect found offset", offset
-            print "actual start time", (self.times[0],)
+            print("requested start time", (start_time,))
+            print("bisect found offset", offset)
+            print("actual start time", (self.times[0],))
         mark_as_removed = None
         pointer = 0
         buff = np.zeros((length, self.channels))
@@ -101,7 +98,7 @@ class SampleBuffer(object):
                 if self.flag_when_removed is sample:
                     mark_as_removed = (sample, pointer)
                 take = min(length - pointer, len(sample))
-                buff[pointer: pointer + take, :] = sample[0:take, :]
+                buff[pointer : pointer + take, :] = sample[0:take, :]
                 self.queue[0] = sample[take:, :]
                 pointer = pointer + take
                 if not len(self.queue[0]):

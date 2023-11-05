@@ -1,11 +1,10 @@
-from __future__ import division
-
 import numpy as np
 import alsaaudio as aa
 import time
 import threading
 
-from data import *
+from .data import *
+
 
 class Stream(object):
     def __init__(self, device, is_input, is_blocking=True):
@@ -21,7 +20,9 @@ class Stream(object):
         self.pcm = aa.PCM(
             type=aa.PCM_CAPTURE if self.is_input else aa.PCM_PLAYBACK,
             mode=aa.PCM_NORMAL if self.is_blocking else aa.PCM_NONBLOCK,
-            device=self.device.name,
+            format=self.device.format,
+            rate=self.device.rate,
+            device=f"hw:CARD={self.device.name},DEV=0"
         )
         self.pcm.setrate(self.device.rate)
         self.pcm.setchannels(self.device.channels)

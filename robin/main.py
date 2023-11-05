@@ -1,37 +1,30 @@
 #! /usr/bin/python
 
-from __future__ import division
+
 
 import os
 import time
 import datetime
-import sys
-import base64
 import click
 
 
-from audio import Audio
-from config import (ULTRAMICS, DAC, IP, DEVICE_ID, BLUETOOTH_REMOTE_NAME,
+from .audio import Audio
+from .config import (BATHAT, HEADPHONES, IP, DEVICE_ID, BLUETOOTH_REMOTE_NAME,
         has_required_devices, print_device_availability)
+from .config_secret import BATCAVE_HOST
+from .echolocate import simple_loop, Echolocation
+from .gpio import emitter_enable
+from .profile import *
+from .pulse import *
+from .remote import *
+from .process.pipeline import STANDARD_PIPELINE
 
-from config_secret import BATCAVE_HOST
-from data import array_to_periods
+from .batcave.client import run_client
+from .batcave.protocol import Message, DeviceStatus
+from .batcave.debug_override import DebugOverride
 
-from echolocate import simple_loop, Echolocation
 
-from gpio import emitter_enable
-
-from profile import *
-from pulse import *
-from remote import *
-
-import batcave.client as batcave
-from batcave.protocol import Message, DeviceStatus
-from batcave.debug_override import DebugOverride
-
-import process.pipeline as pipeline
-
-audio = Audio(ULTRAMICS, DAC)
+audio = Audio(record_device=BATHAT, emit_device=BATHAT, playback_device=HEADPHONES)
 profile = None
 busy = False
 connected_remotes = 0
@@ -43,11 +36,11 @@ def handle_override(overrides):
     profile.set_save_prefix(overrides.save_prefix)
 
 def on_connected():
-    print "Batcave client connected"
+    print("Batcave client connected")
 
 
 def on_disconnect():
-    print "Batcave client disconnected"
+    print("Batcave client disconnected")
 
 
 def on_remote_connect():
@@ -76,7 +69,7 @@ def on_set_record_duration(d):
 def on_assign_pulse(info):
     button = info["button"]
     pulse = pulse_from_dict(info["pulse"])
-    print "Assigning", pulse, "to", button
+    print("Assigning", pulse, "to", button)
     profile.remote_mapping[button] = pulse
 
 def on_update_label(label):
@@ -87,7 +80,7 @@ def on_trigger_pulse(pulse=None):
     if busy:
         return
     pulse = pulse or profile.current_pulse
-    print "Emitting", pulse
+    print("Emitting", pulse)
     busy = True
     try:
         ex = simple_loop(
@@ -100,7 +93,7 @@ def on_trigger_pulse(pulse=None):
             ),
             audio,
             profile,
-            pipeline.STANDARD_PIPELINE,
+            STANDARD_PIPELINE,
         )
         """
         if ex.recording_filename:
@@ -153,23 +146,23 @@ def main(reverse_channels, loopback_test, profile_path):
     global profile
     if not has_required_devices():
         print_device_availability()
-        print "Missing audio hardware. exiting."
+        print("Missing audio hardware. exiting.")
         os._exit(0)
     if profile_path:
-        print "Using profile from %s" % profile_path
+        print("Using profile from %s" % profile_path)
         profile = Profile.from_file(profile_path)
     else:
         profile = Profile()
-        print "Using default profile"
+        print("Using default profile")
     if reverse_channels != None:
         profile.reverse_channels = reverse_channels
-        print "Override reverse_channels to %s" % reverse_channels
+        print("Override reverse_channels to %s" % reverse_channels)
     if len(profile.remote_mapping) == 0:
-        print "Warning: profile has no remote key mappings"
-    print "Starting audio I/O..."
+        print("Warning: profile has no remote key mappings")
+    print("Starting audio I/O...")
     audio.start()
-    print "Starting Batcave client..."
-    batcave.run_client(
+    print("Starting Batcave client...")
+    run_client(
         BATCAVE_HOST,
         get_device_status,
         get_device_info,
@@ -187,12 +180,12 @@ def main(reverse_channels, loopback_test, profile_path):
            Message.UPDATE_LABEL: on_update_label,
         }
     )
-    print "Waiting for Bluetooth remote..."
+    print("Waiting for Bluetooth remote...")
     remote = Remote(BLUETOOTH_REMOTE_NAME)
     if loopback_test:
         remote.clear_key(RemoteKeys.RIGHT)
-        print "Ready earbuds and press RIGHT on the remote"
-        print "Waiting for key..."
+        print("Ready earbuds and press RIGHT on the remote")
+        print("Waiting for key...")
         while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
             audio.loopback()
     remote.register_handlers(
@@ -209,11 +202,11 @@ def main(reverse_channels, loopback_test, profile_path):
                 (not busy) and emitter_enable.set(False)
         }
     )
-    for i in xrange(3):
+    for i in range(3):
         emitter_enable.set(True)
         time.sleep(0.05)
         emitter_enable.set(False)
         time.sleep(0.05)
-    print "Ready to echolocate!"
+    print("Ready to echolocate!")
 
 main_wrapper()
