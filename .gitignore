@@ -12,3 +12,6 @@ config_secret.py
 build/
 venv/
 resources/
+
+.robin_repl_history
+.vscode/

@@ -27,10 +27,11 @@ class Pipeline(object):
 STANDARD_PIPELINE = Pipeline(
     [
         stats,
+        skeri_notch,
         bandpass,
-        find_pulse_start_index,
-        # align,
-        detrend,
-        normalize,
+        # find_pulse_start_index,
+        # detrend,
+        # noisereduce,
+        # normalize,
     ]
 )

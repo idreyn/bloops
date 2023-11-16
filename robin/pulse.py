@@ -66,7 +66,7 @@ class Pulse(object):
         if not self.__t_axis is None:
             return self.__t_axis
         self.__t_axis = np.linspace(
-            0, 1e-6 * self.us_duration, 1e-6 * self.us_duration * device.rate
+            0, 1e-6 * self.us_duration, int(1e-6 * self.us_duration * device.rate)
         )
         return self.__t_axis
 

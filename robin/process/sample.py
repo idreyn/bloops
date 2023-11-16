@@ -24,7 +24,7 @@ class EnvironmentSample(object):
         self.rate = rate
         self.us_pulse_duration = us_pulse_duration
         self.us_expected_distance = us_expected_distance
-        self.silence_boundary_index = int(1e-6 * us_silence_before * self.rate) / 2
+        self.silence_boundary_index = int(1e-6 * us_silence_before * self.rate) // 2
         self.us_record_duration = 1e6 * len(sample) / self.rate
         self.hz_band = hz_band or (0, self.rate / 2)
         self.np_format = np_format

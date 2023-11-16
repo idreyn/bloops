@@ -22,7 +22,7 @@ class Stream(object):
             mode=aa.PCM_NORMAL if self.is_blocking else aa.PCM_NONBLOCK,
             format=self.device.format,
             rate=self.device.rate,
-            device=f"hw:CARD={self.device.name},DEV=0"
+            device=f"hw:CARD={self.device.name},DEV=0",
         )
         self.pcm.setrate(self.device.rate)
         self.pcm.setchannels(self.device.channels)

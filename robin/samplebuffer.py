@@ -32,11 +32,6 @@ class SampleBuffer(object):
     def time_range(self):
         return (self.times[0], self.times[-1])
 
-    def pointer_for_time(self, time, start_limit=0, end_limit=None):
-        if not end_limit:
-            end_limit = len(self.times)
-        midpoint = (start_limit + end_limit) / 2
-
     def get_flagged_remove_time(self):
         if not self.flagged_remove_time:
             if self.flag_when_removed:
@@ -79,9 +74,10 @@ class SampleBuffer(object):
         offset = 0 if start_time is None else bisect.bisect_left(self.times, start_time)
         self._shift(offset)
         if verbose and start_time:
-            print("requested start time", (start_time,))
+            print("requested start time", start_time)
             print("bisect found offset", offset)
-            print("actual start time", (self.times[0],))
+            print("min/max times", min(self.times), max(self.times))
+            print("actual start time", self.times[0])
         mark_as_removed = None
         pointer = 0
         buff = np.zeros((length, self.channels))
@@ -112,3 +108,7 @@ class SampleBuffer(object):
             self.flagged_and_removed = sample
             self.flagged_remove_time = remove_time + (offset / self.rate)
         return buff
+    
+    def get_for_interval(self, start_time_s, end_time_s, verbose=False):
+        samples = int(self.rate * (end_time_s - start_time_s))
+        return self.get(length=samples, start_time=start_time_s, verbose=verbose)

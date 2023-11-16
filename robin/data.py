@@ -23,5 +23,5 @@ def array_to_periods(array, device):
 
 def periods_to_array(frames, device):
     channels = device.channels
-    array = np.frombuffer(b''.join(frames), dtype=device.np_format)
+    array = np.frombuffer(b"".join(frames), dtype=device.np_format)
     return np.reshape(array, (len(array) // channels, channels))

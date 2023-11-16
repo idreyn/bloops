@@ -42,7 +42,7 @@ class GPIORead(object):
         gpio.add_event_callback(self.pin, handler)
 
 
-emitter_enable = GPIOWrite(17)
+emitter_enable = GPIOWrite(16)
 
 """
 emitter_battery_low = GPIORead(27)

@@ -6,8 +6,10 @@ import numpy as np
 from .config import BATHAT
 from .gpio import emitter_enable
 from .pulse import Silence
-from .save import save_file
+from .wav import save_wav_file, byte_encode_wav_data
 from .stream import Stream
+from .batcave.protocol import Message
+from .batcave.client import send_to_batcave_remote
 from .util import zero_pad, zero_pad_to_multiple, bandpass
 
 
@@ -27,7 +29,7 @@ class Echolocation(object):
 
 def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
-    rendered = ex.pulse.render(BATHAT)
+    rendered = ex.pulse.render(audio.emit_device)
     with emitter_enable:
         audio.record_buffer.clear()
         audio.emit_queue.put(rendered)
@@ -36,11 +38,10 @@ def simple_loop(ex, audio, profile, pipeline=None):
     record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
     time.sleep(record_time)
     sample = audio.record_buffer.get(
-        int(record_time * audio.record_stream.device.rate), t0 - ex.us_silence_before
+        int(record_time * audio.record_stream.device.rate), t0 - ex.us_silence_before,
     )
     if profile.reverse_channels:
         sample = np.flip(sample, axis=1)
-    audio.record_stream.pause()
     if pipeline:
         t0 = time.time()
         sample = pipeline.run(ex, sample)
@@ -52,16 +53,18 @@ def simple_loop(ex, audio, profile, pipeline=None):
     for i, chunk in enumerate(
         np.split(zero_pad_to_multiple(sample, total_chunks), total_chunks)
     ):
-        # chunk = resample(chunk, ex.slowdown, 'linear')
         chunk = np.repeat(chunk, ex.slowdown, axis=0)
         chunks.append(chunk)
         buffered.put(chunk)
         if i >= buffer_first:
-            audio.emit_queue.put(buffered.get(), False)
+            audio.playback_queue.put(buffered.get(), False)
     if profile.should_play_recording():
         while not buffered.empty():
-            audio.emit_queue.put(buffered.get(), False)
+            audio.playback_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
+    send_to_batcave_remote(
+        Message.AUDIO, {"audio": byte_encode_wav_data(audio.record_device, resampled)}
+    )
     if profile.should_play_recording():
         time.sleep(ex.slowdown * record_time)
     else:
@@ -69,16 +72,12 @@ def simple_loop(ex, audio, profile, pipeline=None):
     prefix = profile.save_prefix() + "_" + str(ex.pulse)
     print("Saving...")
     if profile.should_save_recording():
-        print("Savig sample")
-        ex.recording_filename = save_file(BATHAT, sample, prefix)
+        print("Saving sample")
+        ex.recording_filename = save_wav_file(audio.record_device, sample, prefix)
     if profile.should_save_resampled():
         print("Saving resampled")
-        save_file(BATHAT, resampled, prefix + "__resampled")
-    if profile.should_save_pulse():
-        print("Saving pulse")
-        save_file(BATHAT, rendered, prefix + "__pulse")
+        save_wav_file(audio.record_device, resampled, prefix + "__resampled")
     ex.recording = sample
     ex.resampled = resampled
-    audio.record_stream.resume()
     print("Done")
     return ex

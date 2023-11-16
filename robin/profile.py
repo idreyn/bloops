@@ -5,10 +5,10 @@ from .pulse import *
 from .echolocate import *
 
 DEFAULT_REMOTE_MAPPING = {
-    RemoteKeys.UP: Chirp(1.5e4, 4e4, 1e3),
+    RemoteKeys.UP: Tone(3e4, 0.1e3, True),
     RemoteKeys.DOWN: Chirp(1.5e4, 4e4, 1e4),
-    RemoteKeys.LEFT: Chirp(0.5e4, 4e4, 5e3),
-    RemoteKeys.RIGHT: Tone(2.5e4, 2e3),
+    RemoteKeys.LEFT: Chirp(4e4, 1.5e4, 5e3),
+    RemoteKeys.RIGHT: Chirp(1.5e4, 4e4, 5e3),
     RemoteKeys.JS_DOWN: Chirp(4e4, 1.5e4, 5e3),
     RemoteKeys.JS_RIGHT: Noise(0.5e3),
 }

@@ -2,26 +2,7 @@ import signal, sys
 import math
 
 import numpy as np
-from scipy.signal import *
-
-# Audio processing must-haves
-
-
-def round_to_nearest(x, base):
-    return base * round(x / base)
-
-
-def ceil_to_nearest(x, base):
-    return base * math.ceil(x / base)
-
-
-def floor_to_nearest(x, clip):
-    return base * math.floor(x / clip)
-
-
-def log(x, cb):
-    print((cb(x)))
-    return x
+from scipy.signal import iirnotch, lfilter, butter
 
 
 def to_db(val):
@@ -45,6 +26,11 @@ def bandpass(data, low, high, rate):
     return lfilter(bpf[0], bpf[1], data)
 
 
+def notch(signal, f0, rate, Q=30):
+    b, a = iirnotch(f0, Q, rate)
+    return lfilter(b, a, signal)
+
+
 def t_axis(sample, rate):
     return np.linspace(0, len(sample) / rate, len(sample))
 
@@ -61,11 +47,6 @@ def zero_pad_to_multiple(sample, factor):
 def zero_pad_power_of_two(sample):
     next_power = 2 ** math.ceil(math.log(len(sample), 2))
     return zero_pad(sample, right_length=(next_power - len(sample)))
-
-
-# Python kludges
-
-RUNNING = True
 
 
 def handle_close():

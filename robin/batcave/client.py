@@ -1,44 +1,53 @@
-import logging
-import time
+import socketio
 import threading
 
-from socketIO_client import SocketIO
-from .protocol import *
+from .protocol import Message
 
-# logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
-# logging.basicConfig()
-
-io = None
+sio = None
 
 
-def emit(*args):
-    if io:
-        io.emit(*args)
-    else:
-        print("Unable to emit, not connected to batcave")
+def send_to_batcave_remote(*args, **kwargs):
+    if sio and sio.connected:
+        sio.emit(*args, **kwargs)
 
 
 def client(batcave_host, get_device_status, get_device_info, callbacks):
-    global io
-    io = SocketIO(*batcave_host)
-    for c in callbacks:
-        io.on(c, callbacks.get(c))
+    global sio
+    sio = socketio.Client(reconnection=True)
+
+    for event, handler in callbacks.items():
+        sio.on(event, handler)
+
+    @sio.event
+    def connect():
+        print("Connected to Batcave")
+        handshake()
+
+    @sio.event
+    def disconnect():
+        print("Disconnected from Batcave")
 
     def handshake():
-        io.emit(Message.HANDSHAKE_DEVICE, get_device_info())
+        sio.emit(Message.HANDSHAKE_DEVICE, get_device_info())
 
-    io.on(Message.RECONNECT, handshake)
-    handshake()
+    try:
+        sio.connect(batcave_host)
+    except:
+        print("Could not connect to Batcave")
 
-    while True:
-        io.wait(seconds=5)
-        io.emit(
-            Message.DEVICE_STATUS,
-            {"status": get_device_status(), "info": get_device_info()},
-        )
+    try:
+        while True:
+            device_status = get_device_status()
+            device_info = get_device_info()
+            send_to_batcave_remote(
+                Message.DEVICE_STATUS, {"status": device_status, "info": device_info}
+            )
+            sio.sleep(5)
+    finally:
+        sio.disconnect()
 
 
-def run_client(*args):
+def run_batcave_client(*args):
     t = threading.Thread(target=client, args=args)
     t.daemon = True
     t.start()
