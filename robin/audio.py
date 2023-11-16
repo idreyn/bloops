@@ -96,7 +96,7 @@ class Audio(object):
         self.emit_device = emit_device
         self.playback_device = playback_device
 
-    def start(self, record_capacity_periods = None):
+    def start(self, record_capacity_periods=None):
         if self.record_device:
             self.record_buffer = SampleBuffer(
                 self.record_device.channels,
@@ -132,7 +132,7 @@ class Audio(object):
     def get_recording(self, *args, **kwargs):
         assert self.record_device, "Record device not specified"
         return self.record_buffer.get(*args, **kwargs)
-            
+
     def add_to_playback(self, audio):
         assert self.playback_device, "Playback device not specified"
         self.playback_queue.put(audio)

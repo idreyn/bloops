@@ -6,7 +6,7 @@ import numpy as np
 from .config import BATHAT
 from .gpio import emitter_enable
 from .pulse import Silence
-from .wav import save_wav_file, byte_encode_wav_data
+from .wav import save_wav_echo_recording, byte_encode_wav_data
 from .stream import Stream
 from .batcave.protocol import Message
 from .batcave.client import send_to_batcave_remote
@@ -38,7 +38,8 @@ def simple_loop(ex, audio, profile, pipeline=None):
     record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
     time.sleep(record_time)
     sample = audio.record_buffer.get(
-        int(record_time * audio.record_stream.device.rate), t0 - ex.us_silence_before,
+        int(record_time * audio.record_stream.device.rate),
+        t0 - ex.us_silence_before,
     )
     if profile.reverse_channels:
         sample = np.flip(sample, axis=1)
@@ -73,10 +74,12 @@ def simple_loop(ex, audio, profile, pipeline=None):
     print("Saving...")
     if profile.should_save_recording():
         print("Saving sample")
-        ex.recording_filename = save_wav_file(audio.record_device, sample, prefix)
+        ex.recording_filename = save_wav_echo_recording(
+            audio.record_device, sample, prefix
+        )
     if profile.should_save_resampled():
         print("Saving resampled")
-        save_wav_file(audio.record_device, resampled, prefix + "__resampled")
+        save_wav_echo_recording(audio.record_device, resampled, prefix + "__resampled")
     ex.recording = sample
     ex.resampled = resampled
     print("Done")

@@ -62,9 +62,11 @@ def align(left, right, lsi, rsi):
         last = last[offset:]
     return first if first_is_left else last, last if first_is_left else first
 
+
 import numpy as np
 
-def split_on_silence(signal, threshold_db, filter_window_length=2000):
+
+def split_on_silence(signal, threshold_db, filter_window_length):
     """
     Split a signal into segments based on silence, automatically normalizing and re-normalizing the signal.
 
@@ -80,7 +82,11 @@ def split_on_silence(signal, threshold_db, filter_window_length=2000):
     original_dtype = signal.dtype
 
     # Normalization factor based on the maximum value of the input dtype
-    dtype_max = np.iinfo(original_dtype).max if np.issubdtype(original_dtype, np.integer) else 1.0
+    dtype_max = (
+        np.iinfo(original_dtype).max
+        if np.issubdtype(original_dtype, np.integer)
+        else 1.0
+    )
 
     # Convert to float32 and normalize
     normalized_signal = signal.astype(np.float32) / dtype_max
@@ -93,11 +99,11 @@ def split_on_silence(signal, threshold_db, filter_window_length=2000):
 
     # Apply low-pass filtering on the power signal
     window = np.ones(filter_window_length) / filter_window_length
-    filtered_power_signal = np.convolve(power_signal, window, mode='same')
+    filtered_power_signal = np.convolve(power_signal, window, mode="same")
 
     # Map each element to 0 or 1 based on threshold
     thresholded_signal = (filtered_power_signal > threshold_power).astype(int)
-    
+
     # Find ranges where the array is 1 (non-silent segments) and create arrays
     non_silent_segments = []
     start = None

@@ -13,8 +13,15 @@ def now_stamp():
     return dt.datetime.fromtimestamp(t0).strftime("%Y-%m-%d-%H-%M-%S")
 
 
-def save_wav_file(
-    device, sound, name_append=None, prefix=(BASE_PATH + "/../recordings/"),
+def save_wav_file(sound, rate, filename):
+    wavio.write(filename, sound, rate)
+
+
+def save_wav_echo_recording(
+    device,
+    sound,
+    name_append=None,
+    prefix=(BASE_PATH + "/../recordings/"),
 ):
     rel_path = (
         prefix + dt.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d") + "/"

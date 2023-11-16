@@ -108,7 +108,7 @@ class SampleBuffer(object):
             self.flagged_and_removed = sample
             self.flagged_remove_time = remove_time + (offset / self.rate)
         return buff
-    
+
     def get_for_interval(self, start_time_s, end_time_s, verbose=False):
         samples = int(self.rate * (end_time_s - start_time_s))
         return self.get(length=samples, start_time=start_time_s, verbose=verbose)
