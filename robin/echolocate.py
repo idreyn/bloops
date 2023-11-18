@@ -30,11 +30,12 @@ class Echolocation(object):
 def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(audio.emit_device)
-    with emitter_enable:
-        audio.record_buffer.clear()
-        audio.emit_queue.put(rendered)
-        t0 = time.time()
-        time.sleep(1e-6 * ex.pulse.us_duration)
+    emitter_enable.set(True)
+    audio.record_buffer.clear()
+    audio.emit_queue.put(rendered)
+    t0 = time.time()
+    time.sleep(1e-6 * ex.pulse.us_duration)
+    emitter_enable.set(False)
     record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
     time.sleep(record_time)
     sample = audio.record_buffer.get(

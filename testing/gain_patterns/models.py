@@ -33,10 +33,12 @@ class Experiment:
     max_freq: int
     freq_spacing: int
     tone_length_us: int
+    silence_length_us: int
     min_azimuth: int = 0
     max_azimuth: int = 90
-    azimuth_spacing = 10
-    trials_per_azimuth = 3
+    azimuth_spacing: int = 10
+    trials_per_azimuth: int = 3
+    sample_rate: int = 192000
 
     def __post_init__(self):
         wavs_path = path.join(
@@ -77,14 +79,16 @@ class Experiment:
     @staticmethod
     def load_by_name(name: str):
         contents = open(Experiment.path_by_name(name)).read()
-        json = json.loads(contents)
+        contents = json.loads(contents)
         props = contents["properties"]
         return Experiment(
             name=props["name"],
+            sample_rate=props["sample_rate"],
             min_freq=props["min_freq"],
             max_freq=props["max_freq"],
             freq_spacing=props["freq_spacing"],
             tone_length_us=props["tone_length_us"],
+            silence_length_us=props["silence_length_us"],
             min_azimuth=props["min_azimuth"],
             max_azimuth=props["max_azimuth"],
             azimuth_spacing=props["azimuth_spacing"],
@@ -98,11 +102,13 @@ class Experiment:
 
     def save(self):
         res = {
-            "props": {
+            "properties": {
                 "name": self.name,
+                "sample_rate": self.sample_rate,
                 "min_freq": self.min_freq,
                 "max_freq": self.max_freq,
                 "freq_spacing": self.freq_spacing,
+                "silence_length_us": self.silence_length_us,
                 "tone_length_us": self.tone_length_us,
                 "min_azimuth": self.min_azimuth,
                 "max_azimuth": self.max_azimuth,

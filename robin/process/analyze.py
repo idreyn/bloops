@@ -65,6 +65,37 @@ def align(left, right, lsi, rsi):
 
 import numpy as np
 
+def remove_leading_silence(signal, threshold_db):
+    """
+    Slice off silence from the beginning of a signal array and return the trimmed signal.
+
+    Parameters:
+    signal (ndarray): Input signal array.
+    threshold_db (float): Silence threshold in dB.
+
+    Returns:
+    ndarray: The trimmed signal, starting from the first non-silent part.
+    """
+    original_dtype = signal.dtype
+    dtype_max = np.iinfo(original_dtype).max if np.issubdtype(original_dtype, np.integer) else 1.0
+
+    # Convert to float32 and normalize
+    normalized_signal = signal.astype(np.float32) / dtype_max
+
+    # Compute threshold power
+    threshold_power = 10 ** (threshold_db / 10)
+
+    # Square each element to get signal power timeseries
+    power_signal = np.square(normalized_signal)
+
+    # Find the start of the first non-silent segment
+    non_silent_start = np.argmax(power_signal > threshold_power)
+
+    # Slice the signal from the non-silent start
+    trimmed_signal = normalized_signal[non_silent_start:] * dtype_max
+
+    return trimmed_signal.astype(original_dtype)
+
 
 def split_on_silence(signal, threshold_db, filter_window_length):
     """
