@@ -1,36 +1,32 @@
-#! /usr/bin/python
-
-
 import os
 import time
 import datetime
 import click
 from threading import Event
 
-from .audio import Audio
-from .config import (
-    BATHAT,
-    HEADPHONES,
-    IP,
-    DEVICE_ID,
-    BLUETOOTH_REMOTE_NAME,
-    BATCAVE_HOST,
-    has_required_devices,
-    print_device_availability,
+from .io.audio import Audio
+from .io.remote import BluetoothRemote
+from .config import ROBIN, BASE_PATH
+from .devices import BATHAT, HEADPHONES
+from .echolocation import (
+    simple_echolocation_loop,
+    Echolocation,
+    pulse_from_dict,
+    dict_from_pulse,
 )
-from .echolocate import simple_loop, Echolocation
-from .gpio import emitter_enable
+from .io.gpio import emitter_enable
 from .profile import *
-from .pulse import *
-from .remote import *
 from .repl import run_repl
-from .wav import byte_encode_wav_data
+from .io.wav import byte_encode_wav_data
 from .process.pipeline import STANDARD_PIPELINE
 
 from .batcave.client import run_batcave_client, send_to_batcave_remote
 from .batcave.protocol import Message, DeviceStatus
 from .batcave.debug_override import DebugOverride
 
+
+# ron paul dot gif
+print(ROBIN)
 
 audio = Audio(record_device=BATHAT, emit_device=BATHAT, playback_device=HEADPHONES)
 profile = None
@@ -96,7 +92,7 @@ def on_trigger_pulse(pulse=None):
     print("Emitting", pulse)
     busy = True
     try:
-        ex = simple_loop(
+        ex = simple_echolocation_loop(
             Echolocation(
                 pulse,
                 profile.slowdown,
@@ -170,7 +166,7 @@ def main(reverse_channels, loopback_test, profile_path):
     audio.start()
     print("Starting Batcave client...")
     run_batcave_client(
-        BATCAVE_HOST,
+        profile.batcave_host,
         get_device_status,
         get_device_info,
         {
@@ -188,7 +184,7 @@ def main(reverse_channels, loopback_test, profile_path):
         },
     )
     print("Waiting for Bluetooth remote...")
-    remote = Remote(BLUETOOTH_REMOTE_NAME)
+    remote = BluetoothRemote(profile.bluetooth_remote_name)
     if loopback_test:
         remote.clear_key(RemoteKeys.RIGHT)
         print("Ready earbuds and press RIGHT on the remote")

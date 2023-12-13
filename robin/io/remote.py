@@ -56,7 +56,7 @@ def client(device_name, resolve_await, down=None, hold=None, up=None):
             print("Bluetooth remote disconnected")
 
 
-class Remote(object):
+class BluetoothRemote(object):
     def __init__(self, name):
         self._up = {}
         self._down = {}

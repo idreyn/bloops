@@ -3,9 +3,8 @@ import time
 import io
 import datetime as dt
 import wavio
-import base64
 
-from .config import BASE_PATH
+from ..config import BASE_PATH
 
 
 def now_stamp():

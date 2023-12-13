@@ -4,9 +4,8 @@ import traceback
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from .pulse import Tone, Chirp, Noise, Pulse
-from .config import BASE_PATH
-from .util import handle_close
+from .echolocation.pulse import Pulse
+from .constants import BASE_PATH
 
 
 def run_repl(on_trigger_pulse, profile, exit_event):

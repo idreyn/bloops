@@ -7,7 +7,7 @@ from robin.audio import Audio
 from robin.config import HIFIBERRY, ULTRAMIC
 from robin.gpio import emitter_enable
 from robin.pulse import Tone, Silence
-from robin.wav import save_wav_file
+from robin.io.wav import save_wav_file
 
 from .models import Experiment, ExperimentEntry
 
@@ -25,11 +25,14 @@ def concat_tones(tones, silence):
     return concatenated_array
 
 
-def get_tone_ladder_recording(frequencies: List[int], tone_length: int, silence_length: int):
+def get_tone_ladder_recording(
+    frequencies: List[int], tone_length: int, silence_length: int
+):
     silence = Silence(silence_length).render(HIFIBERRY)
     tones = [Tone(freq, tone_length).render(HIFIBERRY) for freq in frequencies]
     all_tones = concat_tones(tones, silence)
     import matplotlib.pyplot as plt
+
     plt.plot(all_tones)
     plt.show()
     start_time = time.time()
@@ -58,7 +61,9 @@ def collect_experiment(exp: Experiment):
                 entry = ExperimentEntry(exp, azimuth, trial)
                 if entry.wav_file_exists:
                     continue
-                print(f"Press [enter] to collect azimuth={azimuth}, trial={trial}", end="")
+                print(
+                    f"Press [enter] to collect azimuth={azimuth}, trial={trial}", end=""
+                )
                 while input("") != "":
                     continue
                 collect_trial_entry(entry)
@@ -68,6 +73,7 @@ def collect_experiment(exp: Experiment):
         print("Exiting.")
     finally:
         exp.save()
+
 
 if __name__ == "__main__":
     exp = Experiment(

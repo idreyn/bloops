@@ -1,8 +1,7 @@
 import json
 
-from .remote import RemoteKeys
-from .pulse import *
-from .echolocate import *
+from robin.io.remote import RemoteKeys
+from robin.echolocation.pulse import Tone, Chirp, Noise, pulse_from_dict
 
 DEFAULT_REMOTE_MAPPING = {
     RemoteKeys.UP: Tone(3e4, 0.1e3, True),
@@ -32,6 +31,8 @@ class Profile(object):
         save_options=DEFAULT_SAVE_OPTIONS,
         current_pulse=None,
         reverse_channels=False,
+        bluetooth_remote_name=None,
+        remote_batcave_host=None,
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -41,6 +42,8 @@ class Profile(object):
         self.save_options = save_options
         self.current_pulse = current_pulse or Chirp(1.5e4, 4e4, 2.5e3)
         self.reverse_channels = reverse_channels
+        self.bluetooth_remote_name = bluetooth_remote_name
+        self.remote_batcave_host = remote_batcave_host
 
     def should_play_recording(self):
         return self.playback

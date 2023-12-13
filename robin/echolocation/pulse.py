@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import chirp
 
-from .util import zero_pad
+from robin.util import zero_pad
 
 
 def pulse_from_dict(d):

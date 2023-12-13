@@ -3,7 +3,7 @@ import alsaaudio as aa
 import time
 import threading
 
-from .data import *
+from .util.data import *
 
 
 class Stream(object):

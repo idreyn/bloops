@@ -1,13 +1,11 @@
 import numpy as np
-from scipy.special import expit
 import scipy.signal
+from scipy.special import expit
 import peakutils
 
-from .. import util
-from ..noisereduce import noise_reduce, NoiseReduceSettings
-from .measurements import *
-from .sample import EnvironmentSample
-from . import analyze
+import robin.util as util
+from robin.noisereduce import noise_reduce, NoiseReduceSettings
+from robin.pipeline.sample import EnvironmentSample
 
 
 def stage(require=None, forbid=None):
@@ -114,7 +112,7 @@ def detrend(es):
 @stage(require=[bandpass])
 def find_pulse_start_index(es):
     left, right = es.channels
-    lps, rps = analyze.find_signal_start(
+    lps, rps = util.find_signal_start(
         left=left.signal,
         right=right.signal,
         left_silence=left.silence,
@@ -132,7 +130,7 @@ def find_pulse_start_index(es):
 @stage(require=[find_pulse_start_index])
 def align(es):
     left, right = es.channels
-    left.signal, right.signal = analyze.align(
+    left.signal, right.signal = util.align(
         left.signal, right.signal, left.pulse_start_offset, right.pulse_start_offset
     )
     return es

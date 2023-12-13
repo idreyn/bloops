@@ -1,5 +1,5 @@
-from .sample import EnvironmentSample, ChannelSample
-from .stages import *
+from robin.pipeline.sample import EnvironmentSample
+from robin.pipeline.stages import *
 
 
 class Pipeline(object):

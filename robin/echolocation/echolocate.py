@@ -26,7 +26,7 @@ class Echolocation(object):
         self.resampled = None
 
 
-def simple_loop(ex, audio, profile, pipeline=None):
+def simple_echolocation_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(audio.emit_device)
     with emitter_enable:

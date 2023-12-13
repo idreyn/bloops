@@ -1,7 +1,96 @@
-import random
-import peakutils
-
+import signal, sys
+import math
 import numpy as np
+from scipy.signal import iirnotch, lfilter, butter
+
+
+def chunks(l, n):
+    res = []
+    for i in range(0, len(l), n):
+        res.append(l[i : i + n])
+    return res
+
+
+def pad(array, length, pad):
+    if len(array) == length:
+        return array
+    extra = [pad] * (length - len(array))
+    return array + extra
+
+
+def array_to_periods(array, device):
+    return chunks(
+        array.flatten().astype(device.np_format).tostring(), device.period_bytes()
+    )
+
+
+def periods_to_array(frames, device):
+    channels = device.channels
+    array = np.frombuffer(b"".join(frames), dtype=device.np_format)
+    return np.reshape(array, (len(array) // channels, channels))
+
+
+def to_db(val):
+    return 10 * np.log10((0.00000001 + np.abs(val)) ** 2)
+
+
+def from_db(val):
+    return np.power(10, (1.0 / 20) * val)
+
+
+def bandpass_coefficients(lowcut, highcut, fs, order=1):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype="bandpass")
+    return b, a
+
+
+def bandpass(data, low, high, rate):
+    bpf = bandpass_coefficients(low, high, rate)
+    return lfilter(bpf[0], bpf[1], data)
+
+
+def notch(signal, f0, rate, Q=30):
+    b, a = iirnotch(f0, Q, rate)
+    return lfilter(b, a, signal)
+
+
+def t_axis(sample, rate):
+    return np.linspace(0, len(sample) / rate, len(sample))
+
+
+def zero_pad(sample, left_length=0, right_length=0):
+    return np.pad(sample, ((left_length, right_length), (0, 0)), mode="constant")
+
+
+def zero_pad_to_multiple(sample, factor):
+    next_multiple = factor * int(math.ceil(len(sample) / factor))
+    return zero_pad(sample, right_length=(next_multiple - len(sample)))
+
+
+def zero_pad_power_of_two(sample):
+    next_power = 2 ** math.ceil(math.log(len(sample), 2))
+    return zero_pad(sample, right_length=(next_power - len(sample)))
+
+
+def handle_close():
+    def signal_handler(signal, frame):
+        kill_app()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+def get_ip_address():
+    import socket
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except:
+        return "unavailable"
 
 
 def moving_average(values, window):
@@ -65,6 +154,7 @@ def align(left, right, lsi, rsi):
 
 import numpy as np
 
+
 def remove_leading_silence(signal, threshold_db):
     """
     Slice off silence from the beginning of a signal array and return the trimmed signal.
@@ -77,7 +167,11 @@ def remove_leading_silence(signal, threshold_db):
     ndarray: The trimmed signal, starting from the first non-silent part.
     """
     original_dtype = signal.dtype
-    dtype_max = np.iinfo(original_dtype).max if np.issubdtype(original_dtype, np.integer) else 1.0
+    dtype_max = (
+        np.iinfo(original_dtype).max
+        if np.issubdtype(original_dtype, np.integer)
+        else 1.0
+    )
 
     # Convert to float32 and normalize
     normalized_signal = signal.astype(np.float32) / dtype_max
