@@ -1,5 +1,6 @@
 import socketio
 import threading
+import time
 
 from .protocol import Message
 
@@ -11,16 +12,23 @@ def send_to_batcave_remote(*args, **kwargs):
         sio.emit(*args, **kwargs)
 
 
-def client(batcave_host, get_device_status, get_device_info, callbacks):
+def client(profile, get_device_status, get_device_info, callbacks):
     global sio
     sio = socketio.Client(reconnection=True)
+    batcave_host = (
+        "http://0.0.0.0:8000" if profile.batcave_self_host else profile.batcave_host
+    )
+
+    if not batcave_host:
+        return
+
+    print("Starting Batcave client...")
 
     for event, handler in callbacks.items():
         sio.on(event, handler)
 
     @sio.event
     def connect():
-        print("Connected to Batcave")
         handshake()
 
     @sio.event
@@ -30,17 +38,24 @@ def client(batcave_host, get_device_status, get_device_info, callbacks):
     def handshake():
         sio.emit(Message.HANDSHAKE_DEVICE, get_device_info())
 
-    try:
-        sio.connect(batcave_host)
-    except:
-        print("Could not connect to Batcave")
+    connected = False
+    attempts = 0
+    while not connected:
+        try:
+            time.sleep(max(5, min(2 ** (attempts // 4), 120)))
+            sio.connect(batcave_host)
+            connected = True
+        except Exception as ex:
+            attempts += 1
+            print(ex)
 
     try:
         while True:
             device_status = get_device_status()
             device_info = get_device_info()
             send_to_batcave_remote(
-                Message.DEVICE_STATUS, {"status": device_status, "info": device_info}
+                Message.DEVICE_STATUS,
+                {"status": device_status, "info": device_info},
             )
             sio.sleep(5)
     finally:
@@ -48,6 +63,5 @@ def client(batcave_host, get_device_status, get_device_info, callbacks):
 
 
 def run_batcave_client(*args):
-    t = threading.Thread(target=client, args=args)
-    t.daemon = True
-    t.start()
+    client_thread = threading.Thread(target=client, args=args, daemon=True)
+    client_thread.start()

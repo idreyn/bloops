@@ -3,13 +3,11 @@ from queue import Queue
 
 import numpy as np
 
-from .gpio import emitter_enable
-from .pulse import Silence
-from .wav import save_wav_echo_recording, byte_encode_wav_data
-from .stream import Stream
-from .batcave.protocol import Message
-from .batcave.client import send_to_batcave_remote
-from .util import zero_pad, zero_pad_to_multiple, bandpass
+from robin.io.gpio import emitter_enable
+from robin.io.wav import save_wav_echo_recording, byte_encode_wav_data
+from robin.batcave.protocol import Message
+from robin.batcave.client import send_to_batcave_remote
+from robin.util import zero_pad_to_multiple
 
 
 class Echolocation(object):
@@ -26,7 +24,7 @@ class Echolocation(object):
         self.resampled = None
 
 
-def simple_echolocation_loop(ex, audio, profile, pipeline=None):
+def echolocate(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(audio.emit_device)
     with emitter_enable:

@@ -27,12 +27,14 @@ class Profile(object):
         us_silence_before=6e4,
         us_record_duration=1e5,
         playback=True,
+        device_id="robin",
         remote_mapping=DEFAULT_REMOTE_MAPPING,
+        remote_name="MOCUTE-032X_B61-2FB6",
         save_options=DEFAULT_SAVE_OPTIONS,
         current_pulse=None,
         reverse_channels=False,
-        bluetooth_remote_name=None,
-        remote_batcave_host=None,
+        batcave_host=None,
+        batcave_self_host=True,
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -42,8 +44,10 @@ class Profile(object):
         self.save_options = save_options
         self.current_pulse = current_pulse or Chirp(1.5e4, 4e4, 2.5e3)
         self.reverse_channels = reverse_channels
-        self.bluetooth_remote_name = bluetooth_remote_name
-        self.remote_batcave_host = remote_batcave_host
+        self.remote_name = remote_name
+        self.batcave_host = batcave_host
+        self.batcave_self_host = batcave_self_host
+        self.device_id = device_id
 
     def should_play_recording(self):
         return self.playback
@@ -87,4 +91,8 @@ class Profile(object):
             save_options=echolocation.get("saveOptions"),
             playback=echolocation.get("playback"),
             remote_mapping=remote_mapping,
+            remote_name=data.get("remoteName"),
+            batcave_host=data.get("batcaveHost"),
+            batcave_self_host=data.get("batcaveSelfHost"),
+            device_id=data.get("deviceId"),
         )

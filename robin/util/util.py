@@ -1,4 +1,3 @@
-import signal, sys
 import math
 import numpy as np
 from scipy.signal import iirnotch, lfilter, butter
@@ -72,25 +71,6 @@ def zero_pad_to_multiple(sample, factor):
 def zero_pad_power_of_two(sample):
     next_power = 2 ** math.ceil(math.log(len(sample), 2))
     return zero_pad(sample, right_length=(next_power - len(sample)))
-
-
-def handle_close():
-    def signal_handler(signal, frame):
-        kill_app()
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
-
-
-def get_ip_address():
-    import socket
-
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
-    except:
-        return "unavailable"
 
 
 def moving_average(values, window):

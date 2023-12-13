@@ -4,7 +4,7 @@ import io
 import datetime as dt
 import wavio
 
-from ..config import BASE_PATH
+from robin.constants import BASE_PATH
 
 
 def now_stamp():

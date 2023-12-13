@@ -4,7 +4,7 @@ import traceback
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from .echolocation.pulse import Pulse
+from .echolocation.pulse import *
 from .constants import BASE_PATH
 
 
@@ -34,6 +34,5 @@ def run_repl(on_trigger_pulse, profile, exit_event):
                 continue
         exit_event.set()
 
-    repl_thread = Thread(target=repl_inner)
-    repl_thread.daemon = True
+    repl_thread = Thread(target=repl_inner, daemon=True)
     repl_thread.start()

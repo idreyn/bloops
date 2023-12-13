@@ -71,8 +71,8 @@ class BluetoothRemote(object):
                 "device_name": name,
                 "resolve_await": lambda k: self._resolve_await(k),
             },
+            daemon=True,
         )
-        self._thread.daemon = False
         self._thread.start()
 
     def register_handlers(self, down=None, hold=None, up=None):

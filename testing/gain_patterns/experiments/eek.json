@@ -1,0 +1,15 @@
+{
+  "properties": {
+    "name": "eek",
+    "sample_rate": 192000,
+    "min_freq": 20000,
+    "max_freq": 50000,
+    "freq_spacing": 2500,
+    "silence_length_us": 90000.0,
+    "tone_length_us": 10000.0,
+    "min_azimuth": 0,
+    "max_azimuth": 90,
+    "azimuth_spacing": 10,
+    "trials_per_azimuth": 3
+  }
+}

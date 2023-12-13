@@ -6,21 +6,22 @@ from threading import Event
 
 from .io.audio import Audio
 from .io.remote import BluetoothRemote
-from .config import ROBIN, BASE_PATH
+from .constants import ROBIN
 from .devices import BATHAT, HEADPHONES
 from .echolocation import (
-    simple_echolocation_loop,
+    echolocate,
     Echolocation,
     pulse_from_dict,
     dict_from_pulse,
 )
-from .io.gpio import emitter_enable
+from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
 from .profile import *
 from .repl import run_repl
-from .io.wav import byte_encode_wav_data
-from .process.pipeline import STANDARD_PIPELINE
+from .pipeline import STANDARD_PIPELINE
+from .util.net import get_ip_address
 
-from .batcave.client import run_batcave_client, send_to_batcave_remote
+from .batcave.client import run_batcave_client
+from .batcave.server import run_batcave_server
 from .batcave.protocol import Message, DeviceStatus
 from .batcave.debug_override import DebugOverride
 
@@ -92,7 +93,7 @@ def on_trigger_pulse(pulse=None):
     print("Emitting", pulse)
     busy = True
     try:
-        ex = simple_echolocation_loop(
+        echolocate(
             Echolocation(
                 pulse,
                 profile.slowdown,
@@ -113,13 +114,13 @@ def get_device_status():
 
 
 def get_device_info():
+    global profile
     return {
-        "id": DEVICE_ID,
-        "ip": IP,
-        "deviceVoltageLow": False,  # power_led.read(),
-        "deviceBatteryLow": False,  # device_battery_low.read(),
-        "emitterBatteryLow": False,  # emitter_battery_low.read(),
-        "bluetoothConnections": "Unknown",
+        "id": profile.device_id,
+        "ip": get_ip_address(),
+        "deviceBatteryLow": device_battery_low.read(),
+        "emitterBatteryLow": emitter_battery_low.read(),
+        "bluetoothConnections": str(connected_remotes),
         "lastSeen": str(datetime.datetime.now()),
         "pulse": dict_from_pulse(profile.current_pulse),
     }
@@ -132,24 +133,30 @@ def make_pulse_callback(button):
     return inner
 
 
+batcave_handlers = {
+    Message.CONNECT: on_connected,
+    Message.RECONNECT: on_connected,
+    Message.DISCONNECT: on_disconnect,
+    Message.TRIGGER_PULSE: on_trigger_pulse,
+    Message.UPDATE_PULSE: on_update_pulse,
+    Message.SET_RECORD_DURATION: on_set_record_duration,
+    Message.UPDATE_OVERRIDES: on_update_overrides,
+    Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
+    Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
+    Message.ASSIGN_PULSE: on_assign_pulse,
+    Message.UPDATE_LABEL: on_update_label,
+}
+
+
 @click.command()
 @click.option("--reverse-channels/--no-reverse-channels", default=False, required=False)
 @click.option("--loopback-test/--no-loopback-test", default=False, required=False)
 @click.argument("profile_path", type=click.Path(exists=True), required=False)
-def main_wrapper(*args, **kwargs):
-    try:
-        main(*args, **kwargs)
-        while True:
-            time.sleep(0.01)
-    except KeyboardInterrupt:
-        os._exit(0)
-
-
 def main(reverse_channels, loopback_test, profile_path):
     global profile
-    if not has_required_devices():
-        print_device_availability()
-        print("Missing audio hardware. exiting.")
+    if not audio.devices_available():
+        print(audio.device_availability())
+        print("Missing audio hardware, exiting.")
         os._exit(0)
     if profile_path:
         print("Using profile from %s" % profile_path)
@@ -164,27 +171,18 @@ def main(reverse_channels, loopback_test, profile_path):
         print("Warning: profile has no remote key mappings")
     print("Starting audio I/O...")
     audio.start()
-    print("Starting Batcave client...")
+    exit_event = Event()
+    if profile.batcave_self_host:
+        print("Running Batcave server locally...")
+        run_batcave_server(exit_event)
     run_batcave_client(
-        profile.batcave_host,
+        profile,
         get_device_status,
         get_device_info,
-        {
-            Message.CONNECT: on_connected,
-            Message.RECONNECT: on_connected,
-            Message.DISCONNECT: on_disconnect,
-            Message.TRIGGER_PULSE: on_trigger_pulse,
-            Message.UPDATE_PULSE: on_update_pulse,
-            Message.SET_RECORD_DURATION: on_set_record_duration,
-            Message.UPDATE_OVERRIDES: on_update_overrides,
-            Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
-            Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
-            Message.ASSIGN_PULSE: on_assign_pulse,
-            Message.UPDATE_LABEL: on_update_label,
-        },
+        batcave_handlers,
     )
     print("Waiting for Bluetooth remote...")
-    remote = BluetoothRemote(profile.bluetooth_remote_name)
+    remote = BluetoothRemote(profile.remote_name)
     if loopback_test:
         remote.clear_key(RemoteKeys.RIGHT)
         print("Ready earbuds and press RIGHT on the remote")
@@ -202,10 +200,8 @@ def main(reverse_channels, loopback_test, profile_path):
         emitter_enable.set(False)
         time.sleep(0.05)
     print("Ready to echolocate!")
-    exit_event = Event()
     run_repl(on_trigger_pulse, profile, exit_event)
     exit_event.wait()
-    os._exit(0)
 
 
-main_wrapper()
+main()

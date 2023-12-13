@@ -1,0 +1,51 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2711";  
+
+    fragment@0 {
+        target = <&i2c1>;
+        __overlay__ {
+            cs4270: cs4270@48 {
+                compatible = "cirrus,cs4270";
+                reg = <0x48>;
+                reset-gpios = <&gpio 26 0>;
+                #sound-dai-cells = <0>;
+            };
+        };
+    };
+
+    fragment@1 {
+        target-path = "/";
+        __overlay__ {
+            sound {
+                compatible = "simple-audio-card";
+                simple-audio-card,name = "CS4270";
+                simple-audio-card,format = "i2s";
+                status = "okay";
+
+                simple-audio-card,cpu {
+                    sound-dai = <&i2s>;
+                };
+
+                simple-audio-card,codec {
+                    sound-dai = <&cs4270>;
+                    clocks = <&mclk>;
+                    clock-names = "mclk";
+                };
+            };
+        };
+    };
+
+    fragment@2 {
+        target-path = "/";
+        __overlay__ {
+            mclk: mclk {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <24576000>;
+            };
+        };
+    };
+};

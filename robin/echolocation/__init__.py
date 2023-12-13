@@ -1,4 +1,4 @@
-from .echolocate import Echolocation, simple_echolocation_loop
+from .echolocate import Echolocation, echolocate
 from .pulse import (
     Pulse,
     Tone,
@@ -18,5 +18,5 @@ __all__ = [
     "CombinedPulse",
     "pulse_from_dict",
     "dict_from_pulse",
-    "simple_echolocation_loop",
+    "echolocate",
 ]

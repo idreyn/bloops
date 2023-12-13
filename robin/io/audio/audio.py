@@ -2,15 +2,15 @@ import threading
 from queue import Queue
 
 from .samplebuffer import SampleBuffer
-from .stream import Stream
+from .stream import AudioStream
 
 
-def run_emit_or_playback_thread(emit_stream: Stream, emit_queue: Queue):
+def run_emit_or_playback_thread(emit_stream: AudioStream, emit_queue: Queue):
     while True:
         emit_stream.write_array(emit_queue.get())
 
 
-def run_record_thread(record_stream: Stream, record_buffer: SampleBuffer):
+def run_record_thread(record_stream: AudioStream, record_buffer: SampleBuffer):
     period_size = record_stream.device.period_size
     while True:
         try:
@@ -27,6 +27,19 @@ class Audio(object):
         self.emit_device = emit_device
         self.playback_device = playback_device
 
+    def device_availability(self):
+        return {
+            device.name: device.available(as_input)
+            for (device, as_input) in [
+                (self.record_device, True),
+                (self.emit_device, False),
+                (self.playback_device, False),
+            ]
+        }
+
+    def devices_available(self):
+        return all(self.device_availability().values())
+
     def start(self, record_capacity_periods=500):
         if self.record_device:
             self.record_buffer = SampleBuffer(
@@ -34,28 +47,31 @@ class Audio(object):
                 self.record_device.rate,
                 record_capacity_periods,
             )
-            self.record_stream = Stream(self.record_device, True)
+            self.record_stream = AudioStream(self.record_device, True)
             self.record_thread = threading.Thread(
                 target=run_record_thread,
                 args=(self.record_stream, self.record_buffer),
+                daemon=True,
             )
             self.record_thread.daemon = True
             self.record_thread.start()
         if self.emit_device:
             self.emit_queue = Queue()
-            self.emit_stream = Stream(self.emit_device, False)
+            self.emit_stream = AudioStream(self.emit_device, False)
             self.emit_thread = threading.Thread(
                 target=run_emit_or_playback_thread,
                 args=(self.emit_stream, self.emit_queue),
+                daemon=True,
             )
             self.emit_thread.daemon = True
             self.emit_thread.start()
         if self.playback_device:
             self.playback_queue = Queue()
-            self.playback_stream = Stream(self.playback_device, False)
+            self.playback_stream = AudioStream(self.playback_device, False)
             self.playback_thread = threading.Thread(
                 target=run_emit_or_playback_thread,
                 args=(self.playback_stream, self.playback_queue),
+                daemon=True,
             )
             self.playback_thread.daemon = True
             self.playback_thread.start()

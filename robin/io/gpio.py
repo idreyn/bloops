@@ -1,14 +1,12 @@
 import time
 import RPi.GPIO as gpio
 
-from .stream import *
-
 gpio.setwarnings(False)
 gpio.setmode(gpio.BCM)
 
 
 class GPIOWrite(object):
-    def __init__(self, pin, ms_wait=200):
+    def __init__(self, pin, ms_wait=0):
         self.pin = pin
         self.ms_wait = ms_wait
         gpio.setup(self.pin, gpio.OUT)
@@ -32,7 +30,7 @@ class GPIORead(object):
     def read(self):
         return gpio.input(self.pin)
 
-    def on(self, callback, rising=True):
+    def on(self, callback):
         def handler():
             callback(self.read())
 
@@ -42,10 +40,6 @@ class GPIORead(object):
         gpio.add_event_callback(self.pin, handler)
 
 
-emitter_enable = GPIOWrite(16)
-
-"""
-emitter_battery_low = GPIORead(27)
-device_battery_low = GPIORead(22)
-power_led = GPIORead(35)
-"""
+emitter_enable = GPIOWrite(16, ms_wait=1)
+emitter_battery_low = GPIORead(12)
+device_battery_low = GPIORead(25)

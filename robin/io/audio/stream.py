@@ -1,53 +1,62 @@
-import sounddevice as sd
+import alsaaudio as aa
 
-from .stream import *
-from .formats import *
-from .samplebuffer import *
-from .formats import format_size, format_np
+from robin.util import array_to_periods, periods_to_array
 
 
-class AudioDevice(object):
-    def __init__(
-        self,
-        name,
-        rate: float,
-        channels: int,
-        format: str,
-        period_size: int,
-        unmute_on_startup=False,
-    ):
-        self.name = name
-        self.channels = channels
-        self.rate = rate
-        self.format = format
-        self.period_size = period_size
-        self.width = format_size(format)
-        self.np_format = format_np(format)
-        if unmute_on_startup:
-            self.unmute_and_set_volume()
+class AudioStream(object):
+    def __init__(self, device, is_input, is_blocking=True):
+        self.pcm = None
+        self.device = device
+        self.is_input = is_input
+        self.is_blocking = is_blocking
+        self.setup()
 
-    def unmute_and_set_volume(self):
-        mixer = aa.Mixer(device=f"hw:CARD={self.name}")
-        mixer.setmute(0)
-        mixer.setvolume(100)
+    def setup(self):
+        if self.pcm:
+            self.pcm.close()
+        self.pcm = aa.PCM(
+            type=aa.PCM_CAPTURE if self.is_input else aa.PCM_PLAYBACK,
+            mode=aa.PCM_NORMAL if self.is_blocking else aa.PCM_NONBLOCK,
+            format=self.device.format,
+            rate=self.device.rate,
+            device=f"hw:CARD={self.device.name},DEV=0",
+        )
+        self.pcm.setrate(self.device.rate)
+        self.pcm.setchannels(self.device.channels)
+        self.pcm.setformat(self.device.format)
+        self.pcm.setperiodsize(self.device.period_size)
+        self._okay = True
+        self._paused = False
 
-    def frame_bytes(self):
-        return self.width * self.channels
+    def pause(self):
+        if not self._paused:
+            self._paused = True
+            self.pcm.pause(True)
 
-    def period_bytes(self):
-        return self.frame_bytes() * self.period_size
+    def resume(self):
+        if self._paused:
+            self._paused = False
+            self.pcm.pause(False)
 
-    def period_length(self):
-        return float(self.period_size) / self.rate
+    def read(self):
+        length, data = self.pcm.read()
+        if length < 0:
+            self._okay = False
+            raise Exception("Error reading from ALSA stream: %s" % length)
+        return data
 
-    def available(self, as_input):
-        try:
-            (sd.check_input_settings if as_input else sd.check_output_settings)(
-                device=self.name,
-                channels=self.channels,
-                samplerate=self.rate,
-                dtype=self.np_format,
-            )
-            return True
-        except:
-            return False
+    def write(self, bytes):
+        self.pcm.write(bytes)
+
+    def write_array(self, array):
+        device = self.device
+        periods = array_to_periods(array, device)
+        for p in periods:
+            self.write(p)
+
+    def read_array(self, n_samples):
+        period_count = n_samples // self.device.period_size
+        samples = []
+        while len(samples) < period_count:
+            samples.append(self.read())
+        return periods_to_array(samples, self.device)
