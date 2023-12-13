@@ -3,7 +3,6 @@ from queue import Queue
 
 import numpy as np
 
-from .config import BATHAT
 from .gpio import emitter_enable
 from .pulse import Silence
 from .wav import save_wav_echo_recording, byte_encode_wav_data
@@ -30,14 +29,14 @@ class Echolocation(object):
 def simple_loop(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
     rendered = ex.pulse.render(audio.emit_device)
-    emitter_enable.set(True)
-    audio.record_buffer.clear()
-    audio.emit_queue.put(rendered)
-    t0 = time.time()
-    time.sleep(1e-6 * ex.pulse.us_duration)
-    emitter_enable.set(False)
-    record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
-    time.sleep(record_time)
+    with emitter_enable:
+        time.sleep(0.05)
+        audio.record_buffer.clear()
+        audio.emit_queue.put(rendered)
+        t0 = time.time()
+        time.sleep(1e-6 * ex.pulse.us_duration)
+        record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
+        time.sleep(record_time)
     sample = audio.record_buffer.get(
         int(record_time * audio.record_stream.device.rate),
         t0 - ex.us_silence_before,

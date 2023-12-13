@@ -54,6 +54,14 @@ BATHAT = AudioDevice(
     unmute_on_startup=True,
 )
 
+HIFIBERRY = AudioDevice(
+    name="sndrpihifiberry",
+    rate=RATE,
+    channels=CHANNELS,
+    format=FORMAT,
+    period_size=PERIOD_SIZE,
+)
+
 HEADPHONES = AudioDevice(
     name="Headphones",
     rate=RATE,
@@ -70,8 +78,8 @@ ULTRAMIC = AudioDevice(
     period_size=PERIOD_SIZE,
 )
 
-REQUIRED_INPUT_DEVICES = [BATHAT]
-REQUIRED_OUTPUT_DEVICES = [BATHAT, HEADPHONES]
+REQUIRED_INPUT_DEVICES = [HIFIBERRY]
+REQUIRED_OUTPUT_DEVICES = [HIFIBERRY, HEADPHONES]
 
 
 def has_required_devices():

@@ -92,6 +92,19 @@ def skeri_notch(es):
 
 
 @stage()
+def self_notch(es):
+    for c in es.channels:
+        for khz in range(1, 5):
+            for _ in range(3):
+                c.signal = util.notch(
+                    c.signal,
+                    1000 * khz,
+                    es.rate,
+                )
+    return es
+
+
+@stage()
 def detrend(es):
     for c in es.channels:
         c.signal = scipy.signal.detrend(c.signal, type="constant")

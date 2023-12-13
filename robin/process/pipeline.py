@@ -28,9 +28,10 @@ STANDARD_PIPELINE = Pipeline(
     [
         stats,
         skeri_notch,
+        # self_notch,
         bandpass,
-        # find_pulse_start_index,
-        # detrend,
+        find_pulse_start_index,
+        detrend,
         # noisereduce,
         # normalize,
     ]

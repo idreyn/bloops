@@ -4,14 +4,14 @@ import numpy as np
 from typing import List
 
 from robin.audio import Audio
-from robin.config import BATHAT, ULTRAMIC
+from robin.config import HIFIBERRY, ULTRAMIC
 from robin.gpio import emitter_enable
 from robin.pulse import Tone, Silence
 from robin.wav import save_wav_file
 
 from .models import Experiment, ExperimentEntry
 
-audio = Audio(emit_device=BATHAT, record_device=ULTRAMIC)
+audio = Audio(emit_device=HIFIBERRY, record_device=ULTRAMIC)
 audio.start(record_capacity_periods=2000)
 
 
@@ -26,8 +26,8 @@ def concat_tones(tones, silence):
 
 
 def get_tone_ladder_recording(frequencies: List[int], tone_length: int, silence_length: int):
-    silence = Silence(silence_length).render(BATHAT)
-    tones = [Tone(freq, tone_length).render(BATHAT) for freq in frequencies]
+    silence = Silence(silence_length).render(HIFIBERRY)
+    tones = [Tone(freq, tone_length).render(HIFIBERRY) for freq in frequencies]
     all_tones = concat_tones(tones, silence)
     import matplotlib.pyplot as plt
     plt.plot(all_tones)

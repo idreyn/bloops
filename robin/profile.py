@@ -14,8 +14,8 @@ DEFAULT_REMOTE_MAPPING = {
 }
 
 DEFAULT_SAVE_OPTIONS = {
-    "recording": False,
-    "resampled": False,
+    "recording": True,
+    "resampled": True,
     "pulse": False,
     "prefix": "",
 }
