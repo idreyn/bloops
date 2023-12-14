@@ -12,7 +12,12 @@ from robin.util import zero_pad_to_multiple
 
 class Echolocation(object):
     def __init__(
-        self, pulse, slowdown, device, us_record_duration=1e5, us_silence_before=1e4
+        self,
+        pulse,
+        slowdown,
+        device,
+        us_record_duration=1e5,
+        us_silence_before=1e4,
     ):
         self.pulse = pulse
         self.slowdown = slowdown
@@ -26,7 +31,7 @@ class Echolocation(object):
 
 def echolocate(ex, audio, profile, pipeline=None):
     assert isinstance(ex, Echolocation)
-    rendered = ex.pulse.render(audio.emit_device)
+    rendered = (1 / 3) * ex.pulse.render(audio.emit_device)
     with emitter_enable:
         time.sleep(0.05)
         audio.record_buffer.clear()

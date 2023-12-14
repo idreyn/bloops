@@ -35,6 +35,7 @@ class Profile(object):
         reverse_channels=False,
         batcave_host=None,
         batcave_self_host=True,
+        noisereduce=False,
     ):
         self.slowdown = slowdown
         self.us_silence_before = us_silence_before
@@ -48,6 +49,7 @@ class Profile(object):
         self.batcave_host = batcave_host
         self.batcave_self_host = batcave_self_host
         self.device_id = device_id
+        self.noisereduce = noisereduce
 
     def should_play_recording(self):
         return self.playback
@@ -90,6 +92,7 @@ class Profile(object):
             us_silence_before=echolocation.get("usSilenceBefore"),
             save_options=echolocation.get("saveOptions"),
             playback=echolocation.get("playback"),
+            noisereduce=echolocation.get("noisereduce"),
             remote_mapping=remote_mapping,
             remote_name=data.get("remoteName"),
             batcave_host=data.get("batcaveHost"),

@@ -14,6 +14,7 @@ from .echolocation import (
     pulse_from_dict,
     dict_from_pulse,
 )
+from .io.ad5252 import AD5252
 from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
 from .profile import *
 from .repl import run_repl
@@ -149,7 +150,7 @@ batcave_handlers = {
 
 
 @click.command()
-@click.option("--reverse-channels/--no-reverse-channels", default=False, required=False)
+@click.option("--reverse-channels/--no-reverse-channels", default=None, required=False)
 @click.option("--loopback-test/--no-loopback-test", default=False, required=False)
 @click.argument("profile_path", type=click.Path(exists=True), required=False)
 def main(reverse_channels, loopback_test, profile_path):
@@ -169,6 +170,9 @@ def main(reverse_channels, loopback_test, profile_path):
         print("Override reverse_channels to %s" % reverse_channels)
     if len(profile.remote_mapping) == 0:
         print("Warning: profile has no remote key mappings")
+    if audio.record_device == BATHAT:
+        ad = AD5252()
+        ad.write_all(9.9)
     print("Starting audio I/O...")
     audio.start()
     exit_event = Event()

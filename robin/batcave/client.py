@@ -47,7 +47,6 @@ def client(profile, get_device_status, get_device_info, callbacks):
             connected = True
         except Exception as ex:
             attempts += 1
-            print(ex)
 
     try:
         while True:

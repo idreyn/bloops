@@ -11,6 +11,12 @@ BATCAVE_DIR = path.join(BASE_PATH, "batcave_server")
 def build_batcave_server():
     if not path.exists(path.join(BATCAVE_DIR, "dist")):
         subprocess.run(
+            args=["npm", "install"],
+            cwd=BATCAVE_DIR,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(
             args=["npm", "run", "build"],
             cwd=BATCAVE_DIR,
             stdout=subprocess.DEVNULL,

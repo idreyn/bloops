@@ -27,6 +27,7 @@ jupyter = "^1.0.0"
 opencv-python = "^4.8.1.78"
 wget = "^3.2"
 psutil = "^5.9.6"
+smbus = "^1.1.post2"
 
 
 [tool.poetry.group.dev.dependencies]
