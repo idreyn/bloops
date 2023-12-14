@@ -1,0 +1,28 @@
+# Some would say I stole this straight from sane/sane
+
+# Nerd merdules
+node_modules
+
+# Operating system files
+.Spotlight-V100
+.Trashes
+.DS_Store
+.DS_Store?
+ehthumbs.db
+Thumbs.db
+
+#Editor files
+*.sublime-*
+*.idea
+
+# Build scripts
+# zzz-build
+# zzz-watch-build
+# zzz-serve
+
+# Built js
+bundle.js
+
+# Shhhhh?
+secrets
+dist/

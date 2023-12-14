@@ -170,3 +170,4 @@ resources/
 
 scratch.py
 scratch.ipynb
+.DS_Store
