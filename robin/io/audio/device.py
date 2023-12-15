@@ -1,5 +1,4 @@
 import alsaaudio as aa
-import sounddevice as sd
 
 from .formats import format_size, format_np
 
@@ -25,9 +24,10 @@ class AudioDevice(object):
             self.unmute_and_set_volume()
 
     def unmute_and_set_volume(self):
-        mixer = aa.Mixer(device=f"hw:CARD={self.name}")
-        mixer.setmute(0)
-        mixer.setvolume(100)
+        if self.available(as_input=False):
+            mixer = aa.Mixer(device=f"hw:CARD={self.name}")
+            mixer.setmute(0)
+            mixer.setvolume(100)
 
     def frame_bytes(self):
         return self.width * self.channels
@@ -38,14 +38,26 @@ class AudioDevice(object):
     def period_length(self):
         return float(self.period_size) / self.rate
 
-    def available(self, as_input):
+    def get_pcm(self, as_input, is_blocking=False):
         try:
-            (sd.check_input_settings if as_input else sd.check_output_settings)(
-                device=self.name,
-                channels=self.channels,
-                samplerate=self.rate,
-                dtype=self.np_format,
+            pcm = aa.PCM(
+                type=aa.PCM_CAPTURE if as_input else aa.PCM_PLAYBACK,
+                mode=aa.PCM_NORMAL if is_blocking else aa.PCM_NONBLOCK,
+                format=self.format,
+                rate=self.rate,
+                device=f"hw:CARD={self.name},DEV=0",
             )
+            pcm.setrate(self.rate)
+            pcm.setchannels(self.channels)
+            pcm.setformat(self.format)
+            pcm.setperiodsize(self.period_size)
+            return pcm
+        except aa.ALSAAudioError:
+            return None
+
+    def available(self, as_input):
+        maybe_pcm = self.get_pcm(as_input)
+        if maybe_pcm:
+            maybe_pcm.close()
             return True
-        except:
-            return False
+        return False

@@ -1,4 +1,4 @@
 #!/bin/bash
 
 script_dir="$(dirname "$0")"
-(cd "$script_dir" && poetry run python -m robin.main)
+(cd "$script_dir" && /home/robin/.local/bin/poetry run python -m robin.main)

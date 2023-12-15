@@ -4,13 +4,12 @@ import datetime
 import click
 from threading import Event
 
-from .io.audio import Audio
+from .io.audio import Audio, get_configured_hat_device
 from .io.remote import BluetoothRemote
 from .constants import ROBIN
-from .devices import BATHAT, HEADPHONES
+from .io.audio.devices import BATHAT, HEADPHONES, HIFIBERRY
 from .echolocation import (
     echolocate,
-    EcholocationCapture,
     pulse_from_dict,
     dict_from_pulse,
 )
@@ -31,7 +30,8 @@ from .batcave.debug_override import DebugOverride
 # ron paul dot gif
 print(ROBIN)
 
-audio = Audio(record_device=BATHAT, emit_device=BATHAT, playback_device=HEADPHONES)
+hat = next(device for device in (HIFIBERRY, BATHAT) if device.available(as_input=True))
+audio = Audio(record_device=hat, emit_device=hat, playback_device=HEADPHONES)
 camera = None
 profile = None
 busy = False

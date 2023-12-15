@@ -1,5 +1,3 @@
-import alsaaudio as aa
-
 from robin.util import array_to_periods, periods_to_array
 
 
@@ -14,17 +12,9 @@ class AudioStream(object):
     def setup(self):
         if self.pcm:
             self.pcm.close()
-        self.pcm = aa.PCM(
-            type=aa.PCM_CAPTURE if self.is_input else aa.PCM_PLAYBACK,
-            mode=aa.PCM_NORMAL if self.is_blocking else aa.PCM_NONBLOCK,
-            format=self.device.format,
-            rate=self.device.rate,
-            device=f"hw:CARD={self.device.name},DEV=0",
+        self.pcm = self.device.get_pcm(
+            as_input=self.is_input, is_blocking=self.is_blocking
         )
-        self.pcm.setrate(self.device.rate)
-        self.pcm.setchannels(self.device.channels)
-        self.pcm.setformat(self.device.format)
-        self.pcm.setperiodsize(self.device.period_size)
         self._okay = True
         self._paused = False
 
