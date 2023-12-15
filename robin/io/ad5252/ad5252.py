@@ -16,6 +16,10 @@ class AD5252(object):
     def write(self, kohm_resistance, channel):
         assert channel in VALID_CHANNELS
         assert 0 <= kohm_resistance <= KOHM_MAX_RESISTANCE
+        if kohm_resistance in (int(KOHM_MAX_RESISTANCE), float(KOHM_MAX_RESISTANCE)):
+            # 10 causes a rollover to the min value
+            # Set it to close to 10 instead
+            kohm_resistance = 9.9
         write_out = int(kohm_resistance / BYTE_TO_OHMS)
         self.bus.write_i2c_block_data(
             I2C_ADDRESS, CHANNEL_ADDRESSES[channel], [write_out]

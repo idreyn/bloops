@@ -7,7 +7,7 @@ from robin.audio import Audio
 from robin.config import HIFIBERRY, ULTRAMIC
 from robin.gpio import emitter_enable
 from robin.pulse import Tone, Silence
-from robin.io.wav import save_wav_file
+from robin.util.wav import save_wav_file
 
 from .models import Experiment, ExperimentEntry
 

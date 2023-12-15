@@ -16,6 +16,7 @@ DEFAULT_SAVE_OPTIONS = {
     "recording": True,
     "resampled": True,
     "pulse": False,
+    "camera": False,
     "prefix": "",
 }
 
@@ -59,6 +60,9 @@ class Profile(object):
 
     def should_save_resampled(self):
         return self.save_options.get("resampled")
+
+    def should_save_camera_image(self):
+        return self.save_options.get("camera")
 
     def should_save_pulse(self):
         return self.save_options.get("pulse")

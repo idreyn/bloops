@@ -10,11 +10,12 @@ from .constants import ROBIN
 from .devices import BATHAT, HEADPHONES
 from .echolocation import (
     echolocate,
-    Echolocation,
+    EcholocationCapture,
     pulse_from_dict,
     dict_from_pulse,
 )
 from .io.ad5252 import AD5252
+from .io.camera import Camera
 from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
 from .profile import *
 from .repl import run_repl
@@ -31,6 +32,7 @@ from .batcave.debug_override import DebugOverride
 print(ROBIN)
 
 audio = Audio(record_device=BATHAT, emit_device=BATHAT, playback_device=HEADPHONES)
+camera = None
 profile = None
 busy = False
 connected_remotes = 0
@@ -95,14 +97,9 @@ def on_trigger_pulse(pulse=None):
     busy = True
     try:
         echolocate(
-            Echolocation(
-                pulse,
-                profile.slowdown,
-                audio.record_device,
-                profile.us_record_duration,
-                profile.us_silence_before,
-            ),
+            pulse,
             audio,
+            camera,
             profile,
             STANDARD_PIPELINE,
         )
@@ -154,7 +151,7 @@ batcave_handlers = {
 @click.option("--loopback-test/--no-loopback-test", default=False, required=False)
 @click.argument("profile_path", type=click.Path(exists=True), required=False)
 def main(reverse_channels, loopback_test, profile_path):
-    global profile
+    global profile, camera
     if not audio.devices_available():
         print(audio.device_availability())
         print("Missing audio hardware, exiting.")
@@ -172,10 +169,11 @@ def main(reverse_channels, loopback_test, profile_path):
         print("Warning: profile has no remote key mappings")
     if audio.record_device == BATHAT:
         ad = AD5252()
-        ad.write_all(9.9)
+        ad.write_all(10)
     print("Starting audio I/O...")
     audio.start()
     exit_event = Event()
+    camera = Camera()
     if profile.batcave_self_host:
         print("Running Batcave server locally...")
         run_batcave_server(exit_event)

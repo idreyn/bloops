@@ -1,54 +1,55 @@
-import time
+from typing import Optional
 from queue import Queue
-
+import time
 import numpy as np
 
 from robin.io.gpio import emitter_enable
-from robin.io.wav import save_wav_echo_recording, byte_encode_wav_data
+from robin.util.wav import byte_encode_wav_data
 from robin.batcave.protocol import Message
 from robin.batcave.client import send_to_batcave_remote
 from robin.util import zero_pad_to_multiple
+from robin.echolocation.capture import EcholocationCapture
+from robin.echolocation.pulse import Pulse
+from robin.io.audio import Audio
+from robin.io.camera import Camera
+from robin.pipeline import Pipeline
+from robin.profile import Profile
 
 
-class Echolocation(object):
-    def __init__(
-        self,
-        pulse,
-        slowdown,
-        device,
-        us_record_duration=1e5,
-        us_silence_before=1e4,
-    ):
-        self.pulse = pulse
-        self.slowdown = slowdown
-        self.device = device
-        self.us_silence_before = us_silence_before
-        self.us_record_duration = us_record_duration
-        self.recording = None
-        self.recording_filename = None
-        self.resampled = None
-
-
-def echolocate(ex, audio, profile, pipeline=None):
-    assert isinstance(ex, Echolocation)
-    rendered = (1 / 3) * ex.pulse.render(audio.emit_device)
+def echolocate(
+    pulse: Pulse,
+    audio: Audio,
+    camera: Camera,
+    profile: Profile,
+    pipeline: Optional[Pipeline] = None,
+):
+    ec = EcholocationCapture(
+        pulse=pulse,
+        slowdown=profile.slowdown,
+        device=audio.record_device,
+        us_record_duration=profile.us_record_duration,
+        us_silence_before=profile.us_silence_before,
+    )
+    # TODO make gain configurable
+    rendered = (1 / 3) * ec.pulse.render(audio.emit_device)
     with emitter_enable:
         time.sleep(0.05)
         audio.record_buffer.clear()
         audio.emit_queue.put(rendered)
         t0 = time.time()
-        time.sleep(1e-6 * ex.pulse.us_duration)
-        record_time = 1e-6 * (ex.us_record_duration + ex.us_silence_before)
+        time.sleep(1e-6 * ec.pulse.us_duration)
+        record_time = 1e-6 * (ec.us_record_duration + ec.us_silence_before)
         time.sleep(record_time)
+    ec.camera_image = camera.get()
     sample = audio.record_buffer.get(
         int(record_time * audio.record_stream.device.rate),
-        t0 - ex.us_silence_before,
+        t0 - ec.us_silence_before,
     )
     if profile.reverse_channels:
         sample = np.flip(sample, axis=1)
     if pipeline:
         t0 = time.time()
-        sample = pipeline.run(ex, sample)
+        sample = pipeline.run(ec, sample)
         print("Pipeline ran in", round(time.time() - t0, 3))
     chunks = []
     total_chunks = 10
@@ -57,7 +58,7 @@ def echolocate(ex, audio, profile, pipeline=None):
     for i, chunk in enumerate(
         np.split(zero_pad_to_multiple(sample, total_chunks), total_chunks)
     ):
-        chunk = np.repeat(chunk, ex.slowdown, axis=0)
+        chunk = np.repeat(chunk, ec.slowdown, axis=0)
         chunks.append(chunk)
         buffered.put(chunk)
         if i >= buffer_first:
@@ -67,23 +68,15 @@ def echolocate(ex, audio, profile, pipeline=None):
             audio.playback_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
     send_to_batcave_remote(
-        Message.AUDIO, {"audio": byte_encode_wav_data(audio.record_device, resampled)}
+        Message.AUDIO,
+        {"audio": byte_encode_wav_data(resampled, audio.record_device.rate)},
     )
     if profile.should_play_recording():
-        time.sleep(ex.slowdown * record_time)
+        time.sleep(ec.slowdown * record_time)
     else:
         print("Playback disabled in profile")
-    prefix = profile.save_prefix() + "_" + str(ex.pulse)
-    print("Saving...")
-    if profile.should_save_recording():
-        print("Saving sample")
-        ex.recording_filename = save_wav_echo_recording(
-            audio.record_device, sample, prefix
-        )
-    if profile.should_save_resampled():
-        print("Saving resampled")
-        save_wav_echo_recording(audio.record_device, resampled, prefix + "__resampled")
-    ex.recording = sample
-    ex.resampled = resampled
+    ec.recording = sample
+    ec.resampled = resampled
+    ec.save_echolocation_capture(profile)
     print("Done")
-    return ex
+    return ec

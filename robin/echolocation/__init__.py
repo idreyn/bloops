@@ -1,4 +1,5 @@
-from .echolocate import Echolocation, echolocate
+from .echolocate import echolocate
+from .capture import EcholocationCapture
 from .pulse import (
     Pulse,
     Tone,
@@ -10,7 +11,7 @@ from .pulse import (
 )
 
 __all__ = [
-    "Echolocation",
+    "EcholocationCapture",
     "Pulse",
     "Tone",
     "Chirp",
