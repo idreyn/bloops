@@ -30,7 +30,7 @@ class Profile(object):
         playback=True,
         device_id="robin",
         remote_mapping=DEFAULT_REMOTE_MAPPING,
-        remote_name="MOCUTE-032X_B61-2FB6",
+        remote_name="Game-pad",
         save_options=DEFAULT_SAVE_OPTIONS,
         current_pulse=None,
         reverse_channels=False,
