@@ -40,6 +40,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 start = "robin.main:main"
-install-dotfiles = "setup.dotfiles.install:main"
 install-rpi = "setup.install:install_to_rpi"
 uninstall-rpi = "setup.install:uninstall_from_rpi"
