@@ -11,7 +11,7 @@ Description=Start Robin
 
 [Service]
 Type=simple
-ExecStart=${REPO_PATH}/start.sh > ${REPO_PATH}/robin.log 2>&1
+ExecStart={REPO_PATH}/start.sh > {REPO_PATH}/robin.log 2>&1
 User=robin
 Restart=on-failure
 
@@ -34,3 +34,4 @@ def uninstall_systemd_service():
     print("Uninstalling systemd service...")
     if path.exists(DEST_PATH):
         remove(DEST_PATH)
+
