@@ -34,4 +34,3 @@ def uninstall_systemd_service():
     print("Uninstalling systemd service...")
     if path.exists(DEST_PATH):
         remove(DEST_PATH)
-
