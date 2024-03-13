@@ -20,7 +20,7 @@ class ExperimentEntry:
             self.experiment.name,
             f"a{self.azimuth}_t{self.trial}.wav",
         )
-    
+
     @property
     def wav_file_exists(self):
         return path.isfile(self.wav_file_path)

@@ -204,6 +204,3 @@ def main(reverse_channels, loopback_test, profile_path):
     print("Ready to echolocate!")
     run_repl(on_trigger_pulse, profile, exit_event)
     exit_event.wait()
-
-
-main()
