@@ -602,6 +602,17 @@ files = [
 ]
 
 [[package]]
+name = "dotfiles"
+version = "0.6.4"
+description = "Easily manage your dotfiles"
+optional = false
+python-versions = "*"
+files = [
+    {file = "dotfiles-0.6.4-py2.py3-none-any.whl", hash = "sha256:6aee641528df0bf4a56a5e378cff8e5373c8ec37138a13244c8b2b5318bb2ed4"},
+    {file = "dotfiles-0.6.4.tar.gz", hash = "sha256:9b7b8978ab65084aa03768becb570c72113d10aa9abf853500108b9caad1110f"},
+]
+
+[[package]]
 name = "evdev"
 version = "1.6.1"
 description = "Bindings to the Linux input handling subsystem"
@@ -2627,4 +2638,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "517293e1cd1724ed3447d6de1b99234ac151f27c91e16e2cdd5c45dc6d878701"
+content-hash = "597d9b88a7390434210c17fc7b133ef9c14efe7d5f927489118783c1f89163a0"

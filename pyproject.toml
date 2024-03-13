@@ -27,6 +27,7 @@ opencv-python = "^4.8.1.78"
 wget = "^3.2"
 psutil = "^5.9.6"
 smbus = "^1.1.post2"
+dotfiles = "^0.6.4"
 
 
 [tool.poetry.group.dev.dependencies]
