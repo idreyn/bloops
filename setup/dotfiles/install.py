@@ -22,7 +22,7 @@ links = {
 precmds = []
 
 # shell commands to run after linking
-postcmds = [("Installing/updating submodules", "git update-submodules")]
+postcmds = [("Installing/updating submodules", "git submodule update --init --recursive")]
 
 ####################
 
