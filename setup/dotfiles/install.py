@@ -26,7 +26,7 @@ postcmds = [("Installing/updating submodules", "git update-submodules")]
 
 ####################
 
-import sys, os, subprocess
+import sys, os, subprocess  # noqa: E401, E402
 
 
 # colors
@@ -54,7 +54,7 @@ OK = make_color_printer(colors.BLUE)
 SUCC = make_color_printer(colors.GREEN)
 WARN = make_color_printer(colors.MAGENTA)
 FAIL = make_color_printer(colors.RED)
-NEWLINE = lambda: sys.stdout.write("\n")
+NEWLINE = lambda: sys.stdout.write("\n")  # noqa: E731
 
 
 def self_path():

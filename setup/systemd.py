@@ -1,4 +1,4 @@
-import shutil
+import shutil  # noqa: F401
 from os import path, remove
 
 from .util import require_root

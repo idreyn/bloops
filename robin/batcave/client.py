@@ -45,7 +45,7 @@ def client(profile, get_device_status, get_device_info, callbacks):
             time.sleep(max(5, min(2 ** (attempts // 4), 120)))
             sio.connect(batcave_host)
             connected = True
-        except Exception as ex:
+        except Exception as ex:  # noqa: F841
             attempts += 1
 
     try:

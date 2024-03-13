@@ -3,7 +3,7 @@ import numpy as np
 from scipy.signal import iirnotch, lfilter, butter
 
 
-def chunks(l, n):
+def chunks(l, n):  # noqa: E741
     res = []
     for i in range(0, len(l), n):
         res.append(l[i : i + n])
@@ -92,8 +92,8 @@ def find_signal_start(
     if cutoff_index:
         left = left[0:cutoff_index]
         right = right[0:cutoff_index]
-    left_rms = np.std(left)
-    right_rms = np.std(right)
+    left_rms = np.std(left)  # noqa: F841
+    right_rms = np.std(right)  # noqa: F841
     if (
         left_silence is None
         and right_silence is None
@@ -132,7 +132,7 @@ def align(left, right, lsi, rsi):
     return first if first_is_left else last, last if first_is_left else first
 
 
-import numpy as np
+import numpy as np  # noqa: E402, F811
 
 
 def remove_leading_silence(signal, threshold_db):

@@ -4,7 +4,7 @@ import datetime
 import click
 from threading import Event
 
-from .io.audio import Audio, get_configured_hat_device
+from .io.audio import Audio, get_configured_hat_device  # noqa: F401
 from .io.remote import BluetoothRemote
 from .constants import ROBIN
 from .io.audio.devices import BATHAT, HEADPHONES, HIFIBERRY
@@ -16,7 +16,7 @@ from .echolocation import (
 from .io.ad5252 import AD5252
 from .io.camera import Camera
 from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
-from .profile import *
+from .profile import *  # noqa: F403
 from .repl import run_repl
 from .pipeline import STANDARD_PIPELINE
 from .util.net import get_ip_address
@@ -158,11 +158,11 @@ def main(reverse_channels, loopback_test, profile_path):
         os._exit(0)
     if profile_path:
         print("Using profile from %s" % profile_path)
-        profile = Profile.from_file(profile_path)
+        profile = Profile.from_file(profile_path)  # noqa: F405
     else:
-        profile = Profile()
+        profile = Profile()  # noqa: F405
         print("Using default profile")
-    if reverse_channels != None:
+    if reverse_channels != None:  # noqa: E711
         profile.reverse_channels = reverse_channels
         print("Override reverse_channels to %s" % reverse_channels)
     if len(profile.remote_mapping) == 0:
@@ -186,15 +186,15 @@ def main(reverse_channels, loopback_test, profile_path):
     print("Waiting for Bluetooth remote...")
     remote = BluetoothRemote(profile.remote_name)
     if loopback_test:
-        remote.clear_key(RemoteKeys.RIGHT)
+        remote.clear_key(RemoteKeys.RIGHT)  # noqa: F405
         print("Ready earbuds and press RIGHT on the remote")
         print("Waiting for key...")
-        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
+        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):  # noqa: F405
             audio.loopback()
     remote.register_handlers(
         down={k: make_pulse_callback(k) for k in profile.remote_mapping},
-        hold={RemoteKeys.JS_UP: lambda: emitter_enable.set(True)},
-        up={RemoteKeys.JS_UP: lambda: (not busy) and emitter_enable.set(False)},
+        hold={RemoteKeys.JS_UP: lambda: emitter_enable.set(True)},  # noqa: F405
+        up={RemoteKeys.JS_UP: lambda: (not busy) and emitter_enable.set(False)},  # noqa: F405
     )
     for _ in range(3):
         emitter_enable.set(True)

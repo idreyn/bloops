@@ -1,5 +1,5 @@
 from robin.pipeline.sample import EnvironmentSample
-from robin.pipeline.stages import *
+from robin.pipeline.stages import *  # noqa: F403
 
 
 class Pipeline(object):
@@ -26,13 +26,13 @@ class Pipeline(object):
 
 STANDARD_PIPELINE = Pipeline(
     [
-        stats,
-        skeri_notch,
+        stats,  # noqa: F405
+        skeri_notch,  # noqa: F405
         # self_notch,
-        bandpass,
-        find_pulse_start_index,
-        detrend,
-        noisereduce,
+        bandpass,  # noqa: F405
+        find_pulse_start_index,  # noqa: F405
+        detrend,  # noqa: F405
+        noisereduce,  # noqa: F405
         # normalize,
     ]
 )

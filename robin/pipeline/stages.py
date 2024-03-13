@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal
-from scipy.special import expit
-import peakutils
+from scipy.special import expit  # noqa: F401
+import peakutils  # noqa: F401
 
 import robin.util as util
 from robin.noisereduce import noise_reduce, NoiseReduceSettings
@@ -20,7 +20,7 @@ def stage(require=None, forbid=None):
 
     def decorator(stage_func):
         def func_wrapper(es):
-            if not type(es) is EnvironmentSample:
+            if not type(es) is EnvironmentSample:  # noqa: E714
                 raise Exception(
                     "Stage %s was not passed an EnvironmentSample"
                     % (stage_func.__name__)
@@ -42,7 +42,7 @@ def stage(require=None, forbid=None):
                     % (stage_func.__name__)
                 )
             es = stage_func(es)
-            if not type(es) is EnvironmentSample:
+            if not type(es) is EnvironmentSample:  # noqa: E714
                 raise Exception(
                     "Stage %s did not return an EnvironmentSample"
                     % (stage_func.__name__)
@@ -139,7 +139,7 @@ def align(es):
 @stage()
 def normalize(es):
     left, right = es.channels
-    max_value = 32768
+    max_value = 32768  # noqa: F841
     max_sample = max(max(left.signal), max(right.signal))
     left.signal = left.signal * (32768.0 / max_sample)
     right.signal = right.signal * (32768.0 / max_sample)

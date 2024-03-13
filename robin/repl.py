@@ -4,7 +4,7 @@ import traceback
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from .echolocation.pulse import *
+from .echolocation.pulse import *  # noqa: F403
 from .constants import BASE_PATH
 
 
@@ -24,12 +24,12 @@ def run_repl(on_trigger_pulse, profile, exit_event):
                         result = eval(next_input, None, user_namespace)
                     except Exception:
                         result = exec(next_input, None, user_namespace)
-                    if isinstance(result, Pulse):
+                    if isinstance(result, Pulse):  # noqa: F405
                         print(result)
                         on_trigger_pulse(result)
             except KeyboardInterrupt:
                 break
-            except:
+            except:  # noqa: E722
                 traceback.print_exc()
                 continue
         exit_event.set()

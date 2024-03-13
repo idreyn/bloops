@@ -69,7 +69,7 @@ class SampleBuffer(object):
 
     def get(self, length, start_time=None, verbose=False, block=False):
         self.lock.acquire()
-        if len(self.queue) == 0 and not self._empty is None:
+        if len(self.queue) == 0 and not self._empty is None:  # noqa: E714
             self.queue.append(self._empty)
         offset = 0 if start_time is None else bisect.bisect_left(self.times, start_time)
         self._shift(offset)

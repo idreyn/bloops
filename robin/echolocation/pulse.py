@@ -63,7 +63,7 @@ class Pulse(object):
         self.__rendered = None
 
     def t_axis(self, device):
-        if not self.__t_axis is None:
+        if not self.__t_axis is None:  # noqa: E714
             return self.__t_axis
         self.__t_axis = np.linspace(
             0, 1e-6 * self.us_duration, int(1e-6 * self.us_duration * device.rate)
@@ -74,7 +74,7 @@ class Pulse(object):
         return (0, device.rate / 2)
 
     def render(self, device):
-        if not self.__rendered is None:
+        if not self.__rendered is None:  # noqa: E714
             return self.__rendered
         r = self._render(device)
         if self.square:
@@ -172,7 +172,7 @@ class CombinedPulse(Pulse):
 
     def render(self, device):
         assert device.channels == 2
-        if not self.__rendered is None:
+        if not self.__rendered is None:  # noqa: E714
             return self.__rendered
         lr = self.left_pulse.render(device)
         rr = self.right_pulse.render(device)

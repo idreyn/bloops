@@ -1,5 +1,5 @@
 import time
-import sys
+import sys  # noqa: F401
 import numpy as np
 from typing import List
 
@@ -36,7 +36,7 @@ def get_tone_ladder_recording(
     plt.plot(all_tones)
     plt.show()
     start_time = time.time()
-    total_time_us = len(frequencies) * (tone_length + silence_length)
+    total_time_us = len(frequencies) * (tone_length + silence_length)  # noqa: F841
     with emitter_enable:
         audio.add_to_emit(all_tones)
         time.sleep(1)

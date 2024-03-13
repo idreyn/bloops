@@ -11,6 +11,6 @@ def get_ip_address():
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             IP_ADDRESS = s.getsockname()[0]
-        except:
+        except:  # noqa: E722
             IP_ADDRESS = "unavailable"
     return IP_ADDRESS

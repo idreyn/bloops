@@ -1,4 +1,4 @@
-from os import path
+from os import path  # noqa: F401
 from distutils.core import setup
 from Cython.Build import cythonize
 
