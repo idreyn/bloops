@@ -50,5 +50,5 @@ ULTRAMIC = AudioDevice(
 )
 
 
-def pick_available_device(devices: List[AudioDevice]):
-    return next(device for device in devices if device.available(as_input=True))
+def pick_available_device(devices: List[AudioDevice], as_input: bool):
+    return next(device for device in devices if device.available(as_input=as_input))

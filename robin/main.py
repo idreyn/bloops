@@ -30,8 +30,8 @@ from .batcave.debug_override import DebugOverride
 # ron paul dot gif
 print(ROBIN)
 
-codec_device = pick_available_device([BATHAT, HIFIBERRY])
-playback_device = pick_available_device([HEADPHONES, NULL])
+codec_device = pick_available_device([BATHAT, HIFIBERRY], as_input=True)
+playback_device = pick_available_device([HEADPHONES, NULL], as_input=False)
 
 if playback_device is NULL:
     print("Warning: No headphones detected.")
