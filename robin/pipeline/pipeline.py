@@ -32,7 +32,7 @@ STANDARD_PIPELINE = Pipeline(
         bandpass,  # noqa: F405
         find_pulse_start_index,  # noqa: F405
         detrend,  # noqa: F405
-        # noisereduce,  # noqa: F405
+        # noisereduce,
         # normalize,
     ]
 )
