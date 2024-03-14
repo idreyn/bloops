@@ -5,7 +5,7 @@ import peakutils  # noqa: F401
 
 import robin.util as util
 
-#  from robin.noisereduce import noise_reduce, NoiseReduceSettings
+from robin.noisereduce import noise_reduce, NoiseReduceSettings
 from robin.pipeline.sample import EnvironmentSample
 
 
@@ -147,15 +147,15 @@ def normalize(es):
     return es
 
 
-# @stage(require=[detrend], forbid=[normalize])
-# def noisereduce(es):
-#     for c in es.channels:
-#         c.signal = noise_reduce(
-#             c.signal.astype(np.float64),
-#             c.silence.astype(np.float64),
-#             NoiseReduceSettings(),
-#         )
-#     return es
+@stage(require=[detrend], forbid=[normalize])
+def noisereduce(es):
+    for c in es.channels:
+        c.signal = noise_reduce(
+            c.signal.astype(np.float64),
+            c.silence.astype(np.float64),
+            NoiseReduceSettings(),
+        )
+    return es
 
 
 @stage()
