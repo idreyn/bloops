@@ -1,5 +1,6 @@
 from threading import Thread
 from os import path
+import sys
 import traceback
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
@@ -34,5 +35,6 @@ def run_repl(on_trigger_pulse, profile, exit_event):
                 continue
         exit_event.set()
 
-    repl_thread = Thread(target=repl_inner, daemon=True)
-    repl_thread.start()
+    if sys.stdin and sys.stdin.isatty():
+        repl_thread = Thread(target=repl_inner, daemon=True)
+        repl_thread.start()

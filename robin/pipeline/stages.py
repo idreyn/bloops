@@ -87,6 +87,11 @@ def skeri_notch(es):
                 32750,
                 es.rate,
             )
+            c.signal = util.notch(
+                c.signal,
+                53250,
+                es.rate,
+            )
     return es
 
 

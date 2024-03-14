@@ -85,7 +85,7 @@ sudo systemctl start robin
 sudo systemctl enable robin
 
 # See the logs from the Robin service
-journalctl -u robin
+journalctl -u robin -f
 ```
 
 The `start`, `stop`, `restart`, `enable`, and `disable` commands are all available through `systemctl`.
