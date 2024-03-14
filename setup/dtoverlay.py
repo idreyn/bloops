@@ -3,6 +3,7 @@ from .util import require_root
 REQUIRED_LINES = [
     "dtoverlay=hifiberry-dacplusadcpro",
     "force_eeprom_read=0",
+    "dtparam=audio=on",
 ]
 
 BOOT_CONFIG_PATH = "/boot/firmware/config.txt"
