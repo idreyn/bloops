@@ -1,43 +1,40 @@
 import time
-import RPi.GPIO as gpio
+import gpiod
+from gpiod.line import Direction, Value
 
-gpio.setwarnings(False)
-gpio.setmode(gpio.BCM)
+CHIP_NAME = "/dev/gpiochip4"
 
 
 class GPIOWrite(object):
     def __init__(self, pin, ms_wait=0):
         self.pin = pin
         self.ms_wait = ms_wait
-        gpio.setup(self.pin, gpio.OUT)
+        self.chip = gpiod.Chip(CHIP_NAME)
+        self.request = self.chip.request_lines(
+            config={self.pin: gpiod.LineSettings(direction=Direction.OUTPUT)}
+        )
 
     def set(self, on):
-        gpio.output(self.pin, gpio.HIGH if on else gpio.LOW)
+        self.request.set_value(1 if on else 0)
 
-    def __enter__(self, *rest):
-        gpio.output(self.pin, gpio.HIGH)
-        time.sleep(self.ms_wait / 1000)
+    def __enter__(self):
+        self.set(True)
+        time.sleep(self.ms_wait / 1000.0)
 
-    def __exit__(self, *rest):
+    def __exit__(self):
         self.set(False)
 
 
 class GPIORead(object):
     def __init__(self, pin):
         self.pin = pin
-        gpio.setup(self.pin, gpio.IN)
+        self.chip = gpiod.Chip(CHIP_NAME)
+        self.request = self.chip.request_lines(
+            config={self.pin: gpiod.LineSettings(direction=Direction.INPUT)}
+        )
 
-    def read(self):
-        return gpio.input(self.pin)
-
-    def on(self, callback):
-        def handler():
-            callback(self.read())
-
-        self._handler = handler
-        gpio.add_event_dectect(self.pin, gpio.RISING)
-        gpio.add_event_dectect(self.pin, gpio.FALLING)
-        gpio.add_event_callback(self.pin, handler)
+    def read(self) -> bool:
+        return self.request.get_value() == Value.ACTIVE
 
 
 emitter_enable = GPIOWrite(16, ms_wait=1)
