@@ -1,3 +1,4 @@
+from typing import List
 import alsaaudio as aa
 
 from robin.io.audio import AudioDevice
@@ -32,6 +33,14 @@ HEADPHONES = AudioDevice(
     period_size=PERIOD_SIZE,
 )
 
+NULL = AudioDevice(
+    is_null_device=True,
+    rate=RATE,
+    channels=CHANNELS,
+    format=FORMAT,
+    period_size=PERIOD_SIZE,
+)
+
 ULTRAMIC = AudioDevice(
     name="r4",
     rate=RATE,
@@ -39,3 +48,7 @@ ULTRAMIC = AudioDevice(
     format=FORMAT,
     period_size=PERIOD_SIZE,
 )
+
+
+def pick_available_device(devices: List[AudioDevice]):
+    return next(device for device in devices if device.available(as_input=True))

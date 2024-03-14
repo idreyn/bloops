@@ -4,10 +4,10 @@ import datetime
 import click
 from threading import Event
 
-from .io.audio import Audio, get_configured_hat_device  # noqa: F401
+from .io.audio import Audio
 from .io.remote import BluetoothRemote
 from .constants import ROBIN
-from .io.audio.devices import BATHAT, HEADPHONES, HIFIBERRY
+from .io.audio.devices import BATHAT, HEADPHONES, HIFIBERRY, NULL, pick_available_device
 from .echolocation import (
     echolocate,
     pulse_from_dict,
@@ -30,8 +30,18 @@ from .batcave.debug_override import DebugOverride
 # ron paul dot gif
 print(ROBIN)
 
-hat = next(device for device in (HIFIBERRY, BATHAT) if device.available(as_input=True))
-audio = Audio(record_device=hat, emit_device=hat, playback_device=HEADPHONES)
+codec_device = pick_available_device([BATHAT, HIFIBERRY])
+playback_device = pick_available_device([HEADPHONES, NULL])
+
+if playback_device is NULL:
+    print("Warning: No headphones detected.")
+
+audio = Audio(
+    record_device=codec_device,
+    emit_device=codec_device,
+    playback_device=playback_device,
+)
+
 camera = None
 profile = None
 busy = False

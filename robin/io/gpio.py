@@ -15,7 +15,7 @@ class GPIOWrite(object):
         )
 
     def set(self, on):
-        self.request.set_value(1 if on else 0)
+        self.request.set_value(self.pin, Value.ACTIVE if on else Value.INACTIVE)
 
     def __enter__(self):
         self.set(True)
@@ -34,7 +34,7 @@ class GPIORead(object):
         )
 
     def read(self) -> bool:
-        return self.request.get_value() == Value.ACTIVE
+        return self.request.get_value(self.pin) == Value.ACTIVE
 
 
 emitter_enable = GPIOWrite(16, ms_wait=1)
