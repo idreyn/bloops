@@ -4,7 +4,6 @@ import time
 import numpy as np
 
 from robin.io.gpio import emitter_enable
-from robin.util.wav import byte_encode_wav_data
 from robin.batcave.protocol import Message
 from robin.batcave.client import send_to_batcave_remote
 from robin.util import zero_pad_to_multiple
@@ -51,6 +50,15 @@ def echolocate(
         t0 = time.time()
         sample = pipeline.run(ec, sample)
         print("Pipeline ran in", round(time.time() - t0, 3))
+    print(sample.shape)
+    send_to_batcave_remote(
+        Message.AUDIO,
+        {
+            "audio": sample.tobytes(),
+            "slowdown": ec.slowdown,
+            "samplerate": audio.record_device.rate,
+        },
+    )
     chunks = []
     total_chunks = 10
     buffer_first = 0
@@ -67,10 +75,6 @@ def echolocate(
         while not buffered.empty():
             audio.playback_queue.put(buffered.get(), False)
     resampled = np.concatenate(chunks)
-    send_to_batcave_remote(
-        Message.AUDIO,
-        {"audio": byte_encode_wav_data(resampled, audio.record_device.rate)},
-    )
     if profile.should_play_recording():
         time.sleep(ec.slowdown * record_time)
     else:

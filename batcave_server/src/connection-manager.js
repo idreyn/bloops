@@ -62,8 +62,8 @@ class ConnectionManager {
 		this.update();
 	}
 
-	onReceiveAudio({ audio }) {
-		playWavAudio(audio);
+	onReceiveAudio({ audio, samplerate, slowdown }) {
+		playWavAudio(audio, samplerate, slowdown);
 	}
 }
 

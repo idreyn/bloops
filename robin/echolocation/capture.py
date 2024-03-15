@@ -5,6 +5,9 @@ from os import path, mkdir
 from robin.constants import BASE_PATH
 from robin.profile import Profile
 from robin.util.wav import save_wav_file
+from robin.io.audio import AudioDevice
+
+from .pulse import Pulse
 
 
 def now_stamps():
@@ -16,9 +19,9 @@ def now_stamps():
 class EcholocationCapture(object):
     def __init__(
         self,
-        pulse,
-        slowdown,
-        device,
+        pulse: Pulse,
+        slowdown: int,
+        device: AudioDevice,
         us_record_duration=1e5,
         us_silence_before=1e4,
     ):
@@ -46,7 +49,5 @@ class EcholocationCapture(object):
             save_wav_file(f"{base_filename}.wav", self.recording, fs)
         if profile.should_save_resampled():
             save_wav_file(f"{base_filename}__resampled.wav", self.resampled, fs)
-        if profile.should_save_pulse():
-            save_wav_file(f"{base_filename}__pulse.wav", self.pulse, fs)
         if profile.should_save_camera_image() and self.camera_image:
             self.camera_image.save_to_file(f"{base_filename}__capture.png")
