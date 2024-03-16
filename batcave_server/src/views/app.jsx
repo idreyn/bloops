@@ -1,9 +1,8 @@
 const React = require("react");
 const { StyleSheet, css } = require("aphrodite");
 
-const EchoIcon = require("material-ui/svg-icons/action/settings-remote.js").default;
-const LogsIcon = require("material-ui/svg-icons/action/assignment.js").default;
-const LibraryIcon = require("material-ui/svg-icons/action/history.js").default;
+const RemoteIcon = require("material-ui/svg-icons/action/settings-remote.js").default;
+const ConfigIcon = require("material-ui/svg-icons/action/assignment.js").default;
 
 const {
 	BottomNavigation,
@@ -18,7 +17,8 @@ const { Device, Pulse } = require("../models.js");
 const { RemoteStatus, DeviceStatus } = require("../../protocol.js");
 
 const { ShrugView } = require("./shared.jsx");
-const { RemoteView } = require("./remote.jsx");
+const { ConfigView } = require("./config.jsx");
+const { RemoteView } = require("./remote.jsx")
 const { ConnectionManagerView } = require("./connection-manager-view.jsx");
 
 const RobinApp = React.createClass({
@@ -30,7 +30,7 @@ const RobinApp = React.createClass({
 
 	getInitialState() {
 		return {
-			activeTab: 0,
+			activeTab: window.localStorage.activeTab ? parseInt(window.localStorage.activeTab) : 0,
 		};
 	},
 
@@ -38,10 +38,17 @@ const RobinApp = React.createClass({
 		this.setState({ activeTab });
 	},
 
+	componentDidUpdate() {
+		window.localStorage.activeTab = this.state.activeTab.toString();
+	},
+
 	renderActiveTab() {
 		const { activeTab } = this.state;
 		if (activeTab === 0) {
-			return <RemoteView remote={this.props.remote} />;
+			return <RemoteView remote={this.props.remote} />
+		}
+		if (activeTab === 1) {
+			return <ConfigView remote={this.props.remote} />;
 		}
 		return <ShrugView />;
 	},
@@ -60,18 +67,13 @@ const RobinApp = React.createClass({
 				<BottomNavigation selectedIndex={activeTab}>
 					<BottomNavigationItem
 						label="Remote"
-						icon={<EchoIcon />}
+						icon={<RemoteIcon />}
 						onTouchTap={() => this.setActiveTab(0)}
 					/>
 					<BottomNavigationItem
-						label="Logs"
-						icon={<LogsIcon />}
+						label="Config"
+						icon={<ConfigIcon />}
 						onTouchTap={() => this.setActiveTab(1)}
-					/>
-					<BottomNavigationItem
-						label="Library"
-						icon={<LibraryIcon />}
-						onTouchTap={() => this.setActiveTab(2)}
 					/>
 				</BottomNavigation>
 			</Paper>

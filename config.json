@@ -1,5 +1,5 @@
 {
-    "generated_at": 1710626431228,
+    "generated_at": 1710627439927,
     "pulse": {
         "ms_duration": 8,
         "kind": "chirp",
@@ -11,7 +11,7 @@
     "echolocation": {
         "ms_silence_before": 1,
         "ms_record_duration": 100,
-        "slowdown": 20,
+        "slowdown": 11,
         "playback": true,
         "emission_gain": 1.0,
         "noisereduce": false,
