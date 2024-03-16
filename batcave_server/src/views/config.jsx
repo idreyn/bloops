@@ -233,12 +233,12 @@ const PulseControl = React.createClass({
 					value={pulse.ms_duration}
 				/>
 			</ListItem>
-			{pulse.type !== Pulse.kinds.NOISE && <ListItem disabled>
+			{pulse.kind !== Pulse.kinds.NOISE && <ListItem disabled>
 				<LabeledSlider
 					name="start-freq"
 					getLabel={(n) =>
 						<span>{
-							pulse.type === Pulse.kinds.CHIRP ?
+							pulse.kind === Pulse.kinds.CHIRP ?
 								"Starting frequency" :
 								"Frequency"
 						}: {n}kHz</span>
@@ -250,7 +250,7 @@ const PulseControl = React.createClass({
 					value={pulse.khz_start}
 				/>
 			</ListItem>}
-			{pulse.type === Pulse.kinds.CHIRP && <ListItem disabled>
+			{pulse.kind === Pulse.kinds.CHIRP && <ListItem disabled>
 				<LabeledSlider
 					name="end-freq"
 					getLabel={(n) =>
@@ -341,7 +341,7 @@ const PulseControl = React.createClass({
 		return <RobinCard>
 			<Tabs
 				value={pulse.kind}
-				onChange={(v) => this.handlePulseUpdate({ type: v })}
+				onChange={(v) => this.handlePulseUpdate({ kind: v })}
 			>
 				<Tab value={Pulse.kinds.TONE} label="Tone" />
 				<Tab value={Pulse.kinds.CHIRP} label="Chirp" />

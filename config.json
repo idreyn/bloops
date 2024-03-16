@@ -1,23 +1,23 @@
 {
-    "generated_at": 1710627439927,
+    "generated_at": 1710627942924,
     "pulse": {
         "ms_duration": 8,
         "kind": "chirp",
-        "khz_start": 55,
+        "khz_start": 20,
         "khz_end": 40,
-        "logarithmic": false,
+        "logarithmic": true,
         "square": true
     },
     "echolocation": {
         "ms_silence_before": 1,
         "ms_record_duration": 100,
-        "slowdown": 11,
+        "slowdown": 29,
         "playback": true,
         "emission_gain": 1.0,
         "noisereduce": false,
         "emitters": {
             "front_gain": 1.0,
-            "side_gain": 1.0,
+            "side_gain": 0.0,
             "ms_front_delay": 0,
             "ms_warmup_time": 50
         },
