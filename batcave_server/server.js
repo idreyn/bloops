@@ -81,7 +81,11 @@ const setupDirectMessaging = (remote, device) => {
 	Object.values(DirectMessage).forEach(messageType => {
 		device.socket.on(messageType,
 			(...args) => {
-				remote.socket.emit(messageType, ...args);
+				if (messageType === Message.AUDIO) {
+					remotes.forEach(remote => remote.socket.emit(messageType, ...args));
+				} else {
+					remote.socket.emit(messageType, ...args);
+				}
 			}
 		);
 		remote.socket.on(messageType,
