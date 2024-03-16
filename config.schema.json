@@ -18,6 +18,11 @@
                     ],
                     "default": null,
                     "title": "Host"
+                },
+                "build_dev": {
+                    "default": false,
+                    "title": "Build Dev",
+                    "type": "boolean"
                 }
             },
             "title": "BatcaveConfig",
@@ -272,6 +277,18 @@
         }
     },
     "properties": {
+        "generated_at": {
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Generated At"
+        },
         "pulse": {
             "discriminator": {
                 "mapping": {

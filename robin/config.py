@@ -4,7 +4,6 @@ from typing import Mapping
 from pydantic import BaseModel
 
 from robin.constants import BASE_PATH
-from robin.io.remote import RemoteKeys
 from robin.echolocation.pulse import Pulse
 
 
@@ -17,8 +16,8 @@ class EmitterConfig(BaseModel):
 
 class MicrophoneConfig(BaseModel):
     reverse_channels: bool = False
-    left_gain: float = 1
-    right_gain: float = 1
+    left_gain: float = 1  # Not implemented yet
+    right_gain: float = 1  # Not implemented yet
 
 
 class EcholocationConfig(BaseModel):
@@ -27,7 +26,7 @@ class EcholocationConfig(BaseModel):
     slowdown: int = 20
     playback: bool = True
     emission_gain: float = 1
-    noisereduce: bool = False
+    noisereduce: bool = False  # Not implemented yet
     emitters: EmitterConfig
     microphones: MicrophoneConfig
 
@@ -42,15 +41,17 @@ class SaveConfig(BaseModel):
 
 class RemoteConfig(BaseModel):
     remote_name: str
-    remote_keys: Mapping[RemoteKeys, Pulse]
+    remote_keys: Mapping[str, Pulse]
 
 
 class BatcaveConfig(BaseModel):
     self_host: bool = True
     host: str | None = None
+    build_dev: bool = False
 
 
 class ConfigRoot(BaseModel):
+    generated_at: int | None = None
     pulse: Pulse
     echolocation: EcholocationConfig
     save: SaveConfig
@@ -68,10 +69,10 @@ class Config(object):
         self.current = ConfigRoot.model_validate_json(content)
 
     def update_config_json(self, json: dict, and_save: bool):
-        updated = deepmerge(self.current.model_dump(), json)
-        self.current = ConfigRoot.model_validate_json(updated)
+        updated = deepmerge.always_merger.merge(self.current.model_dump(), json)
+        self.current = ConfigRoot.model_validate(updated, strict=True)
         if and_save:
-            json_str = ConfigRoot.model_dump_json()
+            json_str = self.current.model_dump_json(indent=4)
             open(self.filename, "w").write(json_str)
 
 

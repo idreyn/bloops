@@ -22,6 +22,7 @@ const DirectMessage = {
 	SET_RECORD_DURATION: "set-record-duration",
 	TRIGGER_PULSE: "trigger-pulse",
 	UPDATE_OVERRIDES: "update-overrides",
+	UPDATE_CONFIG: "update-config",
 	RESTART_DEVICE: "restart-device",
 	AUDIO: "audio",
 	HANDSHAKE_REMOTE: "handshake-remote",

@@ -1,9 +1,8 @@
 import evdev
 import threading
-from enum import Enum
 
 
-class RemoteKeys(Enum):
+class RemoteKeys:
     JS_UP = "JS_UP"
     JS_DOWN = "JS_DOWN"
     JS_LEFT = "JS_LEFT"

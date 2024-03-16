@@ -124,19 +124,9 @@ const DeviceInfo = React.createClass({
 						toggled={remote.overrides.disablePlayback}
 						onToggle={
 							(e, disablePlayback) => remote.updateOverrides({
-								disablePlayback
-							})
-						}
-					/>}
-				/>
-				<ListItem
-					primaryText="Disable save"
-					secondaryText="Won't save audio recordings or photos"
-					rightToggle={<Toggle
-						toggled={remote.overrides.disableSave}
-						onToggle={
-							(e, disableSave) => remote.updateOverrides({
-								disableSave
+								echolocation: {
+									playback: !disablePlayback,
+								}
 							})
 						}
 					/>}
@@ -188,13 +178,13 @@ const PulseControl = React.createClass({
 		return {
 			editingLabelText: null,
 			showLabelField: false,
-			labelText: "",
+			labelText: this.props.remote.config.save.file_prefix || "",
 		}
 	},
 
 	handlePulseUpdate(updated) {
 		const { remote } = this.props;
-		remote.updatePulse(remote.pulse.copy(updated));
+		remote.updatePulse(updated);
 	},
 
 	handleToggleLabelField() {
@@ -230,49 +220,62 @@ const PulseControl = React.createClass({
 	renderInner() {
 		const { remote } = this.props;
 		const { showLabelField, editingLabelText, labelText } = this.state;
-		const pulse = remote.pulse;
+		const pulse = remote.config.pulse;
 		return <List style={{ padding: 0 }}>
 			<ListItem disabled>
 				<LabeledSlider
 					name="duration"
-					getLabel={(n) => <span>Duration: {Math.round(n / 1000)}ms</span>}
-					onUpdate={(v) => this.handlePulseUpdate({ usDuration: v })}
-					min={1e3}
-					max={2e4}
-					step={500}
-					value={pulse.usDuration}
+					getLabel={(n) => <span>Duration: {Math.round(n)}ms</span>}
+					onUpdate={(v) => this.handlePulseUpdate({ ms_duration: v })}
+					min={1}
+					max={20}
+					step={1}
+					value={pulse.ms_duration}
 				/>
 			</ListItem>
-			{pulse.type !== Pulse.types.NOISE && <ListItem disabled>
+			{pulse.type !== Pulse.kinds.NOISE && <ListItem disabled>
 				<LabeledSlider
 					name="start-freq"
 					getLabel={(n) =>
 						<span>{
-							pulse.type === Pulse.types.CHIRP ?
+							pulse.type === Pulse.kinds.CHIRP ?
 								"Starting frequency" :
 								"Frequency"
 						}: {n}kHz</span>
 					}
-					onUpdate={(v) => this.handlePulseUpdate({ khzStart: v })}
+					onUpdate={(v) => this.handlePulseUpdate({ khz_start: v })}
 					min={10}
 					max={90}
 					step={5}
-					value={pulse.khzStart}
+					value={pulse.khz_start}
 				/>
 			</ListItem>}
-			{pulse.type === Pulse.types.CHIRP && <ListItem disabled>
+			{pulse.type === Pulse.kinds.CHIRP && <ListItem disabled>
 				<LabeledSlider
 					name="end-freq"
 					getLabel={(n) =>
 						<span>Ending frequency: {n}kHz</span>
 					}
-					onUpdate={(v) => this.handlePulseUpdate({ khzEnd: v })}
+					onUpdate={(v) => this.handlePulseUpdate({ khz_end: v })}
 					min={10}
 					max={90}
 					step={5}
-					value={pulse.khzEnd}
+					value={pulse.khz_end}
 				/>
 			</ListItem>}
+			<ListItem disabled>
+				<LabeledSlider
+					name="slowdown"
+					getLabel={(n) =>
+						<span>Slowdown factor: {n}</span>
+					}
+					onUpdate={(slowdown) => remote.updateConfig({ echolocation: { slowdown } })}
+					min={5}
+					max={50}
+					step={1}
+					value={remote.config.echolocation.slowdown}
+				/>
+			</ListItem>
 			<ListItem disabled>
 				<LabeledSlider
 					name="record-duration"
@@ -286,30 +289,34 @@ const PulseControl = React.createClass({
 					value={remote.msRecordDuration}
 				/>
 			</ListItem>
-			{pulse.type !== Pulse.types.NOISE && <ListItem
+			{pulse.kind !== Pulse.kinds.NOISE && <ListItem
 				primaryText="Square"
 				secondaryText="Emit a square wave"
 				rightToggle={<Toggle
-					toggled={pulse.isSquare}
-					onToggle={(e, v) => this.handlePulseUpdate({ isSquare: v })}
+					toggled={pulse.square}
+					onToggle={(e, v) => this.handlePulseUpdate({ square: v })}
 				/>}
 			/>}
-			{pulse.type === Pulse.types.CHIRP && <ListItem
+			{pulse.kind === Pulse.kinds.CHIRP && <ListItem
 				primaryText="Logarithmic"
 				secondaryText="Chirp with a logarithmic freqency sweep"
 				rightToggle={<Toggle
-					toggled={pulse.isLogarithmic}
-					onToggle={(e, v) => this.handlePulseUpdate({ isLogarithmic: v })}
+					toggled={pulse.logarithmic}
+					onToggle={(e, v) => this.handlePulseUpdate({ logarithmic: v })}
 				/>}
 			/>}
 			<ListItem
-				primaryText="Noise reduction"
-				secondaryText="Sample and reduce background noise"
+				primaryText="Enable side emitters"
+				secondaryText="If disabled, only the front will be used"
 				rightToggle={<Toggle
-					toggled={remote.overrides.wipersEnabled}
+					toggled={remote.config.echolocation.emitters.side_gain === 1}
 					onToggle={
-						(e, wipersEnabled) => remote.updateOverrides({
-							wipersEnabled,
+						(e, enabled) => remote.updateConfig({
+							echolocation: {
+								emitters: {
+									side_gain: enabled ? 1 : 0,
+								}
+							}
 						})
 					}
 				/>}
@@ -321,7 +328,7 @@ const PulseControl = React.createClass({
 					onFocus={this.handleLabelFocus}
 					onChange={this.handleLabelChange}
 					onBlur={this.handleLabelBlur}
-					value={editingLabelText || labelText}
+					value={editingLabelText ?? labelText}
 				/>
 			</ListItem>}
 		</List>;
@@ -330,15 +337,15 @@ const PulseControl = React.createClass({
 	render() {
 		const { remote } = this.props;
 		const { showLabelField } = this.state;
-		const pulse = remote.pulse;
+		const pulse = remote.config.pulse;
 		return <RobinCard>
 			<Tabs
-				value={pulse.type}
+				value={pulse.kind}
 				onChange={(v) => this.handlePulseUpdate({ type: v })}
 			>
-				<Tab value={Pulse.types.TONE} label="Tone" />
-				<Tab value={Pulse.types.CHIRP} label="Chirp" />
-				<Tab value={Pulse.types.NOISE} label="Noise" />
+				<Tab value={Pulse.kinds.TONE} label="Tone" />
+				<Tab value={Pulse.kinds.CHIRP} label="Chirp" />
+				<Tab value={Pulse.kinds.NOISE} label="Noise" />
 			</Tabs>
 			<div
 				style={{
@@ -367,7 +374,7 @@ const PulseControl = React.createClass({
 						(k) => <MenuItem
 							key={k}
 							onTouchTap={() => remote.assignPulseToButton(
-								k, remote.pulse
+								k, remote.config.pulse
 							)}
 						>
 							{remote.physicalButtons[k]}

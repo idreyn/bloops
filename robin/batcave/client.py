@@ -60,7 +60,11 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
             device_info = get_device_info()
             send_to_batcave_remote(
                 Message.DEVICE_STATUS,
-                {"status": device_status, "info": device_info},
+                {
+                    "status": device_status,
+                    "info": device_info,
+                    "config": config.current.model_dump(),
+                },
             )
             sio.sleep(5)
     finally:

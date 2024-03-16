@@ -1,26 +1,46 @@
 {
-    "$schema": "./config.schema.json",
+    "generated_at": 1710626431228,
     "pulse": {
+        "ms_duration": 8,
         "kind": "chirp",
-        "khz_start": 15,
+        "khz_start": 55,
         "khz_end": 40,
-        "ms_duration": 3
+        "logarithmic": false,
+        "square": true
     },
     "echolocation": {
+        "ms_silence_before": 1,
+        "ms_record_duration": 100,
+        "slowdown": 20,
+        "playback": true,
+        "emission_gain": 1.0,
+        "noisereduce": false,
         "emitters": {
+            "front_gain": 1.0,
+            "side_gain": 1.0,
             "ms_front_delay": 0,
-            "front_gain": 1,
-            "side_gain": 0,
             "ms_warmup_time": 50
         },
-        "microphones": {},
-        "slowdown": 20,
-        "emission_gain": 1
+        "microphones": {
+            "reverse_channels": false,
+            "left_gain": 1.0,
+            "right_gain": 1.0
+        }
     },
-    "batcave": {},
+    "save": {
+        "save_pulse": true,
+        "save_recording": true,
+        "save_resampled": true,
+        "save_camera_image": false,
+        "file_prefix": ""
+    },
     "remote": {
         "remote_name": "game-pad",
         "remote_keys": {}
     },
-    "save": {}
+    "batcave": {
+        "self_host": true,
+        "host": null,
+        "build_dev": true
+    }
 }

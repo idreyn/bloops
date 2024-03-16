@@ -93,6 +93,10 @@ def on_trigger_pulse(pulse=None):
         busy = False
 
 
+def on_update_config(update):
+    config.update_config_json(update["config"], update["save"])
+
+
 def get_device_status():
     return DeviceStatus.READY
 
@@ -123,6 +127,7 @@ batcave_handlers = {
     Message.UPDATE_OVERRIDES: on_update_overrides,
     Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
     Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
+    Message.UPDATE_CONFIG: on_update_config,
 }
 
 
@@ -152,7 +157,7 @@ def main(loopback_test, config_path):
     camera = Camera()
     if config.current.batcave.self_host:
         print("Running Batcave server locally...")
-        run_batcave_server(exit_event)
+        run_batcave_server(config, exit_event)
     run_batcave_client(
         config,
         get_device_status,

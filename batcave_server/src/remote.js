@@ -1,5 +1,9 @@
-const { Pulse, Device, Overrides } = require("./models.js");
+const deepmerge = require("deepmerge")
+
+const { Device, Overrides } = require("./models.js");
 const { Message } = require("../protocol.js");
+
+const DEFAULT_CONFIG = require("../../config.json");
 
 const PHYSICAL_BUTTONS = {
 	JS_LEFT: "Joystick left",
@@ -16,28 +20,24 @@ class Remote {
 		this.update = update;
 		this.backend = backend;
 		this.device = new Device();
-		this.pulse = Pulse.getDefaultPulse();
 		this.pulseSetByInfo = false;
 		this.overrides = new Overrides();
 		this.msRecordDuration = 100;
 		this.physicalButtons = PHYSICAL_BUTTONS;
-		this.pulseHistory = new PulseHistory(this.pulse, (p) => {
-			this.pulse = p;
-			this.update();
-		});
+		this.config = DEFAULT_CONFIG;
+		this.pulseHistory = new PulseHistory(this.config.pulse, (p) => this.updatePulse(p));
 		backend.on(
 			Message.DEVICE_STATUS,
 			this.handleDeviceStatus.bind(this)
 		);
 	}
 
-	handleDeviceStatus({ status, info }) {
+	handleDeviceStatus({ info, config, ...rest }) {
 		if (!info) return;
-		let { pulse, ...rest } = info;
-		this.device = this.device.copy(rest);
-		if (pulse && !this.pulseSetByInfo) {
-			this.pulse = this.pulse.copy(pulse);
-			this.pulseSetByInfo = true;
+		this.device = this.device.copy(info);
+		if (!this.config.generated_at || config.generated_at > this.config.generated_at) {
+			this.config = config;
+			this.pulseHistory.insert(config.pulse);
 		}
 		this.update();
 	}
@@ -46,15 +46,19 @@ class Remote {
 		this.backend.emit(Message.TRIGGER_PULSE);
 	}
 
-	updatePulse(pulse) {
-		this.backend.emit(Message.UPDATE_PULSE, pulse);
-		this.pulseHistory.insert(pulse);
+	updateConfig(partialConfig) {
+		const partialConfigWithTimestamp = { ...partialConfig, generated_at: Date.now() }
+		this.config = deepmerge(this.config, partialConfigWithTimestamp)
+		this.backend.emit(Message.UPDATE_CONFIG, {
+			config: partialConfigWithTimestamp,
+			save: true,
+		})
+		this.update();
 	}
 
-	updateRecordDuration(d) {
-		this.msRecordDuration = d;
-		this.backend.emit(Message.SET_RECORD_DURATION, d);
-		this.update();
+	updatePulse(pulse) {
+		this.updateConfig({ pulse });
+		this.pulseHistory.insert(this.config.pulse);
 	}
 
 	updateOverrides(obj) {
@@ -64,18 +68,27 @@ class Remote {
 	}
 
 	updateLabel(label) {
-		this.backend.emit(Message.UPDATE_LABEL, label);
-		this.update();
+		this.updateConfig({
+			save: {
+				file_prefix: label,
+			}
+		})
 	}
 
 	assignPulseToButton(button, pulse) {
-		this.backend.emit(Message.ASSIGN_PULSE, { button, pulse });
+		this.updateConfig({
+			remote: {
+				remote_keys: {
+					[button]: pulse
+				}
+			}
+		});
 	}
 }
 
 class PulseHistory {
-	constructor(first, update) {
-		this.list = [first];
+	constructor(initial, update) {
+		this.list = [initial];
 		this.pointer = 0;
 		this.update = update;
 	}
@@ -89,7 +102,7 @@ class PulseHistory {
 	}
 
 	insert(p) {
-		if (p.equalTo(this.getCurrent())) {
+		if (JSON.stringify(p) === JSON.stringify(this.getCurrent())) {
 			return;
 		}
 		if (!this.atEnd()) {

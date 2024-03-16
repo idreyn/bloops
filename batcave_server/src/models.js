@@ -65,25 +65,16 @@ class Pulse extends Model {
 	constructor(obj) {
 		super();
 		this.enumerable({
-			type: Pulse.types.CHIRP,
-			usDuration: 5e3,
-			khzStart: 50,
-			khzEnd: 25,
-			isSquare: false,
-			isLogarithmic: false,
+			ms_duration: 5,
+			khz_start: 15,
+			khz_end: 40,
+			square: false,
+			logarithmic: false,
 		}, obj);
 	}
 }
 
-Pulse.getDefaultPulse = function () {
-	return new Pulse({
-		usDuration: 5e3,
-		khzStart: 50,
-		khzEnd: 25,
-	});
-};
-
-Pulse.types = {
+Pulse.kinds = {
 	TONE: "tone",
 	CHIRP: "chirp",
 	CLICK: "click",
