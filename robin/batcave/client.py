@@ -1,10 +1,14 @@
 import socketio
 import threading
 import time
+from typing import TYPE_CHECKING
 
 from .protocol import Message
 
 sio = None
+
+if TYPE_CHECKING:
+    from robin.config import Config
 
 
 def send_to_batcave_remote(*args, **kwargs):
@@ -12,11 +16,13 @@ def send_to_batcave_remote(*args, **kwargs):
         sio.emit(*args, **kwargs)
 
 
-def client(profile, get_device_status, get_device_info, callbacks):
+def client(config: "Config", get_device_status, get_device_info, callbacks):
     global sio
     sio = socketio.Client(reconnection=True)
     batcave_host = (
-        "http://0.0.0.0:8000" if profile.batcave_self_host else profile.batcave_host
+        "http://0.0.0.0:8000"
+        if config.current.batcave.self_host
+        else config.current.batcave.host
     )
 
     if not batcave_host:

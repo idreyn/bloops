@@ -14,3 +14,7 @@ def get_ip_address():
         except:  # noqa: E722
             IP_ADDRESS = "unavailable"
     return IP_ADDRESS
+
+
+def get_hostname():
+    return socket.gethostname() + ".local"

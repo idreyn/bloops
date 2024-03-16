@@ -1,0 +1,19 @@
+{
+    "$schema": "./config.schema.json",
+    "pulse": {
+        "kind": "chirp",
+        "khz_start": 15,
+        "khz_end": 40,
+        "ms_duration": 3
+    },
+    "echolocation": {
+        "emitters": {},
+        "microphones": {}
+    },
+    "batcave": {},
+    "remote": {
+        "remote_name": "game-pad",
+        "remote_keys": {}
+    },
+    "save": {}
+}

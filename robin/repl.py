@@ -5,16 +5,22 @@ import traceback
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
-from .echolocation.pulse import *  # noqa: F403
+from .echolocation.pulse import BasePulse
+from .echolocation.pulse_helpers import chirp, tone, noise
 from .constants import BASE_PATH
 
 
-def run_repl(on_trigger_pulse, profile, exit_event):
+def run_repl(on_trigger_pulse, config, exit_event):
     def repl_inner():
         session = PromptSession(
             history=FileHistory(path.join(BASE_PATH, ".robin_repl_history"))
         )
-        user_namespace = {"profile": profile}
+        user_namespace = {
+            "config": config,
+            "chirp": chirp,
+            "tone": tone,
+            "noise": noise,
+        }
         while True:
             try:
                 next_input = session.prompt("(  •͈ )> ")
@@ -25,7 +31,7 @@ def run_repl(on_trigger_pulse, profile, exit_event):
                         result = eval(next_input, None, user_namespace)
                     except Exception:
                         result = exec(next_input, None, user_namespace)
-                    if isinstance(result, Pulse):  # noqa: F405
+                    if isinstance(result, BasePulse):
                         print(result)
                         on_trigger_pulse(result)
             except KeyboardInterrupt:

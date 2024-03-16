@@ -1,192 +1,121 @@
 import numpy as np
+from typing import TYPE_CHECKING
 from scipy.signal import chirp
+from pydantic import BaseModel, Field
+from typing_extensions import Annotated, Literal
 
-from robin.util import zero_pad
+from robin.io.audio import AudioDevice
 
-
-def pulse_from_dict(d):
-    if d.get("type") == "tone":
-        return Tone(
-            1000 * (d.get("khzFreq") or d.get("khzStart")),
-            d.get("usDuration"),
-            d.get("isSquare"),
-        )
-    elif d.get("type") == "chirp":
-        return Chirp(
-            1000 * d.get("khzStart"),
-            1000 * d.get("khzEnd"),
-            d.get("usDuration"),
-            "logarithmic" if d.get("isLogarithmic") else "linear",
-            d.get("isSquare"),
-        )
-    elif d.get("type") == "noise":
-        return Noise(d.get("usDuration"))
-    else:
-        raise Exception("Unable to parse Pulse from dict")
+if TYPE_CHECKING:
+    from robin.config import EmitterConfig
 
 
-def dict_from_pulse(p):
-    d = {
-        "type": "noise"
-        if type(p) is Noise
-        else ("chirp" if type(p) is Chirp else ("tone" if type(p) is Tone else "?")),
-        "usDuration": p.us_duration,
-    }
-    if type(p) is Tone:
-        d["khzStart"] = p.frequency / 1000
-        d["isSquare"] = p.square
-    elif type(p) is Chirp:
-        d["khzStart"] = p.f0 / 1000
-        d["khzEnd"] = p.f1 / 1000
-        d["isLogarithmic"] = p.method == "logarithmic"
-        d["isSquare"] = p.square
-    return d
+class BasePulse(BaseModel):
+    ms_duration: int
 
-
-def default_pulse():
-    return pulse_from_dict(
-        {
-            "type": "chirp",
-            "usDuration": 5e3,
-            "khzStart": 20,
-            "khzEnd": 50,
-            "isLogarithmic": True,
-        }
-    )
-
-
-class Pulse(object):
-    def __init__(self, us_duration, square=False):
-        self.us_duration = us_duration
-        self.square = square
-        self.__t_axis = None
-        self.__rendered = None
-
-    def t_axis(self, device):
-        if not self.__t_axis is None:  # noqa: E714
-            return self.__t_axis
-        self.__t_axis = np.linspace(
-            0, 1e-6 * self.us_duration, int(1e-6 * self.us_duration * device.rate)
-        )
-        return self.__t_axis
-
-    def band(self, device):
-        return (0, device.rate / 2)
-
-    def render(self, device):
-        if not self.__rendered is None:  # noqa: E714
-            return self.__rendered
-        r = self._render(device)
-        if self.square:
-            r[r > 0] = 1
-            r[r < 0] = -1
-        if device.channels == 1:
-            self.__rendered = r
-        else:
-            self.__rendered = (
-                32767 if device.np_format == np.int16 else 1
-            ) * np.transpose(np.array([r for _ in range(device.channels)]))
-        return self.__rendered
+    def khz_band(self):
+        raise NotImplementedError()
 
     def _render(self):
-        raise Exception("Pulse should not be instantiated directly")
+        raise NotImplementedError()
 
+    def render(self, device: AudioDevice, cfg: "EmitterConfig" = None):
+        r = self._render(device)
+        if device.channels == 1:
+            return r
+        else:
+            ms_front_delay = cfg.ms_front_delay if cfg else 0
+            front_gain = cfg.front_gain if cfg else 1
+            side_gain = cfg.side_gain if cfg else 1
+            delay = np.zeros(int(1e-3 * ms_front_delay * device.rate)).astype(
+                device.np_format
+            )
+            max_value = np.iinfo(device.np_format).max
+            front_channel = front_gain * np.concatenate([delay, r])
+            side_channel = side_gain * np.concatenate([r, delay])
+            both_channels = np.transpose([front_channel, side_channel])
+            res = (max_value * both_channels).astype(device.np_format)
+            return res
 
-class Silence(Pulse):
-    def __init__(self, us_duration):
-        super(Silence, self).__init__(us_duration)
-
-    def _render(self, device):
-        return np.zeros(len(self.t_axis(device)))
-
-
-class Tone(Pulse):
-    def __init__(self, frequency, us_duration, square=False):
-        super(Tone, self).__init__(us_duration, square)
-        self.frequency = frequency
-
-    def __str__(self):
-        return "tone-%sk-%sms%s" % (
-            str(self.frequency / 1000),
-            str(self.us_duration / 1000),
-            "-square" if self.square else "",
+    def t_axis(self, device: AudioDevice):
+        return np.linspace(
+            0, 1e-3 * self.ms_duration, int(1e-3 * self.ms_duration * device.rate)
         )
 
-    def _render(self, device):
-        return np.cos(2 * np.pi * self.frequency * self.t_axis(device))
 
-    def band(self):
-        leakage = 2500  # pretty arbitrary
-        return (self.frequency - leakage, self.frequency + leakage)
+class Chirp(BasePulse):
+    kind: Literal["chirp"] = "chirp"
+    khz_start: int
+    khz_end: int
+    logarithmic: bool = False
+    square: bool = False
 
+    def khz_band(self):
+        return (min(self.khz_start, self.khz_end), max(self.khz_start, self.khz_end))
 
-class Chirp(Pulse):
-    def __init__(self, f0, f1, us_duration, method="linear", square=False):
-        super(Chirp, self).__init__(us_duration, square)
-        self.f0 = f0
-        self.f1 = f1
-        self.method = method
+    @property
+    def method(self):
+        return "logarithmic" if self.logarithmic else "linear"
+
+    def _render(self, device: AudioDevice):
+        times = self.t_axis(device)
+        t1 = times[-1]
+        res = chirp(
+            t=times,
+            f0=1e3 * self.khz_start,
+            f1=1e3 * self.khz_end,
+            t1=t1,
+            method=self.method,
+        )
+        if self.square:
+            res[res > 0] = 1
+            res[res < 0] = -1
+        return res
 
     def __str__(self):
         return "chirp-%sk-%sk-%sms-%s%s" % (
-            str(self.f0 / 1000),
-            str(self.f1 / 1000),
-            str(self.us_duration / 1000),
+            str(self.khz_start),
+            str(self.khz_end),
+            str(self.ms_duration),
             self.method,
             "-square" if self.square else "",
         )
 
-    def _render(self, device):
-        times = self.t_axis(device)
-        t1 = times[-1]
-        return chirp(t=times, f0=self.f0, f1=self.f1, t1=t1, method=self.method)
 
-    def band(self, device=None):
-        return (min(self.f0, self.f1), max(self.f1, self.f0))
+class Tone(BasePulse):
+    kind: Literal["tone"] = "tone"
+    khz_freq: int
+    square: bool = False
 
+    def khz_band(self, khz_leakage=2.5):
+        return (self.khz_freq - khz_leakage, self.khz_freq + khz_leakage)
 
-class Noise(Pulse):
-    def __init__(self, us_duration):
-        super(Noise, self).__init__(us_duration)
+    def _render(self, device: AudioDevice):
+        res = np.cos(2 * np.pi * 1e3 * self.khz_freq * self.t_axis(device))
+        if self.square:
+            res[res > 0] = 1
+            res[res < 0] = -1
+        return res
 
     def __str__(self):
-        return "noise-%sms" % (str(self.us_duration / 1000))
+        return "tone-%sk-%sms%s" % (
+            str(self.khz_freq),
+            str(self.ms_duration),
+            "-square" if self.square else "",
+        )
 
-    def _render(self, device):
+
+class Noise(BasePulse):
+    kind: Literal["noise"] = "noise"
+
+    def khz_band(self):
+        return (15, 90)
+
+    def _render(self, device: AudioDevice):
         return np.random.normal(0, 1, size=len(self.t_axis(device)))
 
-    def band(self, device=None):
-        # This bad boy is very broadband but we probably can get rid of audible
-        # sound anyway, since the tweeters are loudest at > 15k.
-        return (1.5e4, 7e4)
-
-
-class CombinedPulse(Pulse):
-    def __init__(self, left, right):
-        super(CombinedPulse, self).__init__(
-            max(left.us_duration, right.us_duration), left.square and right.square
-        )
-        self.__rendered = None
-        self.left_pulse = left
-        self.right_pulse = right
-
-    def render(self, device):
-        assert device.channels == 2
-        if not self.__rendered is None:  # noqa: E714
-            return self.__rendered
-        lr = self.left_pulse.render(device)
-        rr = self.right_pulse.render(device)
-        if len(lr) < len(rr):
-            lr = zero_pad(lr, right_length=(len(rr) - len(lr)))
-        if len(rr) < len(lr):
-            rr = zero_pad(rr, right_length=(len(lr) - len(rr)))
-        self.__rendered = np.stack((lr[:, 0], rr[:, 0]), axis=1)
-        return self.__rendered
-
-    def band(self):
-        (l0, h0) = self.left_pulse.band()
-        (l1, h1) = self.right_pulse.band()
-        return (min(l0, l1), max(h0, h1))
-
     def __str__(self):
-        return "combined-%s-%s" % (self.left_pulse, self.right_pulse)
+        return f"noise-{self.ms_duration}ms"
+
+
+Pulse = Annotated[Chirp | Tone | Noise, Field(discriminator="kind")]

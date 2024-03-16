@@ -5,6 +5,7 @@ import peakutils  # noqa: F401
 
 import robin.util as util
 
+from robin.config import Config
 from robin.noisereduce import noise_reduce, NoiseReduceSettings
 from robin.pipeline.sample import EnvironmentSample
 
@@ -20,7 +21,7 @@ def stage(require=None, forbid=None):
         forbid = [forbid]
 
     def decorator(stage_func):
-        def func_wrapper(es):
+        def func_wrapper(es, config):
             if not type(es) is EnvironmentSample:  # noqa: E714
                 raise Exception(
                     "Stage %s was not passed an EnvironmentSample"
@@ -42,7 +43,7 @@ def stage(require=None, forbid=None):
                     )
                     % (stage_func.__name__)
                 )
-            es = stage_func(es)
+            es = stage_func(es, config)
             if not type(es) is EnvironmentSample:  # noqa: E714
                 raise Exception(
                     "Stage %s did not return an EnvironmentSample"
@@ -58,7 +59,7 @@ def stage(require=None, forbid=None):
 
 
 @stage()
-def stats(es):
+def stats(es, *rest):
     for i, c in enumerate(es.channels):
         c.max_val = max(c.signal)
         c.argmax = np.argmax(c.signal)
@@ -71,7 +72,7 @@ def stats(es):
 
 
 @stage()
-def bandpass(es):
+def bandpass(es, *rest):
     for c in es.channels:
         print("Bandpassing", es.hz_band, es.rate)
         c.signal = util.bandpass(c.signal, es.hz_band[0], es.hz_band[1], es.rate)
@@ -79,7 +80,7 @@ def bandpass(es):
 
 
 @stage()
-def skeri_notch(es):
+def skeri_notch(es, *rest):
     for c in es.channels:
         for _ in range(3):
             c.signal = util.notch(
@@ -96,7 +97,7 @@ def skeri_notch(es):
 
 
 @stage()
-def self_notch(es):
+def self_notch(es, *rest):
     for c in es.channels:
         for khz in range(1, 5):
             for _ in range(3):
@@ -109,14 +110,14 @@ def self_notch(es):
 
 
 @stage()
-def detrend(es):
+def detrend(es, *rest):
     for c in es.channels:
         c.signal = scipy.signal.detrend(c.signal, type="constant")
     return es
 
 
 @stage(require=[bandpass])
-def find_pulse_start_index(es):
+def find_pulse_start_index(es, *rest):
     left, right = es.channels
     lps, rps = util.find_signal_start(
         left=left.signal,
@@ -124,8 +125,7 @@ def find_pulse_start_index(es):
         left_silence=left.silence,
         right_silence=right.silence,
         cutoff_index=int(
-            min(1, 2 * (es.us_pulse_duration / es.us_record_duration))
-            * len(left.signal)
+            1e-3 * (es.ms_silence_before + es.ms_pulse_duration) / es.rate
         ),
     )
     left.pulse_start_offset = lps
@@ -134,11 +134,21 @@ def find_pulse_start_index(es):
 
 
 @stage(require=[find_pulse_start_index])
-def align(es):
+def remove_leading_silence(es, *rest):
     left, right = es.channels
-    left.signal, right.signal = util.align(
-        left.signal, right.signal, left.pulse_start_offset, right.pulse_start_offset
-    )
+    start_index = min(left.pulse_start_offset, right.pulse_start_offset)
+    print("Removing ms", 1000 * start_index / es.rate)
+    left.signal = left.signal[start_index:]
+    right.signal = right.signal[start_index:]
+    return es
+
+
+@stage(require=[remove_leading_silence])
+def attunate_emission(es, config: Config):
+    if config.current.echolocation.emission_gain < 1:
+        through_index = int(es.rate * 1e-3 * es.ms_pulse_duration)
+        for channel in es.channels:
+            channel.signal[0:through_index] = 0
     return es
 
 

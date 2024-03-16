@@ -42,18 +42,9 @@ socket.on(Message.DISCONNECT, () => {
 	overrides = null;
 });
 
-socket.on(Message.UPDATE_PULSE, (p) => {
-	console.log("Setting pulse to ", p);
-	pulse = p;
-});
-
 socket.on(Message.UPDATE_OVERRIDES, (o) => {
 	console.log("Setting overrides to ", o);
 	overrides = o;
 });
-
-socket.on(Message.ASSIGN_PULSE, ({ button, pulse }) => {
-	console.log("Assigning pulse", button, pulse);
-})
 
 setInterval(emitStatus, 5000);

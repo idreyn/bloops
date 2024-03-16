@@ -19,14 +19,11 @@ const RemoteStatus = {
 
 const DirectMessage = {
 	DEVICE_STATUS: "device-status",
-	UPDATE_PULSE: "update-pulse",
 	SET_RECORD_DURATION: "set-record-duration",
 	TRIGGER_PULSE: "trigger-pulse",
 	UPDATE_OVERRIDES: "update-overrides",
 	RESTART_DEVICE: "restart-device",
 	AUDIO: "audio",
-	ASSIGN_PULSE: "assign-pulse",
-	UPDATE_LABEL: "update-label",
 	HANDSHAKE_REMOTE: "handshake-remote",
 	HANDSHAKE_DEVICE: "handshake-device",
 }

@@ -1,0 +1,319 @@
+{
+    "$defs": {
+        "BatcaveConfig": {
+            "properties": {
+                "self_host": {
+                    "default": true,
+                    "title": "Self Host",
+                    "type": "boolean"
+                },
+                "host": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Host"
+                }
+            },
+            "title": "BatcaveConfig",
+            "type": "object"
+        },
+        "Chirp": {
+            "properties": {
+                "ms_duration": {
+                    "title": "Ms Duration",
+                    "type": "integer"
+                },
+                "kind": {
+                    "const": "chirp",
+                    "default": "chirp",
+                    "title": "Kind"
+                },
+                "khz_start": {
+                    "title": "Khz Start",
+                    "type": "integer"
+                },
+                "khz_end": {
+                    "title": "Khz End",
+                    "type": "integer"
+                },
+                "logarithmic": {
+                    "default": false,
+                    "title": "Logarithmic",
+                    "type": "boolean"
+                },
+                "square": {
+                    "default": false,
+                    "title": "Square",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "ms_duration",
+                "khz_start",
+                "khz_end"
+            ],
+            "title": "Chirp",
+            "type": "object"
+        },
+        "EcholocationConfig": {
+            "properties": {
+                "ms_silence_before": {
+                    "default": 1,
+                    "title": "Ms Silence Before",
+                    "type": "integer"
+                },
+                "ms_record_duration": {
+                    "default": 100,
+                    "title": "Ms Record Duration",
+                    "type": "integer"
+                },
+                "slowdown": {
+                    "default": 20,
+                    "title": "Slowdown",
+                    "type": "integer"
+                },
+                "playback": {
+                    "default": true,
+                    "title": "Playback",
+                    "type": "boolean"
+                },
+                "emission_gain": {
+                    "default": 1,
+                    "title": "Emission Gain",
+                    "type": "number"
+                },
+                "noisereduce": {
+                    "default": false,
+                    "title": "Noisereduce",
+                    "type": "boolean"
+                },
+                "emitters": {
+                    "$ref": "#/$defs/EmitterConfig"
+                },
+                "microphones": {
+                    "$ref": "#/$defs/MicrophoneConfig"
+                }
+            },
+            "required": [
+                "emitters",
+                "microphones"
+            ],
+            "title": "EcholocationConfig",
+            "type": "object"
+        },
+        "EmitterConfig": {
+            "properties": {
+                "front_gain": {
+                    "default": 1,
+                    "title": "Front Gain",
+                    "type": "number"
+                },
+                "side_gain": {
+                    "default": 1,
+                    "title": "Side Gain",
+                    "type": "number"
+                },
+                "ms_front_delay": {
+                    "default": 0,
+                    "title": "Ms Front Delay",
+                    "type": "integer"
+                },
+                "ms_warmup_time": {
+                    "default": 25,
+                    "title": "Ms Warmup Time",
+                    "type": "integer"
+                }
+            },
+            "title": "EmitterConfig",
+            "type": "object"
+        },
+        "MicrophoneConfig": {
+            "properties": {
+                "reverse_channels": {
+                    "default": false,
+                    "title": "Reverse Channels",
+                    "type": "boolean"
+                },
+                "left_gain": {
+                    "default": 1,
+                    "title": "Left Gain",
+                    "type": "number"
+                },
+                "right_gain": {
+                    "default": 1,
+                    "title": "Right Gain",
+                    "type": "number"
+                }
+            },
+            "title": "MicrophoneConfig",
+            "type": "object"
+        },
+        "Noise": {
+            "properties": {
+                "ms_duration": {
+                    "title": "Ms Duration",
+                    "type": "integer"
+                },
+                "kind": {
+                    "const": "noise",
+                    "default": "noise",
+                    "title": "Kind"
+                }
+            },
+            "required": [
+                "ms_duration"
+            ],
+            "title": "Noise",
+            "type": "object"
+        },
+        "RemoteConfig": {
+            "properties": {
+                "remote_name": {
+                    "title": "Remote Name",
+                    "type": "string"
+                },
+                "remote_keys": {
+                    "additionalProperties": {
+                        "discriminator": {
+                            "mapping": {
+                                "chirp": "#/$defs/Chirp",
+                                "noise": "#/$defs/Noise",
+                                "tone": "#/$defs/Tone"
+                            },
+                            "propertyName": "kind"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/Chirp"
+                            },
+                            {
+                                "$ref": "#/$defs/Tone"
+                            },
+                            {
+                                "$ref": "#/$defs/Noise"
+                            }
+                        ]
+                    },
+                    "title": "Remote Keys",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "remote_name",
+                "remote_keys"
+            ],
+            "title": "RemoteConfig",
+            "type": "object"
+        },
+        "SaveConfig": {
+            "properties": {
+                "save_pulse": {
+                    "default": true,
+                    "title": "Save Pulse",
+                    "type": "boolean"
+                },
+                "save_recording": {
+                    "default": true,
+                    "title": "Save Recording",
+                    "type": "boolean"
+                },
+                "save_resampled": {
+                    "default": true,
+                    "title": "Save Resampled",
+                    "type": "boolean"
+                },
+                "save_camera_image": {
+                    "default": false,
+                    "title": "Save Camera Image",
+                    "type": "boolean"
+                },
+                "file_prefix": {
+                    "default": "",
+                    "title": "File Prefix",
+                    "type": "string"
+                }
+            },
+            "title": "SaveConfig",
+            "type": "object"
+        },
+        "Tone": {
+            "properties": {
+                "ms_duration": {
+                    "title": "Ms Duration",
+                    "type": "integer"
+                },
+                "kind": {
+                    "const": "tone",
+                    "default": "tone",
+                    "title": "Kind"
+                },
+                "khz_freq": {
+                    "title": "Khz Freq",
+                    "type": "integer"
+                },
+                "square": {
+                    "default": false,
+                    "title": "Square",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "ms_duration",
+                "khz_freq"
+            ],
+            "title": "Tone",
+            "type": "object"
+        }
+    },
+    "properties": {
+        "pulse": {
+            "discriminator": {
+                "mapping": {
+                    "chirp": "#/$defs/Chirp",
+                    "noise": "#/$defs/Noise",
+                    "tone": "#/$defs/Tone"
+                },
+                "propertyName": "kind"
+            },
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/Chirp"
+                },
+                {
+                    "$ref": "#/$defs/Tone"
+                },
+                {
+                    "$ref": "#/$defs/Noise"
+                }
+            ],
+            "title": "Pulse"
+        },
+        "echolocation": {
+            "$ref": "#/$defs/EcholocationConfig"
+        },
+        "save": {
+            "$ref": "#/$defs/SaveConfig"
+        },
+        "remote": {
+            "$ref": "#/$defs/RemoteConfig"
+        },
+        "batcave": {
+            "$ref": "#/$defs/BatcaveConfig"
+        }
+    },
+    "required": [
+        "pulse",
+        "echolocation",
+        "save",
+        "remote",
+        "batcave"
+    ],
+    "title": "ConfigRoot",
+    "type": "object"
+}

@@ -6,20 +6,18 @@ from threading import Event
 
 from .io.audio import Audio
 from .io.remote import BluetoothRemote
-from .constants import ROBIN
+from .constants import ROBIN, BASE_PATH
 from .io.audio.devices import BATHAT, HEADPHONES, HIFIBERRY, NULL, pick_available_device
-from .echolocation import (
-    echolocate,
-    pulse_from_dict,
-    dict_from_pulse,
-)
+from .echolocation.echolocate import echolocate
+
 from .io.ad5252 import AD5252
 from .io.camera import Camera
 from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
-from .profile import *  # noqa: F403
+from .io.remote import RemoteKeys
 from .repl import run_repl
 from .pipeline import STANDARD_PIPELINE
-from .util.net import get_ip_address
+from .util.net import get_ip_address, get_hostname
+from .config import Config
 
 from .batcave.client import run_batcave_client
 from .batcave.server import run_batcave_server
@@ -43,16 +41,13 @@ audio = Audio(
 )
 
 camera = None
-profile = None
+config: Config = None
 busy = False
 connected_remotes = 0
 
 
 def handle_override(overrides):
     emitter_enable.set(overrides.force_enable_emitters)
-    profile.playback = not overrides.disable_playback
-    profile.set_save_all(not overrides.disable_save)
-    profile.set_save_prefix(overrides.save_prefix)
 
 
 def on_connected():
@@ -79,30 +74,11 @@ def on_update_overrides(overrides):
     handle_override(DebugOverride.from_dict(overrides))
 
 
-def on_update_pulse(pulse_dict):
-    profile.current_pulse = pulse_from_dict(pulse_dict)
-
-
-def on_set_record_duration(d):
-    profile.us_record_duration = d
-
-
-def on_assign_pulse(info):
-    button = info["button"]
-    pulse = pulse_from_dict(info["pulse"])
-    print("Assigning", pulse, "to", button)
-    profile.remote_mapping[button] = pulse
-
-
-def on_update_label(label):
-    profile.set_save_prefix(label)
-
-
 def on_trigger_pulse(pulse=None):
-    global busy
+    global busy, config
     if busy:
         return
-    pulse = pulse or profile.current_pulse
+    pulse = pulse or config.current.pulse
     print("Emitting", pulse)
     busy = True
     try:
@@ -110,7 +86,7 @@ def on_trigger_pulse(pulse=None):
             pulse,
             audio,
             camera,
-            profile,
+            config,
             STANDARD_PIPELINE,
         )
     finally:
@@ -122,21 +98,19 @@ def get_device_status():
 
 
 def get_device_info():
-    global profile
     return {
-        "id": profile.device_id,
+        "id": get_hostname(),
         "ip": get_ip_address(),
         "deviceBatteryLow": device_battery_low.read(),
         "emitterBatteryLow": emitter_battery_low.read(),
         "bluetoothConnections": str(connected_remotes),
         "lastSeen": str(datetime.datetime.now()),
-        "pulse": dict_from_pulse(profile.current_pulse),
     }
 
 
 def make_pulse_callback(button):
     def inner():
-        on_trigger_pulse(profile.remote_mapping[button])
+        on_trigger_pulse(config.current.remote.remote_keys[button])
 
     return inner
 
@@ -146,37 +120,29 @@ batcave_handlers = {
     Message.RECONNECT: on_connected,
     Message.DISCONNECT: on_disconnect,
     Message.TRIGGER_PULSE: on_trigger_pulse,
-    Message.UPDATE_PULSE: on_update_pulse,
-    Message.SET_RECORD_DURATION: on_set_record_duration,
     Message.UPDATE_OVERRIDES: on_update_overrides,
     Message.DEVICE_REMOTE_CONNECT: on_remote_connect,
     Message.DEVICE_REMOTE_DISCONNECT: on_remote_disconnect,
-    Message.ASSIGN_PULSE: on_assign_pulse,
-    Message.UPDATE_LABEL: on_update_label,
 }
 
 
 @click.command()
-@click.option("--reverse-channels/--no-reverse-channels", default=None, required=False)
 @click.option("--loopback-test/--no-loopback-test", default=False, required=False)
-@click.argument("profile_path", type=click.Path(exists=True), required=False)
-def main(reverse_channels, loopback_test, profile_path):
-    global profile, camera
+@click.argument(
+    "config_path",
+    type=click.Path(exists=True),
+    default=f"{BASE_PATH}/config.json",
+    required=False,
+)
+def main(loopback_test, config_path):
+    global camera, config
+    config = Config(config_path)
     if not audio.devices_available():
         print(audio.device_availability())
         print("Missing audio hardware, exiting.")
         os._exit(0)
-    if profile_path:
-        print("Using profile from %s" % profile_path)
-        profile = Profile.from_file(profile_path)  # noqa: F405
-    else:
-        profile = Profile()  # noqa: F405
-        print("Using default profile")
-    if reverse_channels != None:  # noqa: E711
-        profile.reverse_channels = reverse_channels
-        print("Override reverse_channels to %s" % reverse_channels)
-    if len(profile.remote_mapping) == 0:
-        print("Warning: profile has no remote key mappings")
+    if len(config.current.remote.remote_keys) == 0:
+        print("Warning: config has no remote key mappings")
     if audio.record_device == BATHAT:
         ad = AD5252()
         ad.write_all(10)
@@ -184,27 +150,27 @@ def main(reverse_channels, loopback_test, profile_path):
     audio.start()
     exit_event = Event()
     camera = Camera()
-    if profile.batcave_self_host:
+    if config.current.batcave.self_host:
         print("Running Batcave server locally...")
         run_batcave_server(exit_event)
     run_batcave_client(
-        profile,
+        config,
         get_device_status,
         get_device_info,
         batcave_handlers,
     )
     print("Waiting for Bluetooth remote...")
-    remote = BluetoothRemote(profile.remote_name)
+    remote = BluetoothRemote(config.current.remote.remote_name)
     if loopback_test:
-        remote.clear_key(RemoteKeys.RIGHT)  # noqa: F405
+        remote.clear_key(RemoteKeys.RIGHT)
         print("Ready earbuds and press RIGHT on the remote")
         print("Waiting for key...")
-        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):  # noqa: F405
+        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
             audio.loopback()
     remote.register_handlers(
-        down={k: make_pulse_callback(k) for k in profile.remote_mapping},
-        hold={RemoteKeys.JS_UP: lambda: emitter_enable.set(True)},  # noqa: F405
-        up={RemoteKeys.JS_UP: lambda: (not busy) and emitter_enable.set(False)},  # noqa: F405
+        down={k: make_pulse_callback(k) for k in config.current.remote.remote_keys},
+        hold={RemoteKeys.JS_UP: lambda: emitter_enable.set(True)},
+        up={RemoteKeys.JS_UP: lambda: (not busy) and emitter_enable.set(False)},
     )
     for _ in range(3):
         emitter_enable.set(True)
@@ -212,5 +178,5 @@ def main(reverse_channels, loopback_test, profile_path):
         emitter_enable.set(False)
         time.sleep(0.05)
     print("Ready to echolocate!")
-    run_repl(on_trigger_pulse, profile, exit_event)
+    run_repl(on_trigger_pulse, config, exit_event)
     exit_event.wait()
