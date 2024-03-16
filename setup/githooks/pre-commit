@@ -1,2 +1,1 @@
 poetry run ruff format --check && poetry run ruff check . --extend-select RUF100 --fix
-poetry run update-config-schema
