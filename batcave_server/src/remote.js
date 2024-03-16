@@ -43,7 +43,6 @@ class Remote {
 	}
 
 	triggerPulse() {
-		console.log("TPPPP")
 		this.backend.emit(Message.TRIGGER_PULSE);
 	}
 

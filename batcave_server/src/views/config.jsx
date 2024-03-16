@@ -282,7 +282,7 @@ const PulseControl = React.createClass({
 					getLabel={(n) =>
 						<span>Recording duration: {n}ms</span>
 					}
-					onUpdate={(ms_record_duration) => remote.updateConfig({ echolocation: {ms_record_duration}})}
+					onUpdate={(ms_record_duration) => remote.updateConfig({ echolocation: { ms_record_duration } })}
 					min={20}
 					max={200}
 					step={5}
@@ -390,4 +390,4 @@ const PulseControl = React.createClass({
 	}
 });
 
-module.exports = { ConfigView , DeviceInfo, PulseControl };
+module.exports = { ConfigView, DeviceInfo, PulseControl };
