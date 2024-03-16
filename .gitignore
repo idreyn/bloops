@@ -171,4 +171,4 @@ resources/
 scratch.py
 scratch.ipynb
 .ruff_cache
-.config.json
+config.json
