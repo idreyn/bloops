@@ -282,11 +282,11 @@ const PulseControl = React.createClass({
 					getLabel={(n) =>
 						<span>Recording duration: {n}ms</span>
 					}
-					onUpdate={(d) => remote.updateRecordDuration(d)}
+					onUpdate={(ms_record_duration) => remote.updateConfig({ echolocation: {ms_record_duration}})}
 					min={20}
 					max={200}
 					step={5}
-					value={remote.msRecordDuration}
+					value={remote.config.echolocation.ms_record_duration}
 				/>
 			</ListItem>
 			{pulse.kind !== Pulse.kinds.NOISE && <ListItem
