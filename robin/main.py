@@ -95,6 +95,7 @@ def on_trigger_pulse(pulse=None):
 
 def on_update_config(update):
     config.update_config_json(update["config"], update["save"])
+    print("new pulse", config.current.pulse.model_dump())
 
 
 def get_device_status():

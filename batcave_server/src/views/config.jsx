@@ -233,15 +233,24 @@ const PulseControl = React.createClass({
 					value={pulse.ms_duration}
 				/>
 			</ListItem>
-			{pulse.kind !== Pulse.kinds.NOISE && <ListItem disabled>
+			{pulse.kind === Pulse.kinds.TONE && <ListItem disabled>
+				<LabeledSlider
+					name="freq"
+					getLabel={(n) =>
+						<span>Frequency: {n}kHz</span>
+					}
+					onUpdate={(v) => this.handlePulseUpdate({ khz_freq: v })}
+					min={10}
+					max={90}
+					step={5}
+					value={pulse.khz_freq}
+				/>
+			</ListItem>}
+			{pulse.kind === Pulse.kinds.CHIRP && <ListItem disabled>
 				<LabeledSlider
 					name="start-freq"
 					getLabel={(n) =>
-						<span>{
-							pulse.kind === Pulse.kinds.CHIRP ?
-								"Starting frequency" :
-								"Frequency"
-						}: {n}kHz</span>
+						<span>Starting frequency: {n}kHz</span>
 					}
 					onUpdate={(v) => this.handlePulseUpdate({ khz_start: v })}
 					min={10}
