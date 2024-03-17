@@ -3,6 +3,8 @@ import threading
 import bisect
 import numpy as np
 
+from robin.logger import log
+
 
 class SampleBuffer(object):
     def __init__(self, channels, rate, capacity=500):
@@ -46,12 +48,12 @@ class SampleBuffer(object):
     def put(self, sample, critical=True, flag_removed=False):
         available = self.lock.acquire(critical)
         if not available:
-            print("Warning: discarded sample")
+            log("Warning: discarded sample")
             # Toss these samples, we're doing something else
             return
         if flag_removed:
             if self.flag_when_removed:
-                print("Warning: overriding buffer's flag_when_removed")
+                log("Warning: overriding buffer's flag_when_removed")
             self.flag_when_removed = sample
         self.queue.append(sample)
         self.times.append(time.time())
@@ -74,14 +76,15 @@ class SampleBuffer(object):
         offset = 0 if start_time is None else bisect.bisect_left(self.times, start_time)
         self._shift(offset)
         if verbose and start_time:
-            print("requested start time", start_time)
-            print("bisect found offset", offset)
-            print("min/max times", min(self.times), max(self.times))
-            print("actual start time", self.times[0])
+            log(f"requested start time {start_time}")
+            log(f"bisect found offset {offset}")
+            log(f"min/max times {min(self.times)} {max(self.times)}")
+            log("actual start time", self.times[0])
         mark_as_removed = None
         pointer = 0
         buff = np.zeros((length, self.channels))
         self.lock.release()
+
         while pointer < length:
             if not len(self.queue):
                 if block:

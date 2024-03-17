@@ -24,6 +24,7 @@ class Message:
     DEVICE_STATUS = "device-status"
     DEVICE_REMOTE_CONNECT = "device-remote-connect"
     DEVICE_REMOTE_DISCONNECT = "device-remote-disconnect"
+    DEVICE_LOG = "device-log"
     UPDATE_CONFIG = "update-config"
     TRIGGER_PULSE = "trigger-pulse"
     UPDATE_OVERRIDES = "update-overrides"

@@ -1,13 +1,12 @@
 import numpy as np
 import scipy.signal
-from scipy.special import expit  # noqa: F401
-import peakutils  # noqa: F401
 
 import robin.util as util
 
 from robin.config import Config
 from robin.noisereduce import noise_reduce, NoiseReduceSettings
 from robin.pipeline.sample import EnvironmentSample
+from robin.logger import log
 
 
 def stage(require=None, forbid=None):
@@ -64,7 +63,7 @@ def stats(es, *rest):
         c.max_val = max(c.signal)
         c.argmax = np.argmax(c.signal)
         c.avg_power = sum(c.signal**2) / len(c.signal)
-        print(
+        log(
             "channel %s: max %s argmax %s avg_power %s"
             % (i, c.max_val, c.argmax, c.avg_power)
         )
@@ -74,7 +73,7 @@ def stats(es, *rest):
 @stage()
 def bandpass(es, *rest):
     for c in es.channels:
-        print("Bandpassing", es.hz_band, es.rate)
+        log(f"Bandpassing {es.hz_band} {es.rate}")
         c.signal = util.bandpass(c.signal, es.hz_band[0], es.hz_band[1], es.rate)
     return es
 
@@ -137,7 +136,7 @@ def find_pulse_start_index(es, *rest):
 def remove_leading_silence(es, *rest):
     left, right = es.channels
     start_index = min(left.pulse_start_offset, right.pulse_start_offset)
-    print("Removing ms", 1000 * start_index / es.rate)
+    log(f"Removing leading silence: {1000 * start_index / es.rate}ms")
     left.signal = left.signal[start_index:]
     right.signal = right.signal[start_index:]
     return es

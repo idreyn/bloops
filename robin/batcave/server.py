@@ -4,6 +4,7 @@ import threading
 from psutil import Process
 
 from robin.constants import BASE_PATH
+from robin.logger import log
 
 BATCAVE_DIR = path.join(BASE_PATH, "batcave_server")
 
@@ -17,7 +18,7 @@ def build_batcave_server(config):
             stderr=subprocess.DEVNULL,
         )
     if config.current.batcave.build_dev:
-        print("Watching for changes to Batcave frontend...")
+        log("Watching for changes to Batcave frontend...")
         subprocess.Popen(
             args=["npm", "run", "dev"],
             cwd=BATCAVE_DIR,

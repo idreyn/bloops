@@ -13,6 +13,7 @@ from robin.io.audio import Audio
 from robin.io.camera import Camera
 from robin.pipeline import Pipeline
 from robin.config import Config
+from robin.logger import log
 
 
 def echolocate(
@@ -49,7 +50,7 @@ def echolocate(
     if pipeline:
         t0 = time.time()
         sample = pipeline.run(ec, sample, config)
-        print("Pipeline ran in", round(time.time() - t0, 3))
+        log(f"Pipeline ran in {round(time.time() - t0, 3)}")
     send_to_batcave_remote(
         Message.AUDIO,
         {
@@ -77,9 +78,9 @@ def echolocate(
     if config.current.echolocation.playback:
         time.sleep(ec.slowdown * record_time)
     else:
-        print("Playback disabled in config")
+        log("Playback disabled in config")
     ec.recording = sample
     ec.resampled = resampled
     ec.save_echolocation_capture(config)
-    print("Done")
+    log("Done")
     return ec

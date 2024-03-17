@@ -27,6 +27,7 @@ const DirectMessage = {
 	AUDIO: "audio",
 	HANDSHAKE_REMOTE: "handshake-remote",
 	HANDSHAKE_DEVICE: "handshake-device",
+	DEVICE_LOG: "device-log",
 }
 
 const ServerMessage = {

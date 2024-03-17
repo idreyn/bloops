@@ -3,6 +3,7 @@ from queue import Queue
 
 from .samplebuffer import SampleBuffer
 from .stream import AudioStream
+from robin.logger import log
 
 
 def run_emit_or_playback_thread(emit_stream: AudioStream, emit_queue: Queue):
@@ -17,7 +18,7 @@ def run_record_thread(record_stream: AudioStream, record_buffer: SampleBuffer):
             samples = record_stream.read_array(period_size)
             record_buffer.put(samples, False)
         except Exception as e:
-            print(e)
+            log(e)
             record_stream.setup()
 
 

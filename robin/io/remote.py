@@ -1,6 +1,8 @@
 import evdev
 import threading
 
+from robin.logger import log
+
 
 class RemoteKeys:
     JS_UP = "JS_UP"
@@ -36,7 +38,7 @@ def get_remote_device(name):
 def client(device_name, resolve_await, down=None, hold=None, up=None):
     while True:
         dev = get_remote_device(device_name)
-        print("Bluetooth remote connected")
+        log("Bluetooth remote connected")
         try:
             for event in dev.read_loop():
                 kev = evdev.categorize(event)
@@ -52,8 +54,8 @@ def client(device_name, resolve_await, down=None, hold=None, up=None):
                         if up and up.get(kev.scancode):
                             up.get(kev.scancode)()
         except (IOError, evdev.device.EvdevError) as e:
-            print(e)
-            print("Bluetooth remote disconnected")
+            log(e)
+            log("Bluetooth remote disconnected")
 
 
 class BluetoothRemote(object):

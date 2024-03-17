@@ -4,6 +4,7 @@ import time
 from typing import TYPE_CHECKING
 
 from .protocol import Message
+from robin.logger import log
 
 sio = None
 
@@ -28,7 +29,7 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
     if not batcave_host:
         return
 
-    print("Starting Batcave client...")
+    log("Starting Batcave client...")
 
     for event, handler in callbacks.items():
         sio.on(event, handler)
@@ -39,7 +40,7 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
 
     @sio.event
     def disconnect():
-        print("Disconnected from Batcave")
+        log("Disconnected from Batcave")
 
     def handshake():
         sio.emit(Message.HANDSHAKE_DEVICE, get_device_info())

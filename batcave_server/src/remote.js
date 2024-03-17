@@ -20,9 +20,8 @@ class Remote {
 		this.update = update;
 		this.backend = backend;
 		this.device = new Device();
-		this.pulseSetByInfo = false;
 		this.overrides = new Overrides();
-		this.msRecordDuration = 100;
+		this.logs = [];
 		this.physicalButtons = PHYSICAL_BUTTONS;
 		this.config = DEFAULT_CONFIG;
 		this.pulseHistory = new PulseHistory(this.config.pulse, (p) => this.updatePulse(p));
@@ -30,6 +29,10 @@ class Remote {
 			Message.DEVICE_STATUS,
 			this.handleDeviceStatus.bind(this)
 		);
+		backend.on(
+			Message.DEVICE_LOG,
+			this.handleDeviceLog.bind(this),
+		)
 	}
 
 	handleDeviceStatus({ info, config, ...rest }) {
@@ -40,6 +43,10 @@ class Remote {
 			this.pulseHistory.insert(config.pulse);
 		}
 		this.update();
+	}
+
+	handleDeviceLog(message) {
+		this.logs.push(message);
 	}
 
 	triggerPulse() {

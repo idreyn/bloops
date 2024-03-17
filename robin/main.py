@@ -18,6 +18,7 @@ from .repl import run_repl
 from .pipeline import STANDARD_PIPELINE
 from .util.net import get_ip_address, get_hostname
 from .config import Config
+from .logger import log
 
 from .batcave.client import run_batcave_client
 from .batcave.server import run_batcave_server
@@ -26,13 +27,13 @@ from .batcave.debug_override import DebugOverride
 
 
 # ron paul dot gif
-print(ROBIN)
+log(ROBIN)
 
 codec_device = pick_available_device([BATHAT, HIFIBERRY], as_input=True)
 playback_device = pick_available_device([HEADPHONES, NULL], as_input=False)
 
 if playback_device is NULL:
-    print("Warning: No headphones detected.")
+    log("Warning: No headphones detected.")
 
 audio = Audio(
     record_device=codec_device,
@@ -51,11 +52,11 @@ def handle_override(overrides):
 
 
 def on_connected():
-    print("Batcave client connected")
+    log("Batcave client connected")
 
 
 def on_disconnect():
-    print("Batcave client disconnected")
+    log("Batcave client disconnected")
 
 
 def on_remote_connect():
@@ -79,7 +80,7 @@ def on_trigger_pulse(pulse=None):
     if busy:
         return
     pulse = pulse or config.current.pulse
-    print("Emitting", pulse)
+    log(f"Emitting {pulse}")
     busy = True
     try:
         echolocate(
@@ -95,7 +96,6 @@ def on_trigger_pulse(pulse=None):
 
 def on_update_config(update):
     config.update_config_json(update["config"], update["save"])
-    print("new pulse", config.current.pulse.model_dump())
 
 
 def get_device_status():
@@ -144,20 +144,20 @@ def main(loopback_test, config_path):
     global camera, config
     config = Config(config_path)
     if not audio.devices_available():
-        print(audio.device_availability())
-        print("Missing audio hardware, exiting.")
+        log(audio.device_availability())
+        log("Missing audio hardware, exiting.")
         os._exit(0)
     if len(config.current.remote.remote_keys) == 0:
-        print("Warning: config has no remote key mappings")
+        log("Warning: config has no remote key mappings")
     if audio.record_device == BATHAT:
         ad = AD5252()
         ad.write_all(10)
-    print("Starting audio I/O...")
+    log("Starting audio I/O...")
     audio.start()
     exit_event = Event()
     camera = Camera()
     if config.current.batcave.self_host:
-        print("Running Batcave server locally...")
+        log("Running Batcave server locally...")
         run_batcave_server(config, exit_event)
     run_batcave_client(
         config,
@@ -165,12 +165,12 @@ def main(loopback_test, config_path):
         get_device_info,
         batcave_handlers,
     )
-    print("Waiting for Bluetooth remote...")
+    log("Waiting for Bluetooth remote...")
     remote = BluetoothRemote(config.current.remote.remote_name)
     if loopback_test:
         remote.clear_key(RemoteKeys.RIGHT)
-        print("Ready earbuds and press RIGHT on the remote")
-        print("Waiting for key...")
+        log("Ready earbuds and press RIGHT on the remote")
+        log("Waiting for key...")
         while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
             audio.loopback()
     remote.register_handlers(
@@ -183,6 +183,6 @@ def main(loopback_test, config_path):
         time.sleep(0.05)
         emitter_enable.set(False)
         time.sleep(0.05)
-    print("Ready to echolocate!")
+    log("Ready to echolocate!")
     run_repl(on_trigger_pulse, config, exit_event)
     exit_event.wait()

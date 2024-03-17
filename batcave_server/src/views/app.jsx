@@ -2,7 +2,8 @@ const React = require("react");
 const { StyleSheet, css } = require("aphrodite");
 
 const RemoteIcon = require("material-ui/svg-icons/action/settings-remote.js").default;
-const ConfigIcon = require("material-ui/svg-icons/action/assignment.js").default;
+const ConfigIcon = require("material-ui/svg-icons/action/settings-applications.js").default;
+const LogsIcon = require("material-ui/svg-icons/action/assignment.js").default;
 
 const {
 	BottomNavigation,
@@ -18,7 +19,8 @@ const { RemoteStatus, DeviceStatus } = require("../../protocol.js");
 
 const { ShrugView } = require("./shared.jsx");
 const { ConfigView } = require("./config.jsx");
-const { RemoteView } = require("./remote.jsx")
+const { RemoteView } = require("./remote.jsx");
+const { LogsView, LogView } = require("./log-view.jsx");
 const { ConnectionManagerView } = require("./connection-manager-view.jsx");
 
 const RobinApp = React.createClass({
@@ -50,6 +52,9 @@ const RobinApp = React.createClass({
 		if (activeTab === 1) {
 			return <ConfigView remote={this.props.remote} />;
 		}
+		if (activeTab === 2) {
+			return <LogView remote={this.props.remote} />;
+		}
 		return <ShrugView />;
 	},
 
@@ -74,6 +79,11 @@ const RobinApp = React.createClass({
 						label="Config"
 						icon={<ConfigIcon />}
 						onTouchTap={() => this.setActiveTab(1)}
+					/>
+					<BottomNavigationItem
+						label="Logs"
+						icon={<LogsIcon />}
+						onTouchTap={() => this.setActiveTab(2)}
 					/>
 				</BottomNavigation>
 			</Paper>

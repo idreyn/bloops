@@ -1,4 +1,5 @@
 from .devices import BATHAT, HIFIBERRY
+from robin.logger import log
 
 HAT_OVERLAY_NAMES = {
     "cs4270": BATHAT,
@@ -12,7 +13,7 @@ DTOVERLAY_KEY = "dtoverlay"
 
 def print_possible_overlays():
     for overlay_name in HAT_OVERLAY_NAMES.keys():
-        print(f"{DTOVERLAY_KEY}={overlay_name}")
+        log(f"{DTOVERLAY_KEY}={overlay_name}")
 
 
 def get_configured_hat_device():
@@ -23,8 +24,8 @@ def get_configured_hat_device():
                 overlay_name = overlay_name.strip()
                 hat = HAT_OVERLAY_NAMES.get(overlay_name)
                 if not hat:
-                    print(f"No device available for {DTOVERLAY_KEY}={overlay_name}")
+                    log(f"No device available for {DTOVERLAY_KEY}={overlay_name}")
                 return hat
-    print(f"No {DTOVERLAY_KEY} entry found. Add one of these to {BOOT_CONFIG}:")
+    log(f"No {DTOVERLAY_KEY} entry found. Add one of these to {BOOT_CONFIG}:")
     print_possible_overlays()
     return None
