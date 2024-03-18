@@ -101,7 +101,7 @@ sudo systemctl restart robin
 
 ## Using the `batcave` web remote
 
-Robin ships with a helpful web interface for debugging and testing (see the `batcave_server` directory). By default, the Robin service will start the server. Assuming you're connected to the same Wi-Fi network as Robin, you can visit `http://robin.local:8000` to visit the remote (assuming the hostname is `robin` — you may have chosen something else). It has three tabs:
+Robin ships with a helpful web interface for debugging and testing (see the `batcave_server` directory). By default, the Robin service will serve the remote over the local network. Assuming you're connected to the same Wi-Fi network as Robin, you can visit `http://robin.local:8000` to visit the remote (assuming the hostname is `robin` — you may have chosen something else). It has three tabs:
 
 - `Emit` is a big button that will emit the currently configured pulse and stream it through your browser
 - `Config` provides a frontend to `config.json` (see the section below) and lets you control many important settings, particularly the output pulse
@@ -118,4 +118,14 @@ This lets you control settings like:
 - The currently emitted pulse
 - A bluetooth remote to connect to, and a mapping of `remote_keys` to pulses
 - Key echolocation settings, for instance the `slowdown`, and gain calibration options for the microphones
-- Which recordings are saved from each pulse
+- Which recordings are saved from each pulse.
+
+## Committing code
+
+The setup scripts install a Git `pre-commit` hook which runs the Ruff linter and formatter for Python code before allowing commits. To format the code you can use:
+
+```
+poetry run ruff format
+```
+
+You can pass the `-n` flag to `git commit` if you want to skip this step.
