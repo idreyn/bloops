@@ -1,13 +1,21 @@
-# Installing from scratch on a new Raspberry Pi
+# Robin
+
+Robin is an echolocation headset; it is a research platform, and a prototype mobility aid for blind people. It is the spiritual successor to the [Sonic Eye](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4536767/) (Sohl-Dickstein et al., 2015). This repository and this README focus on the _code_ for the device; schematics for the hardware are in other repos in this Github organization. But for the curious, the device currently looks like this:
+
+<img src="https://github.com/robin-labs/robin/assets/2208769/0d185afb-1f4f-41ba-8dcc-24892ee6839d" alt="The Robin device: a headset on a dummy head, wired up to a Raspberry Pi in a carrying case" height="200">
+
+The code is written in Python and is designed to run on a Raspberry Pi.
+
+## Installing from scratch
+
+*You can skip this section if you already have a working device.*
 
 You'll need:
-- A Raspberry Pi
+- A Raspberry Pi 4
 - A MicroSD card (16 GB should be plenty)
 - The [HifiBerry DAC+ ADC Pro](https://www.hifiberry.com/shop/boards/hifiberry-dac-adc-pro/)
 
-## Installing the OS
-
-Grab the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and pop in your SD card. You'll want the 64-bit version of Raspbian for your Pi 4/5/whatever. Make sure you choose the **Edit Settings** option before proceeding. You'll want to change the following:
+Grab the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and pop in your SD card. You'll want the 64-bit version of Raspbian for your Pi. Make sure you choose the **Edit Settings** option before proceeding. You'll want to change the following:
 
 - The hostname: you'll use this to access the Pi on the local network. We commonly call it `robin`, but if there's an existing device with that name floating around, you'll want to call it something else.
 - A username and password. We usually use the username `robin`.
@@ -15,7 +23,7 @@ Grab the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and pop in
 - The local timezone and keyboard layout
 - **Make sure to enable SSH from the Services** tab.
 
-<img width="651" alt="Screenshot 2024-03-13 at 12 22 11 PM" src="https://github.com/robin-labs/robin/assets/2208769/2c653bbd-de1b-4828-8390-a252b47e2ab7">
+<img width="651" alt="screenshot of the the RPi imager tool" src="https://github.com/robin-labs/robin/assets/2208769/2c653bbd-de1b-4828-8390-a252b47e2ab7">
 
 The installer will install Raspbian on the SD card. Insert it into the Pi and turn it on. To connect for the first time, use:
 
@@ -73,19 +81,41 @@ cd robin
 poetry run start
 ```
 
-## Starting Robin on boot
+Recordings will be saved to the `~/recordings` directory.
 
-The installation script registers a [`systemd`](https://systemd.io/) service called `robin.service`. You can use this to automatically start the Robin software when the Pi boots:
+After you `sudo reboot`, the device should work without further intervention from the command line.
+
+## Controlling the Robin service
+
+The installation script registers a [`systemd`](https://systemd.io/) service called `robin.service`. It will automatically start Robin on boot (if the headset is connected and powered on, you'll hear three clicks from the emitters when it comes online). You can view the output using `journalctl`:
 
 ```
-# Run Robin as a service
-sudo systemctl start robin
-
-# Set up to run on boot
-sudo systemctl enable robin
-
-# See the logs from the Robin service
 journalctl -u robin -f
 ```
 
-The `start`, `stop`, `restart`, `enable`, and `disable` commands are all available through `systemctl`.
+You can use the `start`, `stop`, `restart`, `enable`, and `disable` commands from `systemctl` to manage the service, e.g.
+
+```
+sudo systemctl restart robin
+```
+
+## Using the `batcave` web remote
+
+Robin ships with a helpful web interface for debugging and testing (see the `batcave_server` directory). By default, the Robin service will start the server. Assuming you're connected to the same Wi-Fi network as Robin, you can visit `http://robin.local:8000` to visit the remote (assuming the hostname is `robin` — you may have chosen something else). It has three tabs:
+
+- `Emit` is a big button that will emit the currently configured pulse and stream it through your browser
+- `Config` provides a frontend to `config.json` (see the section below) and lets you control many important settings, particularly the output pulse
+- `Logs` shows debug logs streaming from the device.
+
+## The `config.json` file
+
+Many important settings are specified in `config.json` at the root of the repository. It is not checked into source, but the `poetry run install-rpi` command should install a basic `config.json` for you to use. The available settings are specified by Pydantic models in `robin/config.py`, and these are mirrored in `config.schema.json` which should give you good autocomplete support in an IDE like VSCode:
+
+<img width="400" alt="config.json being edited in vscode" src="https://github.com/robin-labs/robin/assets/2208769/b3b36e8a-a11e-4fcd-973c-1bbc3f044971">
+
+This lets you control settings like:
+
+- The currently emitted pulse
+- A bluetooth remote to connect to, and a mapping of `remote_keys` to pulses
+- Key echolocation settings, for instance the `slowdown`, and gain calibration options for the microphones
+- Which recordings are saved from each pulse
