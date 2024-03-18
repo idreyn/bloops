@@ -1,3 +1,5 @@
+import subprocess
+
 from .util import require_root
 
 REQUIRED_LINES = [
@@ -23,6 +25,7 @@ def install_dtoverlay():
                 and required_line not in existing_lines
             ):
                 file.write(f"{required_line}\n")
+    subprocess.run(["systemctl", "enable", "robin"])
 
 
 @require_root
