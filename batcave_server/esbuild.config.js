@@ -22,11 +22,10 @@ const main = async () => {
         assetNames: 'assets/[dir]/[name]-[hash]',
         // ...other options
     }).catch(() => process.exit(1));
-
     await ctx.rebuild();
     if (devMode) {
         await ctx.watch();
     }
 }
 
-main();
+main().then(() => process.exit(0));
