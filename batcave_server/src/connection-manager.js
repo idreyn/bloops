@@ -60,6 +60,7 @@ class ConnectionManager {
 	onRemoteDisconnect() {
 		this.deviceStatus = DeviceStatus.DISCONNECTED;
 		this.remoteStatus = RemoteStatus.DISCONNECTED;
+		this.deviceListing = [];
 		this.update();
 	}
 
