@@ -29,18 +29,19 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
     if not batcave_host:
         return
 
-    log("Starting Batcave client...")
+    log(f"Connecting to Batcave server at {batcave_host}")
 
     for event, handler in callbacks.items():
         sio.on(event, handler)
 
     @sio.event
     def connect():
+        log("Connected to Batcave server.")
         handshake()
 
     @sio.event
     def disconnect():
-        log("Disconnected from Batcave")
+        log("Disconnected from Batcave server.")
 
     def handshake():
         sio.emit(Message.HANDSHAKE_DEVICE, get_device_info())

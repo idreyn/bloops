@@ -32,18 +32,35 @@ class ConnectionManager {
 				Message.AUDIO,
 				this.onReceiveAudio.bind(this),
 			);
-			backend.emit(Message.HANDSHAKE_REMOTE);
+			backend.on(Message.CONNECT, this.onRemoteConnect.bind(this));
+			backend.on(Message.DISCONNECT, this.onRemoteDisconnect.bind(this));
 		}
 		this.update();
 	}
 
 	statusText() {
-		return {
-			[RemoteStatus.DISCONNECTED]: "Waiting for a device..." +
-				this.deviceListing.length.toString() + " found so far.",
-			[RemoteStatus.NO_SOCKET]: "Socket unavailable." +
-				" Is the server running?",
-		}[this.remoteStatus] || "Uh-oh";
+		if (this.remoteStatus === RemoteStatus.CONNECTED) {
+			return "Waiting for a device..." +
+				this.deviceListing.length.toString() + " found so far.";
+		}
+		if (this.remoteStatus === RemoteStatus.DISCONNECTED) {
+			return "Looking for Batcave server...";
+		}
+		return "Socket unavailable. Is the server running?";
+	}
+
+	onRemoteConnect() {
+		if (this.remoteStatus !== this.remoteStatus.CONNECTED) {
+			backend.emit(Message.HANDSHAKE_REMOTE);
+		}
+		this.remoteStatus = RemoteStatus.CONNECTED;
+		this.update();
+	}
+
+	onRemoteDisconnect() {
+		this.deviceStatus = DeviceStatus.DISCONNECTED;
+		this.remoteStatus = RemoteStatus.DISCONNECTED;
+		this.update();
 	}
 
 	onDeviceListing(listing) {
@@ -54,11 +71,8 @@ class ConnectionManager {
 		this.update();
 	}
 
-	onDeviceStatus(status) {
+	onDeviceStatus({ status }) {
 		this.deviceStatus = status;
-		if (status === DeviceStatus.DISCONNECTED) {
-			this.remoteStatus = RemoteStatus.DISCONNECTED;
-		}
 		this.update();
 	}
 

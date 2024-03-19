@@ -33,10 +33,14 @@ io.on("connection", (socket) => {
 });
 
 const createDeviceSocket = (socket, info) => {
-	const dev = new Device(socket, info);
-	devices.add(dev);
-	socket.on(Message.DISCONNECT, (e) => {
-		devices.delete(dev);
+	const device = new Device(socket, info);
+	devices.add(device);
+	device.socket.on(Message.DISCONNECT, (e) => {
+		device.socket.removeAllListeners();
+		devices.delete(device);
+	});
+	device.socket.on(Message.AUDIO, (audio) => {
+		remotes.forEach(remote => remote.socket.emit(Message.AUDIO, audio));
 	});
 };
 
@@ -73,25 +77,25 @@ const createRemoteSocket = (socket) => {
 			remote.socket.emit(Message.DEVICE_CHOICE_SUCCESSFUL, idChoice);
 		}
 	});
-
-	socket.on(Message.DISCONNECT, () => remotes.delete(socket));
+	socket.on(Message.DISCONNECT, () => {
+		remote.socket.removeAllListeners();
+		remotes.delete(remote);
+	});
 };
 
 const setupDirectMessaging = (remote, device) => {
 	Object.values(DirectMessage).forEach(messageType => {
-		device.socket.on(messageType,
-			(...args) => {
-				if (messageType === Message.AUDIO) {
-					remotes.forEach(remote => remote.socket.emit(messageType, ...args));
-				} else {
-					remote.socket.emit(messageType, ...args);
-				}
+		const onMessageFromRemote = (...args) => {
+			device.socket.emit(messageType, ...args);
+		};
+		const onMessageFromDevice = (...args) => {
+			if (messageType !== Message.AUDIO) {
+				remote.socket.emit(messageType, ...args);
 			}
-		);
-		remote.socket.on(messageType,
-			(...args) => {
-				device.socket.emit(messageType, ...args);
-			}
-		);
+		};
+		device.socket.on(messageType, onMessageFromDevice);
+		device.socket.on(Message.DISCONNECT, () => remote.socket.off(messageType, onMessageFromRemote));
+		remote.socket.on(messageType, onMessageFromRemote);
+		remote.socket.on(Message.DISCONNECT, () => device.socket.off(messageType, onMessageFromDevice));
 	});
 }

@@ -1,11 +1,11 @@
 const React = require("react");
 const { StyleSheet, css } = require("aphrodite");
 
-const SvgIcon = require("material-ui/SvgIcon").default;
 const ErrorIcon = require("material-ui/svg-icons/alert/error.js").default;
 
 const { ConnectionManager } = require("../connection-manager.js");
 const { RemoteStatus } = require("../../protocol.js");
+const { Bat } = require("./bat.jsx");
 
 const ConnectionManagerView = React.createClass({
 	propTypes: {
@@ -16,10 +16,10 @@ const ConnectionManagerView = React.createClass({
 	renderIcon() {
 		const { connectionManager } = this.props;
 		switch (connectionManager.remoteStatus) {
+			case RemoteStatus.CONNECTED:
 			case RemoteStatus.DISCONNECTED:
-				return <img
+				return <Bat
 					className={css(styles.largeIcon, styles.ringing)}
-					src="img/bat.svg"
 				/>;
 			case RemoteStatus.NO_SOCKET:
 				return <ErrorIcon className={css(styles.largeIcon)} />;

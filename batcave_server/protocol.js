@@ -15,6 +15,7 @@ const DeviceStatus = {
 const RemoteStatus = {
 	NO_SOCKET: "no-socket",
 	DISCONNECTED: "disconnected",
+	CONNECTED: "connected",
 };
 
 const DirectMessage = {
