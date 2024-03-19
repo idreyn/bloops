@@ -34,7 +34,7 @@ io.on("connection", (socket) => {
 
 const createDeviceSocket = (socket, info) => {
 	const device = new Device(socket, info);
-	if (devices.some(d => d.socket === socket)) {
+	if ([...devices].some(d => d.socket === socket)) {
 		return;
 	}
 	devices.add(device);
