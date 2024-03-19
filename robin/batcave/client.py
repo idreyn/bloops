@@ -19,7 +19,10 @@ def send_to_batcave_remote(*args, **kwargs):
 
 def client(config: "Config", get_device_status, get_device_info, callbacks):
     global sio
+    connected = False
+    attempts = 0
     sio = socketio.Client(reconnection=True)
+
     batcave_host = (
         "http://0.0.0.0:8000"
         if config.current.batcave.self_host
@@ -34,30 +37,23 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
     for event, handler in callbacks.items():
         sio.on(event, handler)
 
-    @sio.event
-    def connect():
-        log("Connected to Batcave server.")
-        handshake()
+    def try_connect():
+        nonlocal attempts, connected
+        attempts = 0
+        while not connected:
+            try:
+                time.sleep(max(5, min(2 ** (attempts // 4), 120)))
+                sio.connect(batcave_host)
+                connected = True
+                run_connection()
+            except Exception as ex:  # noqa: F841
+                attempts += 1
 
-    @sio.event
-    def disconnect():
-        log("Disconnected from Batcave server.")
-
-    def handshake():
+    def run_connection():
+        nonlocal connected
+        log("Connected to Batcave server.", connected)
         sio.emit(Message.HANDSHAKE_DEVICE, get_device_info())
-
-    connected = False
-    attempts = 0
-    while not connected:
-        try:
-            time.sleep(max(5, min(2 ** (attempts // 4), 120)))
-            sio.connect(batcave_host)
-            connected = True
-        except Exception as ex:  # noqa: F841
-            attempts += 1
-
-    try:
-        while True:
+        while connected:
             device_status = get_device_status()
             device_info = get_device_info()
             send_to_batcave_remote(
@@ -69,8 +65,15 @@ def client(config: "Config", get_device_status, get_device_info, callbacks):
                 },
             )
             sio.sleep(5)
-    finally:
-        sio.disconnect()
+
+    @sio.event
+    def disconnect():
+        nonlocal connected
+        connected = False
+        log("Disconnected from Batcave server.")
+        try_connect()
+
+    try_connect()
 
 
 def run_batcave_client(*args):
