@@ -3,7 +3,7 @@ const deepmerge = require("deepmerge")
 const { Device, Overrides } = require("./models.js");
 const { Message } = require("../protocol.js");
 
-const DEFAULT_CONFIG = require("../../config.json");
+const DEFAULT_CONFIG = require("../../config.example.json");
 
 const PHYSICAL_BUTTONS = {
 	JS_LEFT: "Joystick left",
