@@ -34,6 +34,9 @@ io.on("connection", (socket) => {
 
 const createDeviceSocket = (socket, info) => {
 	const device = new Device(socket, info);
+	if (devices.some(d => d.socket === socket)) {
+		return;
+	}
 	devices.add(device);
 	device.socket.on(Message.DISCONNECT, (e) => {
 		device.socket.removeAllListeners();
@@ -65,6 +68,7 @@ const createRemoteSocket = (socket) => {
 		} else {
 			device = chosenDevice;
 			device.socket.on(Message.DISCONNECT, () => {
+				device = null;
 				remote.socket.emit(Message.DEVICE_STATUS, {
 					status: DeviceStatus.DISCONNECTED,
 				});
@@ -77,7 +81,8 @@ const createRemoteSocket = (socket) => {
 			remote.socket.emit(Message.DEVICE_CHOICE_SUCCESSFUL, idChoice);
 		}
 	});
-	socket.on(Message.DISCONNECT, () => {
+
+	remote.socket.on(Message.DISCONNECT, () => {
 		remote.socket.removeAllListeners();
 		remotes.delete(remote);
 	});
