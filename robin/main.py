@@ -12,7 +12,7 @@ from .echolocation.echolocate import echolocate
 
 from .io.ad5252 import AD5252
 from .io.camera import Camera
-from .io.gpio import emitter_enable, emitter_battery_low, device_battery_low
+from .io.gpio import emitter_enable, emitter_battery_okay, device_battery_okay
 from .io.remote import RemoteKeys
 from .repl import run_repl
 from .pipeline import STANDARD_PIPELINE
@@ -106,8 +106,8 @@ def get_device_info():
     return {
         "id": get_hostname(),
         "ip": get_ip_address(),
-        "deviceBatteryLow": device_battery_low.read(),
-        "emitterBatteryLow": emitter_battery_low.read(),
+        "deviceBatteryLow": not device_battery_okay.read(),
+        "emitterBatteryLow": not emitter_battery_okay.read(),
         "bluetoothConnections": str(connected_remotes),
         "lastSeen": str(datetime.datetime.now()),
     }

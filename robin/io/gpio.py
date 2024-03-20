@@ -35,11 +35,11 @@ class GPIORead(object):
             callback(self.read())
 
         self._handler = handler
-        gpio.add_event_dectect(self.pin, gpio.RISING)
-        gpio.add_event_dectect(self.pin, gpio.FALLING)
+        gpio.add_event_detect(self.pin, gpio.RISING)
+        gpio.add_event_detect(self.pin, gpio.FALLING)
         gpio.add_event_callback(self.pin, handler)
 
 
 emitter_enable = GPIOWrite(16, ms_wait=1)
-emitter_battery_low = GPIORead(12)
-device_battery_low = GPIORead(25)
+emitter_battery_okay = GPIORead(6)
+device_battery_okay = GPIORead(5)
