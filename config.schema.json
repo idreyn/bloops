@@ -185,23 +185,30 @@
                 },
                 "remote_keys": {
                     "additionalProperties": {
-                        "discriminator": {
-                            "mapping": {
-                                "chirp": "#/$defs/Chirp",
-                                "noise": "#/$defs/Noise",
-                                "tone": "#/$defs/Tone"
-                            },
-                            "propertyName": "kind"
-                        },
-                        "oneOf": [
+                        "anyOf": [
                             {
-                                "$ref": "#/$defs/Chirp"
+                                "const": "current"
                             },
                             {
-                                "$ref": "#/$defs/Tone"
-                            },
-                            {
-                                "$ref": "#/$defs/Noise"
+                                "discriminator": {
+                                    "mapping": {
+                                        "chirp": "#/$defs/Chirp",
+                                        "noise": "#/$defs/Noise",
+                                        "tone": "#/$defs/Tone"
+                                    },
+                                    "propertyName": "kind"
+                                },
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/$defs/Chirp"
+                                    },
+                                    {
+                                        "$ref": "#/$defs/Tone"
+                                    },
+                                    {
+                                        "$ref": "#/$defs/Noise"
+                                    }
+                                ]
                             }
                         ]
                     },

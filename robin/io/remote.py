@@ -5,25 +5,31 @@ from robin.logger import log
 
 
 class RemoteKeys:
-    JS_UP = "JS_UP"
-    JS_DOWN = "JS_DOWN"
-    JS_LEFT = "JS_LEFT"
-    JS_RIGHT = "JS_RIGHT"
+    JOYSTICK_UP = "JOYSTICK_UP"
+    JOYSTICK_DOWN = "JOYSTICK_DOWN"
+    JOYSTICK_LEFT = "JOYSTICK_LEFT"
+    JOYSTICK_RIGHT = "JOYSTICK_RIGHT"
     UP = "UP"
     DOWN = "DOWN"
     LEFT = "LEFT"
     RIGHT = "RIGHT"
+    MEDIA_NEXT = "MEDIA_NEXT"
+    MEDIA_PREV = "MEDIA_PREV"
+    MEDIA_PLAY = "MEDIA_PLAY"
 
 
 KEYCODES = {
-    RemoteKeys.JS_UP: 208,
-    RemoteKeys.JS_DOWN: 168,
-    RemoteKeys.JS_LEFT: 165,
-    RemoteKeys.JS_RIGHT: 163,
+    RemoteKeys.JOYSTICK_UP: 208,
+    RemoteKeys.JOYSTICK_DOWN: 168,
+    RemoteKeys.JOYSTICK_LEFT: 165,
+    RemoteKeys.JOYSTICK_RIGHT: 163,
     RemoteKeys.UP: 307,
     RemoteKeys.DOWN: 305,
     RemoteKeys.LEFT: 304,
     RemoteKeys.RIGHT: 308,
+    RemoteKeys.MEDIA_PREV: 163,
+    RemoteKeys.MEDIA_PLAY: 164,
+    RemoteKeys.MEDIA_NEXT: 165,
 }
 
 
@@ -38,7 +44,7 @@ def get_remote_device(name):
 def client(device_name, resolve_await, down=None, hold=None, up=None):
     while True:
         dev = get_remote_device(device_name)
-        log("Bluetooth remote connected")
+        log(f"Bluetooth remote connected: {dev.name}")
         try:
             for event in dev.read_loop():
                 kev = evdev.categorize(event)
@@ -55,7 +61,7 @@ def client(device_name, resolve_await, down=None, hold=None, up=None):
                             up.get(kev.scancode)()
         except (IOError, evdev.device.EvdevError) as e:
             log(e)
-            log("Bluetooth remote disconnected")
+            log(f"Bluetooth remote disconnected: {dev.name}")
 
 
 class BluetoothRemote(object):

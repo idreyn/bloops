@@ -1,6 +1,6 @@
 import json
 import deepmerge
-from typing import Mapping
+from typing import Mapping, Literal
 from pydantic import BaseModel
 
 from robin.constants import BASE_PATH
@@ -41,7 +41,7 @@ class SaveConfig(BaseModel):
 
 class RemoteConfig(BaseModel):
     remote_name: str
-    remote_keys: Mapping[str, Pulse]
+    remote_keys: Mapping[str, Literal["current"] | Pulse]
 
 
 class BatcaveConfig(BaseModel):

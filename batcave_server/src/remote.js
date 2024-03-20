@@ -6,13 +6,16 @@ const { Message } = require("../protocol.js");
 const DEFAULT_CONFIG = require("../../config.example.json");
 
 const PHYSICAL_BUTTONS = {
-	JS_LEFT: "Joystick left",
-	JS_RIGHT: "Joystick right",
-	JS_DOWN: "Joystick down",
+	JOYSTICK_LEFT: "Joystick left",
+	JOYSTICK_RIGHT: "Joystick right",
+	JOYSTICK_DOWN: "Joystick down",
 	LEFT: "Left",
 	RIGHT: "Right",
 	UP: "Up",
 	DOWN: "Down",
+	MEDIA_NEXT: "Media next",
+	MEDIA_PREV: "Media previous",
+	MEDIA_PLAY: "Media play/pause",
 };
 
 class Remote {

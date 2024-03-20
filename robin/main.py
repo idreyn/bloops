@@ -114,8 +114,10 @@ def get_device_info():
 
 
 def make_pulse_callback(button):
+    pulse = config.current.remote.remote_keys[button]
+
     def inner():
-        on_trigger_pulse(config.current.remote.remote_keys[button])
+        on_trigger_pulse(config.current.pulse if pulse == "current" else pulse)
 
     return inner
 
@@ -147,8 +149,11 @@ def main(loopback_test, config_path):
         log(audio.device_availability())
         log("Missing audio hardware, exiting.")
         os._exit(0)
-    if len(config.current.remote.remote_keys) == 0:
-        log("Warning: config has no remote key mappings")
+    if (
+        config.current.remote.remote_name
+        and len(config.current.remote.remote_keys) == 0
+    ):
+        log("Warning: remote name specified but config has no remote key mappings")
     if audio.record_device == BATHAT:
         ad = AD5252()
         ad.write_all(10)
@@ -175,8 +180,8 @@ def main(loopback_test, config_path):
             audio.loopback()
     remote.register_handlers(
         down={k: make_pulse_callback(k) for k in config.current.remote.remote_keys},
-        hold={RemoteKeys.JS_UP: lambda: emitter_enable.set(True)},
-        up={RemoteKeys.JS_UP: lambda: (not busy) and emitter_enable.set(False)},
+        hold={RemoteKeys.JOYSTICK_UP: lambda: emitter_enable.set(True)},
+        up={RemoteKeys.JOYSTICK_UP: lambda: (not busy) and emitter_enable.set(False)},
     )
     for _ in range(3):
         emitter_enable.set(True)
