@@ -53,7 +53,8 @@ class Device extends Model {
 		this.enumerable({
 			id: "",
 			ip: "",
-			bluetoothConnections: "",
+			batcaveConnections: "",
+			bluetoothRemote: "",
 			deviceBatteryLow: false,
 			emitterBatteryLow: false,
 			lastSeen: "",

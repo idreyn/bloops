@@ -82,8 +82,13 @@ const DeviceInfo = React.createClass({
 				/>
 				<ListItem
 					disabled
-					primaryText="Bluetooth connections"
-					secondaryText={remote.device.bluetoothConnections}
+					primaryText="Bluetooth remote"
+					secondaryText={remote.device.bluetoothRemote}
+				/>
+				<ListItem
+					disabled
+					primaryText="Connected clients"
+					secondaryText={remote.device.batcaveConnections}
 				/>
 				<ListItem
 					disabled
@@ -121,9 +126,9 @@ const DeviceInfo = React.createClass({
 					primaryText="Disable device playback"
 					secondaryText="Turns off playback through headphone jack"
 					rightToggle={<Toggle
-						toggled={remote.overrides.disablePlayback}
+						toggled={!remote.config.echolocation.playback}
 						onToggle={
-							(e, disablePlayback) => remote.updateOverrides({
+							(e, disablePlayback) => remote.updateConfig({
 								echolocation: {
 									playback: !disablePlayback,
 								}

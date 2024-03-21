@@ -41,10 +41,10 @@ def get_remote_device(name):
                 return dev
 
 
-def client(device_name, resolve_await, down=None, hold=None, up=None):
+def client(device_name, on_connect_state, resolve_await, down=None, hold=None, up=None):
     while True:
         dev = get_remote_device(device_name)
-        log(f"Bluetooth remote connected: {dev.name}")
+        on_connect_state(True)
         try:
             for event in dev.read_loop():
                 kev = evdev.categorize(event)
@@ -61,7 +61,7 @@ def client(device_name, resolve_await, down=None, hold=None, up=None):
                             up.get(kev.scancode)()
         except (IOError, evdev.device.EvdevError) as e:
             log(e)
-            log(f"Bluetooth remote disconnected: {dev.name}")
+            on_connect_state(False)
 
 
 class BluetoothRemote(object):
@@ -70,6 +70,8 @@ class BluetoothRemote(object):
         self._down = {}
         self._hold = {}
         self._awaits = {}
+        self.name = name
+        self.connected = False
         self._thread = threading.Thread(
             target=client,
             kwargs={
@@ -78,6 +80,7 @@ class BluetoothRemote(object):
                 "hold": self._hold,
                 "device_name": name,
                 "resolve_await": lambda k: self._resolve_await(k),
+                "on_connect_state": lambda state: self._handle_connect_state(state),
             },
             daemon=True,
         )
@@ -106,6 +109,13 @@ class BluetoothRemote(object):
         if and_clear:
             self._awaits[keycode].clear()
         return self._awaits[keycode].wait(time)
+
+    def _handle_connect_state(self, state: bool):
+        self.connected = state
+        if self.connected:
+            log(f"Bluetooth remote connected: {self.name}")
+        else:
+            log(f"Bluetooth remote disconnected: {self.name}")
 
     def _resolve_await(self, keycode):
         if self._awaits.get(keycode):

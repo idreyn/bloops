@@ -12,7 +12,8 @@ const DEVICE_INFO = {
 	ip: ip.address(),
 	deviceBatteryLow: false,
 	emitterBatteryLow: false,
-	bluetoothConnections: "Unknown",
+	batcaveConnections: "Unknown",
+	bluetootRemote: "none",
 };
 
 function emitStatus() {

@@ -44,7 +44,8 @@ audio = Audio(
 camera = None
 config: Config = None
 busy = False
-connected_remotes = 0
+batcave_connections = 0
+bluetooth_remote: BluetoothRemote = None
 
 
 def handle_override(overrides):
@@ -60,14 +61,14 @@ def on_disconnect():
 
 
 def on_remote_connect():
-    global connected_remotes
-    connected_remotes += 1
+    global batcave_connections
+    batcave_connections += 1
 
 
 def on_remote_disconnect():
-    global connected_remotes
-    connected_remotes -= 1
-    if connected_remotes == 0:
+    global batcave_connections
+    batcave_connections -= 1
+    if batcave_connections == 0:
         handle_override(DebugOverride())
 
 
@@ -103,12 +104,18 @@ def get_device_status():
 
 
 def get_device_info():
+    bluetooth_name = (
+        bluetooth_remote.name
+        if bluetooth_remote and bluetooth_remote.connected
+        else "None"
+    )
     return {
         "id": get_hostname(),
         "ip": get_ip_address(),
         "deviceBatteryLow": not device_battery_okay.read(),
         "emitterBatteryLow": not emitter_battery_okay.read(),
-        "bluetoothConnections": str(connected_remotes),
+        "batcaveConnections": str(batcave_connections),
+        "bluetoothRemote": bluetooth_name,
         "lastSeen": str(datetime.datetime.now()),
     }
 
@@ -143,7 +150,7 @@ batcave_handlers = {
     required=False,
 )
 def main(loopback_test, config_path):
-    global camera, config
+    global camera, config, bluetooth_remote
     config = Config(config_path)
     if not audio.devices_available():
         log(audio.device_availability())
@@ -171,14 +178,14 @@ def main(loopback_test, config_path):
         batcave_handlers,
     )
     log("Waiting for Bluetooth remote...")
-    remote = BluetoothRemote(config.current.remote.remote_name)
+    bluetooth_remote = BluetoothRemote(config.current.remote.remote_name)
     if loopback_test:
-        remote.clear_key(RemoteKeys.RIGHT)
+        bluetooth_remote.clear_key(RemoteKeys.RIGHT)
         log("Ready earbuds and press RIGHT on the remote")
         log("Waiting for key...")
-        while not remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
+        while not bluetooth_remote.await_key(RemoteKeys.RIGHT, time=0, and_clear=False):
             audio.loopback()
-    remote.register_handlers(
+    bluetooth_remote.register_handlers(
         down={k: make_pulse_callback(k) for k in config.current.remote.remote_keys},
         hold={RemoteKeys.JOYSTICK_UP: lambda: emitter_enable.set(True)},
         up={RemoteKeys.JOYSTICK_UP: lambda: (not busy) and emitter_enable.set(False)},
