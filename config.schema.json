@@ -180,8 +180,18 @@
         "RemoteConfig": {
             "properties": {
                 "remote_name": {
-                    "title": "Remote Name",
-                    "type": "string"
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        }
+                    ],
+                    "title": "Remote Name"
                 },
                 "remote_keys": {
                     "additionalProperties": {
@@ -295,6 +305,11 @@
             ],
             "default": null,
             "title": "Generated At"
+        },
+        "do_the_thing": {
+            "default": false,
+            "title": "Do The Thing",
+            "type": "boolean"
         },
         "pulse": {
             "discriminator": {

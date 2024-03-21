@@ -136,7 +136,7 @@ const DeviceInfo = React.createClass({
 						}
 					/>}
 				/>
-				<Subheader>Here be dragons</Subheader>
+				{/* <Subheader>Here be dragons</Subheader>
 				<ListItem
 					primaryText="Restart the device server"
 					secondaryText={"You'll lose connection" +
@@ -154,7 +154,7 @@ const DeviceInfo = React.createClass({
 					onTouchTap={() => this.setState({
 						confirmingReboot: true,
 					})}
-				/>
+				/> */}
 			</List>
 			<ConfirmDialog
 				title="Really restart the server?"

@@ -1,5 +1,6 @@
 import evdev
 import threading
+import time
 
 from robin.logger import log
 
@@ -16,6 +17,7 @@ class RemoteKeys:
     MEDIA_NEXT = "MEDIA_NEXT"
     MEDIA_PREV = "MEDIA_PREV"
     MEDIA_PLAY = "MEDIA_PLAY"
+    BUTTON_TOUCH = "BUTTON_TOUCH"
 
 
 KEYCODES = {
@@ -30,21 +32,27 @@ KEYCODES = {
     RemoteKeys.MEDIA_PREV: 163,
     RemoteKeys.MEDIA_PLAY: 164,
     RemoteKeys.MEDIA_NEXT: 165,
+    RemoteKeys.BUTTON_TOUCH: 330,
 }
 
 
-def get_remote_device(name):
+def get_remote_device(name_or_names):
     while True:
         for fn in evdev.list_devices():
             dev = evdev.InputDevice(fn)
-            if dev.name == name:
+            if dev.name == name_or_names or (
+                isinstance(name_or_names, list) and dev.name in name_or_names
+            ):
                 return dev
+        time.sleep(2)
 
 
-def client(device_name, on_connect_state, resolve_await, down=None, hold=None, up=None):
+def client(
+    device_name_or_names, on_connect_state, resolve_await, down=None, hold=None, up=None
+):
     while True:
-        dev = get_remote_device(device_name)
-        on_connect_state(True)
+        dev = get_remote_device(device_name_or_names)
+        on_connect_state(dev.name)
         try:
             for event in dev.read_loop():
                 kev = evdev.categorize(event)
@@ -61,24 +69,23 @@ def client(device_name, on_connect_state, resolve_await, down=None, hold=None, u
                             up.get(kev.scancode)()
         except (IOError, evdev.device.EvdevError) as e:
             log(e)
-            on_connect_state(False)
+            on_connect_state(None)
 
 
 class BluetoothRemote(object):
-    def __init__(self, name):
+    def __init__(self, possible_remote_name_or_names):
         self._up = {}
         self._down = {}
         self._hold = {}
         self._awaits = {}
-        self.name = name
-        self.connected = False
+        self.connected_name = None
         self._thread = threading.Thread(
             target=client,
             kwargs={
                 "up": self._up,
                 "down": self._down,
                 "hold": self._hold,
-                "device_name": name,
+                "device_name_or_names": possible_remote_name_or_names,
                 "resolve_await": lambda k: self._resolve_await(k),
                 "on_connect_state": lambda state: self._handle_connect_state(state),
             },
@@ -110,12 +117,12 @@ class BluetoothRemote(object):
             self._awaits[keycode].clear()
         return self._awaits[keycode].wait(time)
 
-    def _handle_connect_state(self, state: bool):
-        self.connected = state
-        if self.connected:
-            log(f"Bluetooth remote connected: {self.name}")
+    def _handle_connect_state(self, name: str | None):
+        self.connected_name = name
+        if self.connected_name:
+            log(f"Bluetooth remote connected: {self.connected_name}")
         else:
-            log(f"Bluetooth remote disconnected: {self.name}")
+            log("Bluetooth remote disconnected")
 
     def _resolve_await(self, keycode):
         if self._awaits.get(keycode):

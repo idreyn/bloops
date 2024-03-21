@@ -10,4 +10,4 @@ def log(message: object, level: int = logging.INFO):
 
     print(message)
     _logger.log(level, message)
-    send_to_batcave_remote(Message.DEVICE_LOG, message)
+    send_to_batcave_remote(Message.DEVICE_LOG, str(message))

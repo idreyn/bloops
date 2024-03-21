@@ -1,6 +1,6 @@
 import json
 import deepmerge
-from typing import Mapping, Literal
+from typing import List, Mapping, Literal
 from pydantic import BaseModel
 
 from robin.constants import BASE_PATH
@@ -40,7 +40,7 @@ class SaveConfig(BaseModel):
 
 
 class RemoteConfig(BaseModel):
-    remote_name: str
+    remote_name: str | List[str]
     remote_keys: Mapping[str, Literal["current"] | Pulse]
 
 
@@ -52,6 +52,7 @@ class BatcaveConfig(BaseModel):
 
 class ConfigRoot(BaseModel):
     generated_at: int | None = None
+    do_the_thing: bool = False
     pulse: Pulse
     echolocation: EcholocationConfig
     save: SaveConfig
@@ -78,5 +79,6 @@ class Config(object):
 
 def update_config_schema():
     schema = ConfigRoot.model_json_schema()
+    schema["$schema"] = "./config.schema.json"
     schema_str = json.dumps(schema, indent=4)
     open(f"{BASE_PATH}/config.schema.json", "w").write(schema_str)

@@ -105,8 +105,8 @@ def get_device_status():
 
 def get_device_info():
     bluetooth_name = (
-        bluetooth_remote.name
-        if bluetooth_remote and bluetooth_remote.connected
+        bluetooth_remote.connected_name
+        if bluetooth_remote and bluetooth_remote.connected_name
         else "None"
     )
     return {
@@ -167,7 +167,7 @@ def main(loopback_test, config_path):
     log("Starting audio I/O...")
     audio.start()
     exit_event = Event()
-    camera = Camera()
+    camera = Camera(enabled=config.current.save.save_camera_image)
     if config.current.batcave.self_host:
         log("Running Batcave server locally...")
         run_batcave_server(config, exit_event)
@@ -190,11 +190,12 @@ def main(loopback_test, config_path):
         hold={RemoteKeys.JOYSTICK_UP: lambda: emitter_enable.set(True)},
         up={RemoteKeys.JOYSTICK_UP: lambda: (not busy) and emitter_enable.set(False)},
     )
-    for _ in range(3):
-        emitter_enable.set(True)
-        time.sleep(0.05)
-        emitter_enable.set(False)
-        time.sleep(0.05)
+    if config.current.do_the_thing:
+        for _ in range(3):
+            emitter_enable.set(True)
+            time.sleep(0.05)
+            emitter_enable.set(False)
+            time.sleep(0.05)
     log("Ready to echolocate!")
     run_repl(on_trigger_pulse, config, exit_event)
     exit_event.wait()
